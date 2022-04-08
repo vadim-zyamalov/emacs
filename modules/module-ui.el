@@ -63,11 +63,19 @@
              dashboard-set-heading-icons t
              dashboard-navigator-buttons
              `((
-                (,(all-the-icons-fileicon "emacs")
+                (,(all-the-icons-fileicon "emacs" :height 1.0 :v-adjust 0.0)
                  "Настройки"
                  "Открыть файл с настройками (init.el)"
                  (lambda (&rest _)
                      (find-file user-init-file)))
+                (,(all-the-icons-octicon "mark-github" :height 1.0 :v-adjust 0.0)
+                 "dotfiles"
+                 "Github с конфигурационными файлами"
+                 (lambda (&rest _) (browse-url "https://github.com/d9d6ka/dotfiles")))
+                (,(all-the-icons-octicon "mark-github" :height 1.0 :v-adjust 0.0)
+                 "emacs"
+                 "Github с настройками Emacs"
+                 (lambda (&rest _) (browse-url "https://github.com/d9d6ka/emacs")))
                 )))
     (dashboard-setup-startup-hook))
 
