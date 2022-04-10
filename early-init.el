@@ -1,3 +1,9 @@
+;; early-init.el --- Emacs config -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Файл с настройками, применяемыми на раннем этапе, т. е. до основной инициализации.
+
+;;; Code:
 (setq gc-cons-threshold (* 100 1024 1024)
       gc-cons-percentage 0.6)
 
@@ -18,6 +24,20 @@
                                                 user-emacs-directory
                                                 "save-place.el")))
 
+
+;; Настройки UI
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+
+(setq visible-bell t
+      ring-bell-function 'ignore
+      inhibit-splash-screen t
+      inhibit-startup-message t
+      use-dialog-box nil)
+
+
+;; Управление пакетами
 (setq package-enable-at-startup nil
       package-quickstart nil)
 
@@ -35,3 +55,5 @@
             (goto-char (point-max))
             (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
+
+;;; early-init.el ends here

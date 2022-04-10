@@ -21,16 +21,6 @@
 
 (setq split-width-threshold 80)
 
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(menu-bar-mode -1)
-
-(setq visible-bell t
-      ring-bell-function 'ignore
-      inhibit-splash-screen t
-      inhibit-startup-message t
-      use-dialog-box nil)
-
 (setq-default cursor-type 'bar)
 
 

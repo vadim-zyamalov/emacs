@@ -33,20 +33,20 @@
 
 
 ;; Отмена/повтор
-;; (setup (:straight undo-tree)
-;;     (:option undo-tree-enable-undo-in-region nil)
-;;     (:bind-into undo-tree-map
-;;         "C-_" nil
-;;         "M-_" nil
-;;         "C-S-z" undo-tree-redo)
-;;     (global-undo-tree-mode))
+(setup (:straight undo-tree)
+    (:option undo-tree-enable-undo-in-region nil)
+    (:bind-into undo-tree-map
+        "C-_" nil
+        "M-_" nil
+        "C-S-z" undo-tree-redo)
+    (global-undo-tree-mode))
 
-(setup (:straight undo-fu)
-    (:option undo-fu-allow-undo-in-region nil)
-    (:with-map global-map
-        (:unbind "C-z")
-        (:bind "C-z" undo-fu-only-undo
-               "C-S-z" undo-fu-only-redo)))
+;; (setup (:straight undo-fu)
+;;     (:option undo-fu-allow-undo-in-region nil)
+;;     (:with-map global-map
+;;         (:unbind "C-z")
+;;         (:bind "C-z" undo-fu-only-undo
+;;                "C-S-z" undo-fu-only-redo)))
 
 
 ;; Скобки

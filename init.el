@@ -1,4 +1,4 @@
-;; init,el --- Emacs config -*- lexical-binding: t; -*-
+;; init.el --- Emacs config -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Мой модульный файл настроек для Emacs.
@@ -8,17 +8,17 @@
 ;; Большой файл с настройками постепенно становится тяжело читаемым.
 
 ;;; Code:
-(defun load-user-file (file &optional path)
+(defmacro load-user-file (file &optional path)
     "Load a FILE from optional PATH during startup."
     (declare (indent 2))
     (let ((path (if path
                         path
                     "")))
-        (load (expand-file-name
-               (format "%s/%s/%s"
-                       (file-name-directory user-init-file)
-                       path
-                       file)))))
+        `(load ,(expand-file-name
+                 (format "%s/%s/%s"
+                         (file-name-directory user-init-file)
+                         path
+                         file)))))
 
 (load-user-file
         "module-setup.el"
