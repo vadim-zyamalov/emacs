@@ -24,7 +24,7 @@
 ;; Шрифты
 (set-face-attribute 'default
                     nil
-                    :font "Iosevka"
+                    :font "Fira Code"
                     :height 110)
 
 (unless (version< emacs-version "28.1")
