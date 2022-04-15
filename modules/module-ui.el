@@ -31,14 +31,6 @@
     (global-tab-line-mode t))
 
 
-;; Статусная строка
-(setup (:straight minions)
-    (minions-mode t))
-
-(setup (:straight nyan-mode)
-    (nyan-mode))
-
-
 ;; Стартовый экран
 (setup (:straight dashboard)
     (:straight all-the-icons)
@@ -122,6 +114,20 @@
     (pulsar-global-mode t))
 
 
+;; Статусная строка
+(setup (:straight minions)
+    (minions-mode t))
+
+(setup (:straight nyan-mode)
+    (nyan-mode))
+
+(setup (:straight doom-modeline)
+    (:option doom-modeline-height 20
+             doom-modeline-minor-modes t)
+    (:with-hook after-init
+        (:hook doom-modeline-mode)))
+
+
 ;; Окна
 (setup (:straight zoom)
     (:option zoom-size '(0.618 . 0.618))
@@ -138,7 +144,7 @@
 ;; Дерево каталогов
 (setup (:straight neotree)
     (:option neo-smart-open t
-             neo-window-width 50
+             neo-window-width 35
              neo-theme (if (display-graphic-p) 'icons 'arrow))
     (:global "C-x t t" neotree-toggle))
 

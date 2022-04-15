@@ -13,6 +13,8 @@
 (setq user-emacs-directory
       (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/")))
 
+(push (expand-file-name "modules/" (file-name-directory user-init-file)) load-path)
+
 (setq custom-file
       (expand-file-name "custom.el" user-emacs-directory))
 
