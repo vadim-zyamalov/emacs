@@ -185,8 +185,8 @@ to the LaTeX table."
                  (region-end))))
         (save-excursion
             (goto-char (point-min))
-            (while (search-forward-regexp "[ ]+" nil t)
-                (replace-match " " nil nil)))
+            (while (search-forward-regexp "[ ]*&[ ]*" nil t)
+                (replace-match " & " nil nil)))
         (align-regexp (point-min) (point-max) "\\(\\s-*\\)&"
                       1 1 t)
         (align-regexp (point-min) (point-max) "\\(\\s-*\\)\\\\\\\\"
