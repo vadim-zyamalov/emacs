@@ -33,12 +33,20 @@
 
 ;; Сохранение позиции в посещенных файлах
 (setup saveplace
+    (:option save-place-file (expand-file-name
+                              (format "%s/var/%s"
+                                      user-emacs-directory
+                                      "save-place.el")))
     (save-place-mode t))
 
 
 ;; Сохранение истории
 (setup savehist
-    (:option history-delete-duplicates t)
+    (:option history-delete-duplicates t
+             savehist-file (expand-file-name
+                            (format "%s/var/%s"
+                                    user-emacs-directory
+                                    "savehist.el")))
     (savehist-mode t))
 
 

@@ -31,9 +31,22 @@
     (global-tab-line-mode t))
 
 
+;; Статусная строка
+(setup (:straight minions)
+    (minions-mode t))
+
+(setup (:straight nyan-mode)
+    (nyan-mode))
+
+(setup (:straight doom-modeline)
+    (:option doom-modeline-height 20
+             doom-modeline-minor-modes t)
+    (:with-hook after-init-hook
+        (:hook doom-modeline-mode)))
+
+
 ;; Стартовый экран
 (setup (:straight dashboard)
-    (:straight all-the-icons)
     (:require all-the-icons)
     (:option dashboard-set-file-icons t
              dashboard-set-navigator t
@@ -112,20 +125,6 @@
                                       ctrlf-forward-symbol-at-point
                                       consult-line))
     (pulsar-global-mode t))
-
-
-;; Статусная строка
-(setup (:straight minions)
-    (minions-mode t))
-
-(setup (:straight nyan-mode)
-    (nyan-mode))
-
-(setup (:straight doom-modeline)
-    (:option doom-modeline-height 20
-             doom-modeline-minor-modes t)
-    (:with-hook after-init
-        (:hook doom-modeline-mode)))
 
 
 ;; Окна

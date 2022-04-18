@@ -11,11 +11,11 @@
 (require 'module-setup)
 (require 'module-base)
 (require 'module-ui)
-(require 'module-help)
 (require 'module-themes)
+(require 'module-help)
 (require 'module-input)
-(require 'module-completion)
 (require 'module-edit)
+(require 'module-completion)
 (require 'module-programming)
 
 ;;; init.el ends here

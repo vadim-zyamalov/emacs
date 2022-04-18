@@ -6,7 +6,11 @@
 ;; А также поддержка лигатур
 
 ;; https://github.com/doomemacs/themes
-;; https://github.com/be5invis/Iosevka
+;; https://www.jetbrains.com/lp/mono/
+;; https://github.com/JetBrains/JetBrainsMono
+;; https://github.com/domtronn/all-the-icons.el
+;; https://github.com/iyefrat/all-the-icons-completion
+;; https://github.com/mickeynp/ligature.el
 
 ;;; Code:
 
@@ -15,7 +19,6 @@
     (:option doom-themes-bold t
              doom-themes-enable-italic t)
     (doom-themes-visual-bell-config)
-    ;; (doom-themes-treemacs-config)
     (doom-themes-neotree-config)
     (doom-themes-org-config)
     (load-theme 'doom-one t))

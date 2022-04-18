@@ -13,18 +13,11 @@
 (setq user-emacs-directory
       (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/")))
 
-(push (expand-file-name "modules/" (file-name-directory user-init-file)) load-path)
+(push (expand-file-name "modules/" (file-name-directory user-init-file))
+      load-path)
 
 (setq custom-file
       (expand-file-name "custom.el" user-emacs-directory))
-
-(setq savehist-file (expand-file-name (format "%s/var/%s"
-                                              user-emacs-directory
-                                              "savehist.el")))
-
-(setq save-place-file (expand-file-name (format "%s/var/%s"
-                                                user-emacs-directory
-                                                "save-place.el")))
 
 
 ;; Настройки UI
