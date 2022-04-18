@@ -39,7 +39,7 @@
     (nyan-mode))
 
 (setup (:straight doom-modeline)
-    (:option doom-modeline-height 20
+    (:option doom-modeline-height 24
              doom-modeline-minor-modes t)
     (:with-hook after-init-hook
         (:hook doom-modeline-mode)))
