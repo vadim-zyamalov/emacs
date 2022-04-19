@@ -28,7 +28,7 @@
 (set-face-attribute 'default
                     nil
                     :font "JetBrains Mono"
-                    :height 110)
+                    :height 100)
 
 ;; Поддержка лигатур
 ;; Для шрифтов без их поддержки неактуально
