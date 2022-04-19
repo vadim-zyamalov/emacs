@@ -103,7 +103,9 @@
          (side . right)
          (slot . 1)
          (window-width . 0.33)
-         (reusable-frames . nil)))))
+         (reusable-frames . nil))))
+    (unless (getenv "LC_ALL")
+        (setenv "LC_ALL" "ru_RU.UTF-8")))
 
 
 ;; Python

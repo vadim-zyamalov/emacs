@@ -129,7 +129,10 @@
 
 ;; Окна
 (setup (:straight zoom)
-    (:option zoom-size '(0.618 . 0.618))
+    (:option zoom-size '(0.618 . 0.618)
+             zoom-ignored-major-modes '(ess-r-mode
+                                        inferior-ess-r-mode
+                                        ess-rdired-mode))
     (zoom-mode))
 
 (setup (:straight dimmer)
