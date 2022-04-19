@@ -28,7 +28,7 @@
 
 
 ;; Клавиатура
-(define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
+;; (define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
 
 (define-key global-map (kbd "C-=") #'(lambda ()
                                          (interactive)

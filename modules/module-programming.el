@@ -90,7 +90,20 @@
     (:with-mode ess-r-mode
         (:file-match "\\.R$"))
     (:with-mode ess-stata-mode
-        (:file-match "\\.do$")))
+        (:file-match "\\.do$"))
+    (:option display-buffer-alist
+      `(("^\\*R Dired"
+         (display-buffer-reuse-window display-buffer-in-side-window)
+         (side . right)
+         (slot . -1)
+         (window-width . 0.33)
+         (reusable-frames . nil))
+        ("^\\*R"
+         (display-buffer-reuse-window display-buffer-in-side-window)
+         (side . right)
+         (slot . 1)
+         (window-width . 0.33)
+         (reusable-frames . nil)))))
 
 
 ;; Python
