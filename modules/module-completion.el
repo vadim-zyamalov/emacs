@@ -110,13 +110,27 @@
         (:hook consult-preview-at-point-mode)))
 
 ;; Сниппеты
-(setup (:straight tempel)
-    (:option tempel-path (expand-file-name
-                          "templates"
-                          (file-name-directory user-init-file)))
-    (:global "<f6>" tempel-complete
-             "<f7>" tempel-insert
-             "C-<f6>" tempel-done))
+(when (string-equal init/snippet-engine "tempel")
+    (setup (:straight tempel)
+        (:option tempel-path (expand-file-name
+                              "templates"
+                              (file-name-directory user-init-file)))
+        (:global "<f6>" tempel-complete
+                 "<f7>" tempel-insert
+                 "C-<f6>" tempel-done)))
+
+(when (string-equal init/snippet-engine "yasnippet")
+    (setup (:straight yasnippet)
+        (:bind-into yas-minor-mode-map
+            [(tab)] nil
+            "TAB" nil)
+        (yas-global-mode 1))
+
+    (setup (:straight yasnippet-snippets))
+
+    (setup (:straight consult-yasnippet)
+        (:global "<f7>" consult-yasnippet)))
+
 
 (provide 'module-completion)
 ;;; module-completion.el ends here
