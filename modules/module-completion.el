@@ -76,9 +76,6 @@
 ;; Vertico
 (setup (:straight vertico)
     (:option vertico-cycle t)
-    (:global "C-s" consult-line
-             "<f2>" consult-buffer
-             "C-<f2>" ibuffer)
     (:with-hook minibuffer-setup-hook
         (:hook (lambda ()
                    (setq completion-in-region-function
@@ -87,7 +84,10 @@
                              #'completion--in-region)))))
     (vertico-mode))
 
-(setup (:straight consult))
+(setup (:straight consult)
+    (:global "C-s" consult-line
+             "<f2>" consult-buffer
+             "C-<f2>" ibuffer))
 
 
 ;; Orderless
@@ -110,19 +110,13 @@
         (:hook consult-preview-at-point-mode)))
 
 ;; Сниппеты
-(when (string-equal init/snippet-engine "tempel")
-    (setup (:straight tempel)
-        (:option tempel-path (expand-file-name
-                              "templates"
-                              (file-name-directory user-init-file)))
-        (:global "M-+" tempel-complete
-                 "M-*" tempel-insert
-                 "C-M-+" tempel-done)))
-
-(when (string-equal init/snippet-engine "yasnippet")
-    (setup (:straight yasnippet)
-        (yas-global-mode 1))
-    (setup (:straight yasnippet-snippets)))
+(setup (:straight tempel)
+    (:option tempel-path (expand-file-name
+                          "templates"
+                          (file-name-directory user-init-file)))
+    (:global "<f6>" tempel-complete
+             "<f7>" tempel-insert
+             "C-<f6>" tempel-done))
 
 (provide 'module-completion)
 ;;; module-completion.el ends here
