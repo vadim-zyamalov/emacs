@@ -41,15 +41,17 @@
                                          (text-scale-decrease 1.1)))
 (define-key global-map (kbd "C-_") nil)
 
-(setup (:straight reverse-im)
-    (:option reverse-im-input-methods '("russian-computer"))
-    (reverse-im-mode t))
+(use-package reverse-im
+    :straight t
+    :config
+    (reverse-im-mode t)
+    :custom
+    (reverse-im-input-methods '("russian-computer")))
 
-(setup cua
-    (:option cua-keep-region-after-copy t)
-    (cua-mode t)
-    (transient-mark-mode 1)
-    (define-key cua--cua-keys-keymap (kbd "C-z") 'undo-only))
+(setq cua-keep-region-after-copy t)
+(cua-mode t)
+(transient-mark-mode t)
+(define-key cua--cua-keys-keymap (kbd "C-z") 'undo-only)
 
 (provide 'module-input)
 ;;; module-input.el ends here

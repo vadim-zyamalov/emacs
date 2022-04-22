@@ -36,103 +36,126 @@
         (unless (null (symbol-function tmp-symbol))
             (funcall (symbol-function tmp-symbol)))))
 
-(setup (:straight lsp-mode)
-    (:option lsp-headerline-breadcrumb-icons-enable nil
-             lsp-enable-file-watchers nil
-             lsp-keymap-prefix "C-c l"
-             lsp-completion-provider :none)
-    (with-eval-after-load 'lsp-mode
-        (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-    (:hook lsp-enable-which-key-integration)
-    (:with-mode lsp-completion-mode
-        (:hook (lambda ()
-                   (progn
-                       (lsp/non-greedy-lsp-mode)
-                       (lsp/extra-capf))))))
+(use-package lsp-mode
+    :straight t
+    :commands (lsp lsp-deferred)
+    :hook ((lsp-mode . lsp-enable-which-key-integration)
+           (lsp-completion-mode . (lambda ()
+                                      (progn
+                                          (lsp/non-greedy-lsp-mode)
+                                          (lsp/extra-capf)))))
+    :config
+    (setq lsp-headerline-breadcrumb-icons-enable nil
+          lsp-enable-file-watchers nil
+          lsp-keymap-prefix "C-c l")
+    (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
+    :custom
+    (lsp-completion-provider :none))
 
 
 ;; Corfu
-(setup (:straight corfu)
-    (:option corfu-auto nil
-             corfu-cycle t
-             corfu-preselect-first nil
-             corfu-preview-current 'insert
-             tab-always-indent 'complete)
-    (:bind-into corfu-map
-        "TAB" corfu-next
-        [tab] corfu-next
-        "S-TAB" corfu-previous
-        [backtab] corfu-previous)
-    (corfu-global-mode))
+(use-package corfu
+    :straight t
+    :init
+    (setq tab-always-indent 'complete)
+    (corfu-global-mode)
+    :bind (:map corfu-map
+                ("TAB" . corfu-next)
+                ([tab] . corfu-next)
+                ("S-TAB" . corfu-previous)
+                ([backtab] . corfu-previous))
+    :custom
+    (corfu-cycle t)
+    (corfu-auto nil)
+    (corfu-preselect-first nil)
+    (corfu-preview-current 'insert))
 
-(setup (:straight (kind-icon :type git :host github :repo "jdtsmith/kind-icon"))
-    (:load-after corfu)
-    (:option kind-icon-default-face 'corfu-default)
+(use-package kind-icon
+    :straight t
+    :after corfu
+    :custom
+    (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+    :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 
 ;; Cape
-(setup (:straight (cape :type git :host github :repo "minad/cape"))
+(use-package cape
+    :straight t
+    :init
     (add-to-list 'completion-at-point-functions #'cape-file t))
 
 
 ;; Vertico
-(setup (:straight vertico)
-    (:option vertico-cycle t)
-    (:with-hook minibuffer-setup-hook
-        (:hook (lambda ()
-                   (setq completion-in-region-function
-                         (if vertico-mode
-                                 #'consult-completion-in-region
-                             #'completion--in-region)))))
-    (vertico-mode))
+(use-package vertico
+    :straight t
+    :hook
+    ((minibuffer-setup . (lambda ()
+                             (setq completion-in-region-function
+                                   (if vertico-mode
+                                           #'consult-completion-in-region
+                                       #'completion--in-region)))))
+    :init
+    (vertico-mode)
+    :custom
+    (vertico-cycle t))
 
-(setup (:straight consult)
-    (:global "C-s" consult-line
-             "<f2>" consult-buffer
-             "C-<f2>" ibuffer))
+(use-package consult
+    :straight t
+    :bind (("C-s" . consult-line)
+           ("<f2>" . consult-buffer)
+           ("C-<f2>" . ibuffer)))
 
 
 ;; Orderless
-(setup (:straight orderless)
-    (:option completion-styles '(orderless)
-             completion-category-defaults nil
-             completion-category-overrides '((file (styles . (partial-completion))))))
+(use-package orderless
+    :straight t
+    :init
+    (setq completion-styles '(orderless)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles . (partial-completion))))))
 
 
 ;; Embark
-(setup (:straight embark)
-    (:option prefix-help-command #'embark-prefix-help-command)
-    (:global "C-." embark-act
-             "C-;" embark-dwim
-             "C-h B" embark-bindings))
+(use-package embark
+    :straight t
+    :init
+    (setq prefix-help-command #'embark-prefix-help-command)
+    :bind (("C-." . embark-act)
+           ("C-;" . embark-dwim)
+           ("C-h B" . embark-bindings)))
 
-(setup (:straight embark-consult)
-    (:load-after embark consult)
-    (:with-mode embark-collect-mode
-        (:hook consult-preview-at-point-mode)))
+(use-package embark-consult
+    :straight t
+    :demand t
+    :after (embark consult)
+    :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; Сниппеты
 (when (string-equal init/snippet-engine "tempel")
-    (setup (:straight tempel)
-        (:option tempel-path (expand-file-name
-                              "templates"
-                              (file-name-directory user-init-file)))
-        (:global "<f6>" tempel-complete
-                 "<f7>" tempel-insert
-                 "C-<f6>" tempel-done)))
+    (use-package tempel
+    :straight t
+    :custom
+    (tempel-path (expand-file-name "templates" (file-name-directory user-init-file)))
+    :bind (("<f6>" . tempel-complete)
+           ("<f7>" . tempel-insert)
+           ("C-<f6>" . tempel-done))))
 
 (when (string-equal init/snippet-engine "yasnippet")
-    (setup (:straight yasnippet)
-        (:bind-into yas-minor-mode-map
-            [(tab)] nil
-            "TAB" nil)
+    (use-package yasnippet
+        :straight t
+        :bind (:map yas-minor-mode-map
+                    ([(tab)] . nil)
+                    ("TAB" . nil))
+        :config
         (yas-global-mode 1))
 
-    (setup (:straight yasnippet-snippets))
+    (use-package yasnippet-snippets
+        :straight t)
 
-    (setup (:straight consult-yasnippet)
-        (:global "<f7>" consult-yasnippet)))
+    (use-package consult-yasnippet
+        :straight t
+        :bind (("<f7>" . consult-yasnippet))))
 
 
 (provide 'module-completion)

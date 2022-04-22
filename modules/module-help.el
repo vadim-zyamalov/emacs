@@ -12,19 +12,24 @@
 
 ;;; Code:
 
-(setup (:straight marginalia)
+(use-package marginalia
+    :straight t
+    :init
     (marginalia-mode))
 
-(setup (:straight which-key)
-    (:option which-key-idle-delay 1)
+(use-package which-key
+    :straight t
+    :config
+    (setq which-key-idle-delay 1)
     (which-key-mode))
 
-(setup (:straight helpful)
-    (:global [remap describe-function] helpful-callable
-             [remap describe-variable] helpful-variable
-             [remap describe-key] helpful-key
-             "C-h F" helpful-function
-             "C-h C" helpful-command))
+(use-package helpful
+    :straight t
+    :bind (([remap describe-function] . helpful-callable)
+           ([remap describe-variable] . helpful-variable)
+           ([remap describe-key] . helpful-key)
+           ("C-h F" . helpful-function)
+           ("C-h C" . helpful-command)))
 
 (provide 'module-help)
 ;;; module-help.el ends here

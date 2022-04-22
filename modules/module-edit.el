@@ -34,12 +34,14 @@
 
 ;; Отмена/повтор
 (if (version< emacs-version "28.1")
-        (setup (:straight undo-fu)
-            (:option undo-fu-allow-undo-in-region nil)
-            (:with-map global-map
-                (:unbind "C-z")
-                (:bind "C-z" undo-fu-only-undo
-                       "C-S-z" undo-fu-only-redo)))
+        (use-package undo-fu
+            :straight t
+            :bind (("C-_" . nil)
+                   ("C-M-_" . nil)
+                   ("C-z" . undo-fu-only-undo)
+                   ("C-S-z" . undo-fu-only-redo))
+            :custom
+            (undo-fu-allow-undo-in-region nil))
     (progn
         (define-key global-map (kbd "C-_") nil)
         (define-key global-map (kbd "C-M-_") nil)
@@ -53,10 +55,14 @@
 ;; (electric-pair-mode 1)
 (electric-indent-mode -1)
 
-(setup (:straight (smartparens :type git :host github :repo "Fuco1/smartparens"))
-    (:require smartparens-config)
-    (:bind "C-c b r" sp-rewrap-sexp
-           "C-c b d" sp-splice-sexp)
+(use-package smartparens
+    :straight (smartparens :type git :host github :repo "Fuco1/smartparens")
+    :init
+    (require 'smartparens-config)
+    :bind (:map smartparens-mode-map
+                ("C-c b r" . sp-rewrap-sexp)
+                ("C-c b d" . sp-splice-sexp))
+    :config
     (smartparens-global-mode t)
     (sp-with-modes '(tex-mode
                      latex-mode
@@ -64,8 +70,10 @@
         (sp-local-pair "<<" ">>"
                        :unless '(sp-in-math-p))))
 
-(setup (:straight rainbow-delimiters)
-    (:hook-into prog-mode org-mode))
+(use-package rainbow-delimiters
+    :straight t
+    :hook ((prog-mode . rainbow-delimiters-mode)
+           (org-mode . rainbow-delimiters-mode)))
 
 
 ;; Комментирование
@@ -83,31 +91,32 @@
 
 
 ;; Поиск/замена
-(setup (:straight visual-regexp)
-    (:require visual-regexp)
-    (:global "M-%" vr/replace
-             "C-M-%" vr/query-replace
-             "C-c v m" vr/mc-mark))
+(use-package visual-regexp
+    :straight t
+    :bind (("M-%" . vr/replace)
+           ("C-M-%" . vr/query-replace)
+           ("C-c v m" . vr/mc-mark)))
 
 
 ;; Мультикурсор
-(setup (:straight multiple-cursors)
-    (:option mc/match-cursor-style nil)
-    (:global "C-c m l" mc/edit-lines
-             "C->" mc/mark-next-like-this
-             "C-<" mc/mark-previous-like-this
-             "C-c m a" mc/mark-all-like-this))
+(use-package multiple-cursors
+    :straight t
+    :bind (("C-c m l" . mc/edit-lines)
+           ("C->" . mc/mark-next-like-this)
+           ("C-<" . mc/mark-previous-like-this)
+           ("C-c m a" . mc/mark-all-like-this))
+    :custom
+    (mc/match-cursor-style nil))
 
 
 ;; Разные полезные команды
-(setup (:straight crux)
-    (:require crux)
-    (:bind-into global-map
-        "C-c I" crux-find-user-init-file
-        "C-c d" crux-duplicate-current-line-or-region
-        "C-c M-d" crux-duplicate-and-comment-current-line-or-region
-        "S-<return>" crux-smart-open-line
-        "C-S-<return>" crux-smart-open-line-above))
+(use-package crux
+    :straight t
+    :bind (("C-c I".  crux-find-user-init-file)
+           ("C-c d" . crux-duplicate-current-line-or-region)
+           ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
+           ("S-<return>" . crux-smart-open-line)
+           ("C-S-<return>" . crux-smart-open-line-above)))
 
 (provide 'module-edit)
 ;;; module-edit.el ends here

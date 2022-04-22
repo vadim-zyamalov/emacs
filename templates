@@ -72,7 +72,7 @@ latex-mode
           "\\renewcommand\\insertsectionnumber{\\Alph{section}}" n
           "\\appendix")
 
-lisp-mode emacs-lisp-mode
+lisp-mode emacs-lisp-mode lisp-interaction-mode
 
 (lambda "(lambda (" p ")" n>
     r> ")")

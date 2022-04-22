@@ -18,9 +18,8 @@
     "Equals t if emacs works on Windows host system."
     (memq system-type '(cygwin windows-nt ms-dos)))
 
-(setup encoding
-    (prefer-coding-system 'utf-8)
-    (set-language-environment "utf-8"))
+(prefer-coding-system 'utf-8)
+(set-language-environment "utf-8")
 
 (fset 'yes-or-no-p 'y-or-n-p)
 
@@ -32,22 +31,26 @@
 
 
 ;; Сохранение позиции в посещенных файлах
-(setup saveplace
-    (:option save-place-file (expand-file-name
-                              (format "%s/var/%s"
-                                      user-emacs-directory
-                                      "save-place.el")))
-    (save-place-mode t))
+(use-package saveplace
+    :config
+    (save-place-mode t)
+    :custom
+    (save-place-file (expand-file-name
+                      (format "%s/var/%s"
+                              user-emacs-directory
+                              "save-place.el"))))
 
 
 ;; Сохранение истории
-(setup savehist
-    (:option history-delete-duplicates t
-             savehist-file (expand-file-name
-                            (format "%s/var/%s"
-                                    user-emacs-directory
-                                    "savehist.el")))
-    (savehist-mode t))
+(use-package savehist
+    :config
+    (savehist-mode t)
+    :custom
+    (history-delete-duplicates t)
+    (savehist-file (expand-file-name
+                    (format "%s/var/%s"
+                            user-emacs-directory
+                            "savehist.el"))))
 
 
 ;; Ускорение
@@ -57,14 +60,18 @@
 
 
 ;; Настройка работы сборщика мусора
-(setup (:straight gcmh)
+(use-package gcmh
+    :straight t
+    :config
     (gcmh-mode t))
 
 
 ;; Очистка мусора в файлах
-(setup (:straight no-littering)
-    (setq auto-save-file-name-transforms
-          `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+(use-package no-littering
+    :straight t
+    :custom
+    (auto-save-file-name-transforms
+     `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (setq create-lockfiles nil)
 
@@ -72,8 +79,9 @@
 ;; Управление файлами
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
 
-(setup dired
-    (:option dired-recursive-deletes 'top))
+(use-package dired
+    :config
+    (setq dired-recursive-deletes 'top))
 
 (add-hook 'before-save-hook
           (lambda ()
