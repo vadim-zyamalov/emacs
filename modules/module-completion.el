@@ -14,6 +14,9 @@
 ;; https://github.com/minad/consult
 ;; https://github.com/oantolin/embark
 ;; https://github.com/minad/tempel
+;; https://github.com/joaotavora/yasnippet
+;; https://github.com/AndreaCrotti/yasnippet-snippets
+;; https://github.com/mohkale/consult-yasnippet
 
 ;;; Code:
 

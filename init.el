@@ -8,7 +8,7 @@
 ;; Большой файл с настройками постепенно становится тяжело читаемым.
 
 ;;; Code:
-(defconst init/snippet-engine "tempel"
+(defconst init/snippet-engine "yasnippet"
          "Snippet engine to use.")
 
 (require 'module-setup)
