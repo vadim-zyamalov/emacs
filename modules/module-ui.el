@@ -43,14 +43,14 @@
     :config
     (nyan-mode))
 
-;; (use-package doom-modeline
-;;     :straight t
-;;     :hook (after-init . doom-modeline-mode)
-;;     :config
-;;     (minions-mode t)
-;;     :custom
-;;     (doom-modeline-height 24)
-;;     (doom-modeline-minor-modes t))
+(use-package doom-modeline
+    :straight t
+    :hook (after-init . doom-modeline-mode)
+    :config
+    (minions-mode t)
+    :custom
+    (doom-modeline-height 24)
+    (doom-modeline-minor-modes t))
 
 
 ;; Стартовый экран
