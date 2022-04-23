@@ -248,6 +248,7 @@ to the LaTeX table."
           reftex-plug-into-AUCTeX t)
     :custom
     (preview-pdf-color-adjust-method t)
+    (TeX-newline-function 'reindent-then-newline-and-indent)
     (bibtex-dialect 'biblatex)
     (reftex-cite-format '((?\C-m . "\\cite[]{%l}")
 	                      (?a . "\\autocite[]{%l}")
