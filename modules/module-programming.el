@@ -33,12 +33,11 @@
 (use-package markdown-mode
     :straight t
     :commands (markdown-mode gfm-mode)
-    :init
-    (setq markdown-command "multimarkdown")
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode))
     :custom
+    (markdown-command "multimarkdown")
     (markdown-fontify-code-blocks-natively t))
 
 
@@ -242,11 +241,10 @@ to the LaTeX table."
     :hook (((TeX-mode LaTeX-mode) . lsp)
            ((TeX-mode LaTeX-mode) . auctex/latexmk)
            ((TeX-mode LaTeX-mode) . turn-on-reftex))
-    :config
-    (setq reftex-cite-prompt-optional-args t
-          LaTeX-reftex-cite-format-auto-activate nil
-          reftex-plug-into-AUCTeX t)
     :custom
+    (reftex-cite-prompt-optional-args t)
+    (LaTeX-reftex-cite-format-auto-activate nil)
+    (reftex-plug-into-AUCTeX t)
     (preview-pdf-color-adjust-method t)
     (TeX-newline-function 'reindent-then-newline-and-indent)
     (bibtex-dialect 'biblatex)

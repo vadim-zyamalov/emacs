@@ -20,8 +20,9 @@
 (use-package which-key
     :straight t
     :config
-    (setq which-key-idle-delay 1)
-    (which-key-mode))
+    (which-key-mode)
+    :custom
+    (which-key-idle-delay 1))
 
 (use-package helpful
     :straight t

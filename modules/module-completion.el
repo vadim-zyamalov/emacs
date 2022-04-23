@@ -45,19 +45,18 @@
                                           (lsp/non-greedy-lsp-mode)
                                           (lsp/extra-capf)))))
     :config
-    (setq lsp-headerline-breadcrumb-icons-enable nil
-          lsp-enable-file-watchers nil
-          lsp-keymap-prefix "C-c l")
     (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
     :custom
-    (lsp-completion-provider :none))
+    (lsp-completion-provider :none)
+    (lsp-headerline-breadcrumb-icons-enable nil)
+    (lsp-enable-file-watchers nil)
+    (lsp-keymap-prefix "C-c l"))
 
 
 ;; Corfu
 (use-package corfu
     :straight t
     :init
-    (setq tab-always-indent 'complete)
     (corfu-global-mode)
     :bind (:map corfu-map
                 ("TAB" . corfu-next)
@@ -68,7 +67,8 @@
     (corfu-cycle t)
     (corfu-auto nil)
     (corfu-preselect-first nil)
-    (corfu-preview-current 'insert))
+    (corfu-preview-current 'insert)
+    (tab-always-indent 'complete))
 
 (use-package kind-icon
     :straight t
@@ -110,10 +110,10 @@
 ;; Orderless
 (use-package orderless
     :straight t
-    :init
-    (setq completion-styles '(orderless)
-          completion-category-defaults nil
-          completion-category-overrides '((file (styles . (partial-completion))))))
+    :custom
+    (completion-styles '(orderless))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles . (partial-completion))))))
 
 
 ;; Embark

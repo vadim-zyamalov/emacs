@@ -80,8 +80,8 @@
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
 
 (use-package dired
-    :config
-    (setq dired-recursive-deletes 'top))
+    :custom
+    (dired-recursive-deletes 'top))
 
 (add-hook 'before-save-hook
           (lambda ()
