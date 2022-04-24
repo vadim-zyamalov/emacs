@@ -114,6 +114,12 @@
                      (slot . -1)
                      (window-width . 0.33)
                      (reusable-frames . nil))
+                    ("^\\*R view"
+                     (display-buffer-reuse-window display-buffer-in-side-window)
+                     (side . right)
+                     (slot . 1)
+                     (window-width . 0.33)
+                     (reusable-frames . nil))
                     ("^\\*R"
                      (display-buffer-reuse-window display-buffer-in-side-window)
                      (side . right)
