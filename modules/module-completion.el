@@ -57,7 +57,7 @@
 (use-package corfu
     :straight t
     :init
-    (corfu-global-mode)
+    (global-corfu-mode)
     :bind (:map corfu-map
                 ("TAB" . corfu-next)
                 ([tab] . corfu-next)
