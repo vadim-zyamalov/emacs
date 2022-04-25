@@ -33,9 +33,9 @@
 (use-package markdown-mode
     :straight t
     :commands (markdown-mode gfm-mode)
-    :mode (("README\\.md\\'" . gfm-mode)
-           ("\\.md\\'" . markdown-mode)
-           ("\\.markdown\\'" . markdown-mode))
+    :mode (("README\\.md$" . gfm-mode)
+           ("\\.md$" . markdown-mode)
+           ("\\.markdown$" . markdown-mode))
     :custom
     (markdown-command "multimarkdown")
     (markdown-fontify-code-blocks-natively t))
@@ -100,10 +100,19 @@
 
 
 ;; Emacs Speaks Statistics --- ESS
+(defun ess/R-layout ()
+    "Open and arrange buffers for R."
+    (interactive)
+    (progn
+        (run-ess-r-newest)
+        (switch-to-buffer "*R*")
+        (ess-rdired)))
+
 (use-package ess
     :straight t
     :mode (("\\.R$" . ess-r-mode)
            ("\\.do$" . ess-stata-mode))
+    :hook ((ess-r-mode . my/R-layout))
     :init
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
