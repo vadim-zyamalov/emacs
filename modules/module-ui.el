@@ -149,7 +149,10 @@
     (zoom-size '(0.618 . 0.618))
     (zoom-ignored-major-modes '(ess-r-mode
                                 inferior-ess-r-mode
-                                ess-rdired-mode)))
+                                ess-rdired-mode))
+    (zoom-ignored-buffer-names '("*R*"
+                                 "*R dired*"
+                                 "*R view*")))
 
 (use-package dimmer
     :straight t
