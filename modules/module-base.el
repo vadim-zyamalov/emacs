@@ -10,13 +10,13 @@
 ;;; Code:
 
 (defconst ensure/is64
-    "Equals t if emacs works on 64-bit system."
     (not (null
-          (string-match "^x86_64-.*" system-configuration))))
+          (string-match "^x86_64-.*" system-configuration)))
+    "Equals t if Emacs works on 64-bit system.")
 
 (defconst ensure/isWindows
-    "Equals t if emacs works on Windows host system."
-    (memq system-type '(cygwin windows-nt ms-dos)))
+    (memq system-type '(cygwin windows-nt ms-dos))
+    "Equals t if Emacs works on Windows host system.")
 
 (prefer-coding-system 'utf-8)
 (set-language-environment "utf-8")
