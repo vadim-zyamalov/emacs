@@ -33,21 +33,16 @@
 
 
 ;; Отмена/повтор
-(if (version< emacs-version "28.1")
-        (use-package undo-fu
-            :straight t
-            :bind (("C-_" . nil)
-                   ("C-M-_" . nil)
-                   ("C-z" . undo-fu-only-undo)
-                   ("C-S-z" . undo-fu-only-redo))
-            :custom
-            (undo-fu-allow-undo-in-region nil))
-    (progn
-        (define-key global-map (kbd "C-_") nil)
-        (define-key global-map (kbd "C-M-_") nil)
-        (define-key global-map (kbd "C-z") nil)
-        (define-key global-map (kbd "C-z") 'undo-only)
-        (define-key global-map (kbd "C-S-z") 'undo-redo)))
+(use-package undo-fu
+    :straight t
+    :bind (("C-_" . nil)
+           ("C-M-_" . nil)
+           ("C-z" . undo-fu-only-undo)
+           ("C-S-z" . undo-fu-only-redo)
+           :map cua--cua-keys-keymap
+           ("C-z" . undo-fu-only-undo))
+    :custom
+    (undo-fu-allow-undo-in-region nil))
 
 
 ;; Скобки

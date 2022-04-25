@@ -51,7 +51,6 @@
 (setq cua-keep-region-after-copy t)
 (cua-mode t)
 (transient-mark-mode t)
-(define-key cua--cua-keys-keymap (kbd "C-z") 'undo-only)
 
 (provide 'module-input)
 ;;; module-input.el ends here
