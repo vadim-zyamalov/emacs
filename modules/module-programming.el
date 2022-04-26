@@ -100,19 +100,11 @@
 
 
 ;; Emacs Speaks Statistics --- ESS
-(defun ess/R-layout ()
-    "Open and arrange buffers for R."
-    (interactive)
-    (progn
-        (run-ess-r-newest)
-        (switch-to-buffer "*R*")
-        (ess-rdired)))
-
 (use-package ess
     :straight t
     :mode (("\\.R$" . ess-r-mode)
            ("\\.do$" . ess-stata-mode))
-    :hook ((ess-r-mode . my/R-layout))
+    :hook ((ess-r-post-run . ess-rdired))
     :init
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
