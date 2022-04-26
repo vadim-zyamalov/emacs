@@ -203,38 +203,46 @@
     "Convert table delimited by DELIM (usually copy-pasted from Excel)
 to the LaTeX table."
     (interactive "sEnter delimiter (TAB by default): ")
-    (when (string-empty-p delim)
+    (when (string= delim "")
         (setq delim "\t"))
     (save-restriction
-        (when (region-active-p)
-            (narrow-to-region
-             (region-beginning)
-             (if (and (= (region-end) (line-end-position))
-                      (/= (region-end) (line-beginning-position))
-                      (/= (region-end) (point-max)))
-                     (1+ (region-end))
-                 (region-end))))
-        (save-excursion
-            (goto-char (point-min))
-            (while (search-forward-regexp delim nil t)
-                (replace-match " & " nil nil))
-            (goto-char (point-min))
-            (while (search-forward-regexp "\n" nil t)
-                (replace-match " \\\\\\\\\n" nil nil)))))
+        (if (region-active-p)
+                (let ((beg (region-beginning))
+                      (end (region-end)))
+                    (progn
+                        (save-excursion
+                            (goto-char end)
+                            (narrow-to-region
+                             beg
+                             (if (and (= end (line-end-position))
+                                      (/= end (line-beginning-position))
+                                      (/= end (point-max)))
+                                     (1+ end)
+                                 end))
+                            (goto-char (point-min))
+                            (while (search-forward-regexp delim nil t)
+                                (replace-match " & " nil nil))
+                            (goto-char (point-min))
+                            (while (search-forward-regexp "\n" nil t)
+                                (replace-match " \\\\\\\\\n" nil nil)))))
+            (message "Select any delimited region to proceed!"))))
 
 (defun auctex/table-align ()
     "Align LaTeX table by its inner delimeters."
     (interactive)
     (save-restriction
-        (when (region-active-p)
+        (save-excursion
+            (unless (region-active-p)
+                (mark-paragraph)
+                (forward-line)
+                (goto-char (line-beginning-position)))
             (narrow-to-region
              (region-beginning)
              (if (and (= (region-end) (line-end-position))
                       (/= (region-end) (line-beginning-position))
                       (/= (region-end) (point-max)))
                      (1+ (region-end))
-                 (region-end))))
-        (save-excursion
+                 (region-end)))
             (goto-char (point-min))
             (while (search-forward-regexp "[ ]*&[ ]*" nil t)
                 (replace-match " & " nil nil)))
