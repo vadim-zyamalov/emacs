@@ -225,9 +225,23 @@ to the LaTeX table."
     (save-restriction
         (save-excursion
             (unless (region-active-p)
-                (mark-paragraph)
-                (forward-line)
-                (goto-char (line-beginning-position)))
+                (if (equal major-mode 'latex-mode)
+                        (LaTeX-mark-environment)
+                    (mark-paragraph))
+                (let ((beg (save-excursion
+                               (goto-char (region-beginning))
+                               (forward-line)
+                               (line-beginning-position)))
+                      (end (if (equal major-mode 'latex-mode)
+                                   (save-excursion
+                                       (goto-char (region-end))
+                                       (forward-line (if (equal (point) (line-end-position))
+                                                             -1
+                                                         -2))
+                                       (line-end-position))
+                               (region-end))))
+                    (set-mark beg)
+                    (goto-char end)))
             (narrow-to-region
              (region-beginning)
              (if (and (= (region-end) (line-end-position))
