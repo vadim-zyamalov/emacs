@@ -191,6 +191,45 @@
        :help "Make the file using latexmk.")
      TeX-command-list))
 
+(defun my/region-or-env-or-paragraph ()
+    "Produce region from LaTeX environment or paragraph if no any already."
+    (unless (region-active-p)
+        (if (equal major-mode 'latex-mode)
+                (LaTeX-mark-environment)
+            (mark-paragraph))
+        (let ((beg (save-excursion
+                       (goto-char (region-beginning))
+                       (forward-line)
+                       (line-beginning-position)))
+              (end (if (equal major-mode 'latex-mode)
+                           (save-excursion
+                               (goto-char (region-end))
+                               (forward-line (if (equal (point) (line-end-position))
+                                                     -1
+                                                 -2))
+                               (line-end-position))
+                       (region-end))))
+            (set-mark beg)
+            (goto-char end))))
+
+(defun my/region-expand-one-char ()
+    "Add extra char to the end of region if possible."
+    (if (and (= (region-end) (line-end-position))
+             (/= (region-end) (line-beginning-position))
+             (/= (region-end) (point-max)))
+            (1+ (region-end))
+        (region-end)))
+
+(defun my/point-add-one-char (end)
+    "Add new line if END is the last char and not at line-beginning."
+    (interactive "r")
+    (save-excursion
+        (goto-char end)
+        (if (and (equal end (point-max))
+                 (equal end (line-end-position))
+                 (not (equal end (line-beginning-position))))
+                (insert "\n"))))
+
 (defun auctex/table-format (delim)
     "Convert table delimited by DELIM (usually copy-pasted from Excel)
 to the LaTeX table."
@@ -198,57 +237,30 @@ to the LaTeX table."
     (when (string= delim "")
         (setq delim "\t"))
     (save-restriction
-        (if (region-active-p)
-                (let ((beg (region-beginning))
-                      (end (region-end)))
-                    (progn
-                        (save-excursion
-                            (goto-char end)
-                            (narrow-to-region
-                             beg
-                             (if (and (= end (line-end-position))
-                                      (/= end (line-beginning-position))
-                                      (/= end (point-max)))
-                                     (1+ end)
-                                 end))
-                            (goto-char (point-min))
-                            (while (search-forward-regexp delim nil t)
-                                (replace-match " & " nil nil))
-                            (goto-char (point-min))
-                            (while (search-forward-regexp "\n" nil t)
-                                (replace-match " \\\\\\\\\n" nil nil)))))
-            (message "Select any delimited region to proceed!"))))
+        (save-excursion
+            (my/region-or-env-or-paragraph)
+            (my/point-add-one-char (region-end))
+            (narrow-to-region
+             (region-beginning)
+             (my/region-expand-one-char))
+            (goto-char (point-min))
+            (while (search-forward-regexp delim nil t)
+                (replace-match " & " nil nil))
+            (goto-char (point-min))
+            (while (search-forward-regexp "\n" nil t)
+                (replace-match " \\\\\\\\\n" nil nil)))))
+
 
 (defun auctex/table-align ()
     "Align LaTeX table by its inner delimeters."
     (interactive)
     (save-restriction
         (save-excursion
-            (unless (region-active-p)
-                (if (equal major-mode 'latex-mode)
-                        (LaTeX-mark-environment)
-                    (mark-paragraph))
-                (let ((beg (save-excursion
-                               (goto-char (region-beginning))
-                               (forward-line)
-                               (line-beginning-position)))
-                      (end (if (equal major-mode 'latex-mode)
-                                   (save-excursion
-                                       (goto-char (region-end))
-                                       (forward-line (if (equal (point) (line-end-position))
-                                                             -1
-                                                         -2))
-                                       (line-end-position))
-                               (region-end))))
-                    (set-mark beg)
-                    (goto-char end)))
+            (my/region-or-env-or-paragraph)
+            (my/point-add-one-char (region-end))
             (narrow-to-region
              (region-beginning)
-             (if (and (= (region-end) (line-end-position))
-                      (/= (region-end) (line-beginning-position))
-                      (/= (region-end) (point-max)))
-                     (1+ (region-end))
-                 (region-end)))
+             (my/region-expand-one-char))
             (goto-char (point-min))
             (while (search-forward-regexp "[ ]*&[ ]*" nil t)
                 (replace-match " & " nil nil)))
