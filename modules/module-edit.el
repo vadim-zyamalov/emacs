@@ -48,7 +48,7 @@
 ;; Скобки
 (show-paren-mode t)
 ;; (electric-pair-mode 1)
-(electric-indent-mode -1)
+(electric-indent-mode t)
 
 (use-package smartparens
     :straight (smartparens :type git :host github :repo "Fuco1/smartparens")

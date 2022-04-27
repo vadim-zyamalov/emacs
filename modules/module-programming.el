@@ -104,7 +104,8 @@
     :straight t
     :mode (("\\.R$" . ess-r-mode)
            ("\\.do$" . ess-stata-mode))
-    :hook ((ess-r-post-run . ess-rdired))
+    :hook ((ess-r-mode . lsp)
+           (ess-r-post-run . ess-rdired))
     :init
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
