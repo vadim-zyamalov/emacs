@@ -10,7 +10,7 @@
 ;;; Code:
 (straight-use-package 'use-package)
 
-(defconst init/snippet-engine "tempel"
+(defconst init/snippet-engine "yasnippet"
          "Snippet engine to use.")
 
 ;; (require 'module-setup)
