@@ -55,6 +55,7 @@
 
 ;; Ускорение
 (add-hook 'emacs-startup-hook (lambda ()
+                                  (setq gc-cons-threshold (* 64 1024 1024))
                                   (setq file-name-handler-alist file-name-handler-alist-original)
                                   (makunbound 'file-name-handler-alist-original)))
 
@@ -63,7 +64,9 @@
 (use-package gcmh
     :straight t
     :config
-    (gcmh-mode t))
+    (gcmh-mode t)
+    :custom
+    (gcmh-verbose t))
 
 
 ;; Очистка мусора в файлах
