@@ -58,7 +58,8 @@
 
 ;; Настройка работы сборщика мусора
 (setup (:straight gcmh)
-    (:option gcmh-verbose t)
+    (:option gcmh-verbose t
+             gcmh-low-cons-threshold (* 8 1024 1024))
     (gcmh-mode t))
 
 
