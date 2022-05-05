@@ -15,16 +15,13 @@
 ;;; Code:
 
 ;; Тема
-(use-package doom-themes
-    :straight t
-    :config
+(setup (:straight doom-themes)
+    (:option doom-themes-bold t
+             doom-themes-enable-italic t)
     (doom-themes-visual-bell-config)
     (doom-themes-neotree-config)
     (doom-themes-org-config)
-    (load-theme 'doom-one t)
-    :custom
-    (doom-themes-bold t)
-    (doom-themes-enable-italic t))
+    (load-theme 'doom-one t))
 
 
 ;; Шрифты
@@ -36,9 +33,7 @@
 ;; Поддержка лигатур
 ;; Для шрифтов без их поддержки неактуально
 (unless (version< emacs-version "28.1")
-    (use-package ligature
-        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
-        :config
+    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
         (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
                                              "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
                                              "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
@@ -56,12 +51,11 @@
 ;; Иконки
 (when (display-graphic-p)
     (progn
-        (use-package all-the-icons :straight t)
-        (use-package all-the-icons-completion
-            :straight t
-            :after (marginalia all-the-icons)
-            :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-            :config
+        (setup (:straight all-the-icons))
+        (setup (:straight all-the-icons-completion)
+            (:load-after marginalia all-the-icons)
+            (:with-hook marginalia-mode-hook
+                (:hook all-the-icons-completion-marginalia-setup))
             (all-the-icons-completion-mode))))
 
 (provide 'module-themes)

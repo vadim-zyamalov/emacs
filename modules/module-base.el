@@ -31,50 +31,41 @@
 
 
 ;; Сохранение позиции в посещенных файлах
-(use-package saveplace
-    :config
-    (save-place-mode t)
-    :custom
-    (save-place-file (expand-file-name
-                      (format "%s/var/%s"
-                              user-emacs-directory
-                              "save-place.el"))))
+(setup saveplace
+    (:option save-place-file (expand-file-name
+                              (format "%s/var/%s"
+                                      user-emacs-directory
+                                      "save-place.el")))
+    (save-place-mode t))
 
 
 ;; Сохранение истории
-(use-package savehist
-    :config
-    (savehist-mode t)
-    :custom
-    (history-delete-duplicates t)
-    (savehist-file (expand-file-name
-                    (format "%s/var/%s"
-                            user-emacs-directory
-                            "savehist.el"))))
+(setup savehist
+    (:option history-delete-duplicates t
+             savehist-file (expand-file-name
+                            (format "%s/var/%s"
+                                    user-emacs-directory
+                                    "savehist.el")))
+    (savehist-mode t))
 
 
 ;; Ускорение
 (add-hook 'emacs-startup-hook (lambda ()
-                                  (setq gc-cons-threshold (* 64 1024 1024))
+                                  (setq gc-cons-threshold (* 8 1024 1024))
                                   (setq file-name-handler-alist file-name-handler-alist-original)
                                   (makunbound 'file-name-handler-alist-original)))
 
 
 ;; Настройка работы сборщика мусора
-(use-package gcmh
-    :straight t
-    :config
-    (gcmh-mode t)
-    :custom
-    (gcmh-verbose t))
+(setup (:straight gcmh)
+    (:option gcmh-verbose t)
+    (gcmh-mode t))
 
 
 ;; Очистка мусора в файлах
-(use-package no-littering
-    :straight t
-    :custom
-    (auto-save-file-name-transforms
-     `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+(setup (:straight no-littering)
+    (setq auto-save-file-name-transforms
+          `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (setq create-lockfiles nil)
 
@@ -82,9 +73,8 @@
 ;; Управление файлами
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
 
-(use-package dired
-    :custom
-    (dired-recursive-deletes 'top))
+(setup dired
+    (:option dired-recursive-deletes 'top))
 
 (add-hook 'before-save-hook
           (lambda ()

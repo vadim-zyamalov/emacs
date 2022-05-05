@@ -13,32 +13,26 @@
 ;;; Code:
 
 ;; Projectile
-(use-package projectile
-    :straight t
-    :bind (("C-c p" . projectile-command-map))
-    :config
-    (projectile-mode t)
-    :custom
-    (projectile-completion-system 'default))
+(setup (:straight projectile)
+    (:option projectile-completion-system 'default)
+    (:bind "C-c p" projectile-command-map)
+    (projectile-mode t))
 
 
 ;; Flycheck
-(use-package flycheck
-    :straight t
-    :config
+(setup (:straight flycheck)
     (global-flycheck-mode))
 
 
 ;; Markdown
-(use-package markdown-mode
-    :straight t
-    :commands (markdown-mode gfm-mode)
-    :mode (("README\\.md$" . gfm-mode)
-           ("\\.md$" . markdown-mode)
-           ("\\.markdown$" . markdown-mode))
-    :custom
-    (markdown-command "multimarkdown")
-    (markdown-fontify-code-blocks-natively t))
+(setup (:straight markdown-mode)
+    (:with-mode gfm-mode
+        (:file-match "README\\.md\\'"))
+    (:with-mode markdown-mode
+        (:file-match "\\.md\\'"
+                     "\\.markdown\\'"))
+    (:option markdown-fontify-code-blocks-natively t
+             markdown-command "multimarkdown"))
 
 
 ;; Org-mode
@@ -46,39 +40,34 @@
     (modify-syntax-entry ?< "." org-mode-syntax-table)
     (modify-syntax-entry ?> "." org-mode-syntax-table))
 
-(use-package org
-    :hook ((org-mode . org-indent-mode)
-           (org-mode . my/angle-brackets-fix))
-    :custom
-    (org-edit-src-content-indentation 0)
-    (org-src-preserve-indentation nil)
-    (org-src-fontify-natively t)
-    (org-src-tab-acts-natively t)
-    (org-return-follows-link t)
-    (org-mouse-1-follows-link t)
-    (org-descriptive-links t)
-    (org-hide-emphasis-markers t)
-    (org-support-shift-select t)
-    (org-babel-do-load-languages 'org-babel-load-languages
-                                 '((emacs-lisp . t)
-                                   (python . t)
-                                   (lua . t)
-                                   (haskell . t)
-                                   (shell . t))))
+(setup (:straight org)
+    (:option org-edit-src-content-indentation 0
+             org-src-preserve-indentation nil
+             org-src-fontify-natively t
+             org-src-tab-acts-natively t
+             org-return-follows-link t
+             org-mouse-1-follows-link t
+             org-descriptive-links t
+             org-hide-emphasis-markers t
+             org-support-shift-select t)
+    (org-babel-do-load-languages
+     'org-babel-load-languages '((emacs-lisp . t)
+                                 (python . t)
+                                 (lua . t)
+                                 (haskell . t)
+                                 (shell . t)))
+    (:hook org-indent-mode
+           my/angle-brackets-fix))
 
-(use-package edit-indirect
-    :straight t)
+(setup (:straight edit-indirect))
 
-(use-package org-bullets
-    :straight t
-    :after org
-    :hook (org-mode . org-bullets-mode)
-    :custom
-    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+(setup (:straight org-bullets)
+    (:load-after org)
+    (:option org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●"))
+    (:hook-into org-mode))
 
-(use-package org-tempo
-    :after org
-    :config
+(setup org-tempo
+    (:load-after org)
     (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
     (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
@@ -86,27 +75,18 @@
     (add-to-list 'org-structure-template-alist '("py" . "src python"))
     (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
 
-(use-package toc-org
-    :straight t
-    :after org
-    :hook (org-mode . toc-org-mode))
+(setup (:straight toc-org)
+    (:load-after org)
+    (:hook-into org-mode))
 
-(use-package org-appear
-    :straight (org-appear :type git :host github :repo "awth13/org-appear")
-    :hook (org-mode . org-appear-mode)
-    :custom
-    (org-appear-autolinks t)
-    (org-appear-autosubmarkers t))
+(setup (:straight (org-appear :type git :host github :repo "awth13/org-appear"))
+    (:option org-appear-autolinks t
+             org-appear-autosubmarkers t)
+    (:hook-into org-mode))
 
 
 ;; Emacs Speaks Statistics --- ESS
-(use-package ess
-    :straight t
-    :mode (("\\.R$" . ess-r-mode)
-           ("\\.do$" . ess-stata-mode))
-    :hook ((ess-r-mode . lsp)
-           (ess-r-post-run . ess-rdired))
-    :init
+(setup (:straight ess)
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
     (setq display-buffer-alist
@@ -128,7 +108,14 @@
                      (slot . 1)
                      (window-width . 0.33)
                      (reusable-frames . nil)))
-                  display-buffer-alist)))
+                  display-buffer-alist))
+    (:with-mode ess-r-mode
+        (:file-match "\\.R$")
+        (:hook lsp)
+        (:with-hook ess-r-post-run-hook
+            (:hook ess-dired)))
+    (:with-mode ess-stata-mode
+        (:file-match "\\.do$")))
 
 
 ;; Python
@@ -138,22 +125,16 @@
           (append completion-at-point-functions
                   (list 'cape-file))))
 
-(use-package python-mode
-    :init
-    (use-package lsp-pyright
-        :straight t)
-    :hook (python-mode . lsp)
-    :custom
-    (python-shell-interpreter "python3"))
+(setup python
+    (:straight lsp-pyright)
+    (:option python-shell-interpreter "python3")
+    (:hook lsp))
 
 
 ;; Lua
-(use-package lua-mode
-    :straight t
-    :mode "\\.lua$"
-    :interpreter "lua"
-    :custom
-    (lua-indent-level 4))
+(setup (:straight lua-mode)
+    (:file-match "\\.lua$")
+    (:option lua-indent-level 4))
 
 
 ;; LaTeX
@@ -270,34 +251,35 @@ to the LaTeX table."
         (align-regexp (point-min) (point-max) "\\(\\s-*\\)\\\\\\\\"
                       1 1 t)))
 
-(use-package auctex
-    :straight t
-    :mode ("\\.tex$" . latex-mode)
-    :init
-    (use-package company-reftex
-        :straight t)
-    (use-package company-auctex
-        :straight t)
-    (use-package company-math
-        :straight t)
-    :hook (((TeX-mode LaTeX-mode) . lsp)
-           ((TeX-mode LaTeX-mode) . auctex/latexmk)
-           ((TeX-mode LaTeX-mode) . turn-on-reftex))
-    :custom
-    (reftex-cite-prompt-optional-args t)
-    (LaTeX-reftex-cite-format-auto-activate nil)
-    (reftex-plug-into-AUCTeX t)
-    (preview-pdf-color-adjust-method t)
-    (TeX-newline-function 'reindent-then-newline-and-indent)
-    (bibtex-dialect 'biblatex)
-    (reftex-cite-format '((?\C-m . "\\cite[]{%l}")
-	                      (?a . "\\autocite[]{%l}")
-                          (?p . "\\parencite[]{%l}")
-                          (?f . "\\footcite[][]{%l}")
-                          (?t . "\\textcite[]{%l}")
-                          (?o . "\\citepr[]{%l}")
-	                      (?F . "\\fullcite[]{%l}")
-                          (?n . "\\nocite{%l}"))))
+(setup (:straight auctex))
+
+(setup (:straight company-reftex)
+    (:load-after auctex))
+
+(setup (:straight company-auctex)
+    (:load-after auctex))
+
+(setup (:straight company-math)
+    (:load-after auctex))
+
+(setup LaTeX
+    (:option preview-pdf-color-adjust-method t
+             preview-auto-cache-preamble t
+             bibtex-dialect 'biblatex
+             reftex-cite-format '((?\C-m . "\\cite[]{%l}")
+                                  (?a . "\\autocite[]{%l}")
+                                  (?p . "\\parencite[]{%l}")
+                                  (?f . "\\footcite[][]{%l}")
+                                  (?t . "\\textcite[]{%l}")
+                                  (?o . "\\citepr[]{%l}")
+                                  (?F . "\\fullcite[]{%l}")
+                                  (?n . "\\nocite{%l}"))
+             reftex-cite-prompt-optional-args t
+             LaTeX-reftex-cite-format-auto-activate nil
+             reftex-plug-into-AUCTeX t)
+    (:hook lsp
+           auctex/latexmk
+           turn-on-reftex))
 
 (provide 'module-programming)
 ;;; module-programming.el ends here
