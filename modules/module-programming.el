@@ -113,7 +113,7 @@
         (:file-match "\\.R$")
         (:hook lsp)
         (:with-hook ess-r-post-run-hook
-            (:hook ess-dired)))
+            (:hook ess-rdired)))
     (:with-mode ess-stata-mode
         (:file-match "\\.do$")))
 
