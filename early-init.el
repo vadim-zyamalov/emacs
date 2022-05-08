@@ -4,7 +4,7 @@
 ;; Файл с настройками, применяемыми на раннем этапе, т. е. до основной инициализации.
 
 ;;; Code:
-(setq gc-cons-threshold (* 1024 1024 1024)
+(setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 0.6)
 
 (defvar file-name-handler-alist-original file-name-handler-alist)
