@@ -110,12 +110,19 @@
                      (reusable-frames . nil)))
                   display-buffer-alist))
     (:with-mode ess-r-mode
+        (setq-local fill-column 80)
         (:file-match "\\.R$")
-        (:hook lsp)
+        (:hook lsp
+               (lambda ()
+                   (setq-local fill-column 80)
+                   (display-fill-column-indicator-mode)))
         (:with-hook ess-r-post-run-hook
             (:hook ess-rdired)))
     (:with-mode ess-stata-mode
-        (:file-match "\\.do$")))
+        (:file-match "\\.do$")
+        (:hook (lambda ()
+                   (setq-local fill-column 80)
+                   (display-fill-column-indicator-mode)))))
 
 
 ;; Python
@@ -128,7 +135,10 @@
 (setup python
     (:straight lsp-pyright)
     (:option python-shell-interpreter "python3")
-    (:hook lsp))
+    (:hook lsp
+           (lambda ()
+               (setq-local fill-column 80)
+               (display-fill-column-indicator-mode))))
 
 
 ;; Lua
