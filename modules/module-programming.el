@@ -87,6 +87,7 @@
 
 ;; Emacs Speaks Statistics --- ESS
 (setup (:straight ess)
+    (:option flycheck-lintr-linters "default_linters[-which(names(default_linters)==\"object_camel_case_linter\")]")
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
     (setq display-buffer-alist
