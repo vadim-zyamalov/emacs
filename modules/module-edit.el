@@ -80,6 +80,10 @@
 
 
 ;; Поиск/замена
+(setup (:straight ctrlf)
+    (:option ctrlf-auto-recenter t)
+    (ctrlf-mode t))
+
 (setup (:straight visual-regexp)
     (:require visual-regexp)
     (:global "M-%" vr/replace

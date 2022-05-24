@@ -88,9 +88,9 @@
     (vertico-mode))
 
 (setup (:straight consult)
-    (:global "C-s" consult-line
-             "<f2>" consult-buffer
+    (:global "<f2>" consult-buffer
              "C-<f2>" ibuffer))
+;;"C-s" consult-line
 
 
 ;; Orderless
