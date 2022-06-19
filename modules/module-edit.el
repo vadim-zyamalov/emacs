@@ -34,7 +34,9 @@
 
 ;; Отмена/повтор
 (setup (:straight undo-fu)
-    (:option undo-fu-allow-undo-in-region nil)
+    (:require undo-fu)
+    (:option undo-fu-allow-undo-in-region nil
+             undo-fu-ignore-keyboard-quit t)
     (:with-map global-map
         (:unbind "C-z"
                  "C-_"

@@ -27,7 +27,7 @@
 
 (setq vc-follow-symlinks t)
 
-(global-auto-revert-mode t)
+;; (global-auto-revert-mode t)
 
 
 ;; Сохранение позиции в посещенных файлах
