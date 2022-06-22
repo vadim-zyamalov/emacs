@@ -142,6 +142,13 @@
                (display-fill-column-indicator-mode))))
 
 
+;; JS
+;; npm i -g typescript-language-server; npm i -g typescript
+(setup js
+    (:file-match "\\.js.R$")
+    (:hook lsp))
+
+
 ;; Lua
 (setup (:straight lua-mode)
     (:file-match "\\.lua$")
