@@ -15,19 +15,19 @@
 ;;; Code:
 
 ;; Тема
-;; (setup (:straight doom-themes)
-;;     (:option doom-themes-bold t
-;;              doom-themes-enable-italic t)
-;;     (doom-themes-visual-bell-config)
-;;     (doom-themes-neotree-config)
-;;     (doom-themes-org-config)
-;;     (load-theme 'doom-one t))
+(setup (:straight doom-themes)
+    (:option doom-themes-enable-bold t
+             doom-themes-enable-italic t)
+    (doom-themes-visual-bell-config)
+    (doom-themes-neotree-config)
+    (doom-themes-org-config)
+    (load-theme 'doom-one t))
 
-(setup modus-themes
-    (:option modus-themes-mode-line '(borderless)
-             modus-themes-bold-constructs t
-             modus-themes-italic-constructs t)
-    (load-theme 'modus-vivendi t))
+;; (setup modus-themes
+;;     (:option modus-themes-mode-line '(borderless)
+;;              modus-themes-bold-constructs t
+;;              modus-themes-italic-constructs t)
+;;     (load-theme 'modus-vivendi t))
 
 
 ;; Шрифты
