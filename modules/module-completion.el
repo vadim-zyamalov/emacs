@@ -77,8 +77,14 @@
 
 
 ;; Vertico
-(setup (:straight vertico)
-    (:option vertico-cycle t)
+(setup (:straight vertico
+                  consult)
+    (:option vertico-cycle t
+             vertico-mouse-mode t
+             vertico-count 8
+             vertico-resize t)
+    (:global "<f2>" consult-buffer
+             "C-<f2>" ibuffer)
     (:with-hook minibuffer-setup-hook
         (:hook (lambda ()
                    (setq completion-in-region-function
@@ -86,11 +92,6 @@
                                  #'consult-completion-in-region
                              #'completion--in-region)))))
     (vertico-mode))
-
-(setup (:straight consult)
-    (:global "<f2>" consult-buffer
-             "C-<f2>" ibuffer))
-;;"C-s" consult-line
 
 
 ;; Orderless

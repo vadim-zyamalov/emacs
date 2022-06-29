@@ -87,7 +87,6 @@
 
 ;; Emacs Speaks Statistics --- ESS
 (setup (:straight ess)
-    (:option flycheck-lintr-linters "default_linters[-which(names(default_linters)==\"object_camel_case_linter\")]")
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
     (setq display-buffer-alist
@@ -269,18 +268,11 @@ to the LaTeX table."
         (align-regexp (point-min) (point-max) "\\(\\s-*\\)\\\\\\\\"
                       1 1 t)))
 
-(setup (:straight auctex))
-
-(setup (:straight company-reftex)
-    (:load-after auctex))
-
-(setup (:straight company-auctex)
-    (:load-after auctex))
-
-(setup (:straight company-math)
-    (:load-after auctex))
-
 (setup LaTeX
+    (:straight auctex
+               company-reftex
+               company-auctex
+               company-math)
     (:option preview-pdf-color-adjust-method t
              preview-auto-cache-preamble t
              bibtex-dialect 'biblatex

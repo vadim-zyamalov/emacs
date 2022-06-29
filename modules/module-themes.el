@@ -15,13 +15,15 @@
 ;;; Code:
 
 ;; Тема
-(setup (:straight doom-themes)
+(setup (:straight doom-themes
+                  solaire-mode)
     (:option doom-themes-enable-bold t
              doom-themes-enable-italic t)
     (doom-themes-visual-bell-config)
     (doom-themes-neotree-config)
     (doom-themes-org-config)
-    (load-theme 'doom-one t))
+    (load-theme 'doom-palenight t)
+    (solaire-global-mode t))
 
 ;; (setup modus-themes
 ;;     (:option modus-themes-mode-line '(borderless)
