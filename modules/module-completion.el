@@ -52,66 +52,71 @@
 
 
 ;; Corfu
-(setup (:straight corfu)
+(setup (:straight corfu
+                  corfu-doc
+                  kind-icon
+                  (cape
+                   :type git
+                   :host github
+                   :repo "minad/cape")
+                  (popon
+                   :type git
+                   :repo "https://codeberg.org/akib/emacs-popon.git")
+                  (corfu-terminal
+                   :type git
+                   :repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
+                  (corfu-doc-terminal
+                   :type git
+                   :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git"))
     (:option corfu-auto nil
              corfu-cycle t
              corfu-preselect-first nil
              corfu-preview-current 'insert
-             tab-always-indent 'complete)
+             tab-always-indent 'complete
+             kind-icon-default-face 'corfu-default)
+    (:hook corfu-doc-mode)
     (:bind-into corfu-map
         "TAB" corfu-next
         [tab] corfu-next
         "S-TAB" corfu-previous
         [backtab] corfu-previous)
-    (global-corfu-mode))
-
-(setup (:straight kind-icon)
-    (:load-after corfu)
-    (:option kind-icon-default-face 'corfu-default)
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-
-
-;; Cape
-(setup (:straight (cape :type git :host github :repo "minad/cape"))
-    (add-to-list 'completion-at-point-functions #'cape-file t))
+    (global-corfu-mode)
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+    (add-to-list 'completion-at-point-functions #'cape-file t)
+    (unless (display-graphic-p)
+        (corfu-terminal-mode t)
+        (corfu-doc-terminal-mode t)))
 
 
-;; Vertico
+;; Vertico+Embark
 (setup (:straight vertico
-                  consult)
+                  consult
+                  embark
+                  embark-consult
+                  orderless)
     (:option vertico-cycle t
              vertico-mouse-mode t
              vertico-count 8
-             vertico-resize t)
+             vertico-resize t
+             prefix-help-command #'embark-prefix-help-command
+             completion-styles '(orderless basic)
+             completion-category-defaults nil
+             completion-category-overrides '((file (styles basic partial-completion))))
     (:global "<f2>" consult-buffer
-             "C-<f2>" ibuffer)
+             "C-<f2>" ibuffer
+             "C-." embark-act
+             "C-;" embark-dwim
+             "C-h B" embark-bindings)
     (:with-hook minibuffer-setup-hook
         (:hook (lambda ()
                    (setq completion-in-region-function
                          (if vertico-mode
                                  #'consult-completion-in-region
                              #'completion--in-region)))))
-    (vertico-mode))
-
-
-;; Orderless
-(setup (:straight orderless)
-    (:option completion-styles '(orderless basic)
-             completion-category-defaults nil
-             completion-category-overrides '((file (styles basic partial-completion)))))
-
-
-;; Embark
-(setup (:straight embark)
-    (:option prefix-help-command #'embark-prefix-help-command)
-    (:global "C-." embark-act
-             "C-;" embark-dwim
-             "C-h B" embark-bindings))
-
-(setup (:straight embark-consult)
-    (:load-after embark consult)
+    (vertico-mode)
     (:with-mode embark-collect-mode
         (:hook consult-preview-at-point-mode)))
+
 
 ;; Сниппеты
 (when (string-equal init/snippet-engine "tempel")

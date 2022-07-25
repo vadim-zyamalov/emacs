@@ -40,7 +40,11 @@
     (modify-syntax-entry ?< "." org-mode-syntax-table)
     (modify-syntax-entry ?> "." org-mode-syntax-table))
 
-(setup (:straight org)
+(setup (:straight org
+                  edit-indirect
+                  org-bullets
+                  toc-org
+                  (org-appear :type git :host github :repo "awth13/org-appear"))
     (:option org-edit-src-content-indentation 0
              org-src-preserve-indentation nil
              org-src-fontify-natively t
@@ -49,40 +53,28 @@
              org-mouse-1-follows-link t
              org-descriptive-links t
              org-hide-emphasis-markers t
-             org-support-shift-select t)
+             org-support-shift-select t
+             org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")
+             org-appear-autolinks t
+             org-appear-autosubmarkers t)
     (org-babel-do-load-languages
      'org-babel-load-languages '((emacs-lisp . t)
                                  (python . t)
                                  (lua . t)
                                  (haskell . t)
                                  (shell . t)))
+    (progn
+        (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+        (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+        (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
+        (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
+        (add-to-list 'org-structure-template-alist '("py" . "src python"))
+        (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
     (:hook org-indent-mode
-           my/angle-brackets-fix))
-
-(setup (:straight edit-indirect))
-
-(setup (:straight org-bullets)
-    (:load-after org)
-    (:option org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●"))
-    (:hook-into org-mode))
-
-(setup org-tempo
-    (:load-after org)
-    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-    (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
-    (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
-    (add-to-list 'org-structure-template-alist '("py" . "src python"))
-    (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
-
-(setup (:straight toc-org)
-    (:load-after org)
-    (:hook-into org-mode))
-
-(setup (:straight (org-appear :type git :host github :repo "awth13/org-appear"))
-    (:option org-appear-autolinks t
-             org-appear-autosubmarkers t)
-    (:hook-into org-mode))
+           my/angle-brackets-fix
+           org-bullets-mode
+           toc-org-mode
+           org-appear-mode))
 
 
 ;; Emacs Speaks Statistics --- ESS

@@ -58,13 +58,9 @@
 
 ;; Иконки
 (when (display-graphic-p)
-    (progn
-        (setup (:straight all-the-icons))
-        (setup (:straight all-the-icons-completion)
-            (:load-after marginalia all-the-icons)
-            (:with-hook marginalia-mode-hook
-                (:hook all-the-icons-completion-marginalia-setup))
-            (all-the-icons-completion-mode))))
+    (setup (:straight all-the-icons
+                      all-the-icons-completion)
+        (all-the-icons-completion-mode)))
 
 (provide 'module-themes)
 ;;; module-themes.el ends here

@@ -46,7 +46,8 @@
 
 
 ;; Стартовый экран
-(setup (:straight dashboard)
+(setup (:straight dashboard
+                  all-the-icons)
     (:require all-the-icons)
     (:option dashboard-set-heading-icons t
              dashboard-set-file-icons t

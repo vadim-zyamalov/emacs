@@ -30,14 +30,6 @@ first RECIPE's package."
                                (car recipe)
                            recipe))))
 
-(setup-define :load-after
-    (lambda (&rest features)
-        (let ((body `(require ',(setup-get 'feature))))
-            (dolist (feature (nreverse features))
-                (setq body `(with-eval-after-load ',feature ,body)))
-            body))
-    :documentation "Load the current feature after FEATURES.")
-
 (setup-define :advice
     (lambda (symbol where function)
         `(advice-add ',symbol ,where ,(setup-ensure-function function)))
@@ -46,6 +38,13 @@ See `advice-add' for more details."
     :after-loaded t
     :debug '(sexp sexp function-form)
     :repeatable t)
+
+(setup-define :with-local-quit
+    (lambda (&rest body)
+      `(catch ',(setup-get 'quit)
+         ,@body))
+  :documentation "Prevent any reason to abort from leaving beyond BODY."
+  :debug '(setup))
 
 (setup-define :quit
     #'setup-quit

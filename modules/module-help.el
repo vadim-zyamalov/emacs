@@ -12,7 +12,11 @@
 
 ;;; Code:
 
-(setup (:straight marginalia)
+(setup (:straight marginalia
+                  all-the-icons-completion)
+    (:with-local-quit
+     (:only-if (display-graphic-p))
+     (:hook all-the-icons-completion-marginalia-setup))
     (marginalia-mode))
 
 (setup (:straight which-key)
