@@ -25,39 +25,50 @@
 
 
 ;; Вкладки
-(setup tab-line
-    (:global "M-<left>" previous-buffer
-             "M-<right>" next-buffer)
+(use-package tab-line
+    :demand t
+    :bind (("M-<left>" . previous-buffer)
+           ("M-<right>" . next-buffer))
+    :config
     (global-tab-line-mode t))
 
 
 ;; Статусная строка
-(setup (:straight minions)
+(use-package minions
+    :straight t
+    :config
     (minions-mode t))
 
-(setup (:straight nyan-mode)
+(use-package nyan-mode
+    :straight t
+    :config
     (nyan-mode))
 
-(setup (:straight doom-modeline)
-    (:option doom-modeline-height 24
-             doom-modeline-minor-modes t)
-    (:with-hook after-init-hook
-        (:hook doom-modeline-mode)))
+(use-package doom-modeline
+    :straight t
+    :hook (after-init . doom-modeline-mode)
+    :custom
+    (doom-modeline-height 24)
+    (doom-modeline-minor-modes t))
 
 
 ;; Стартовый экран
-(setup (:straight dashboard
-                  all-the-icons)
-    (:require all-the-icons)
-    (:option dashboard-set-heading-icons t
-             dashboard-set-file-icons t
-             dashboard-items '((recents . 15)
-                               (projects . 5))
-             dashboard-startup-banner (expand-file-name
+(use-package dashboard
+    :straight t
+    :if (display-graphic-p)
+    :after (all-the-icons)
+    :config
+    (dashboard-setup-startup-hook)
+    :custom
+    (dashboard-set-heading-icons t)
+             (dashboard-set-file-icons t)
+             (dashboard-items '((recents . 15)
+                               (projects . 5)))
+             (dashboard-startup-banner (expand-file-name
                                        "emacs.png"
-                                       (file-name-directory user-init-file))
-             dashboard-set-navigator t
-             dashboard-navigator-buttons
+                                       (file-name-directory user-init-file)))
+             (dashboard-set-navigator t)
+             (dashboard-navigator-buttons
              `((
                 (,(all-the-icons-fileicon "emacs" :height 1.0 :v-adjust 0.0)
                  "Настройки"
@@ -72,8 +83,7 @@
                  "emacs"
                  "Github с настройками Emacs"
                  (lambda (&rest _) (browse-url "https://github.com/d9d6ka/emacs")))
-                )))
-    (dashboard-setup-startup-hook))
+                ))))
 
 
 ;; Строки
@@ -83,10 +93,14 @@
 (setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
 (global-visual-line-mode t)
 
-(setup (:straight pulsar)
-    (:option pulsar-pulse t
-             pulsar-delay 0.055
-             pulsar-pulse-functions '(recenter-top-bottom
+(use-package pulsar
+    :straight t
+    :config
+    (pulsar-global-mode t)
+    :custom
+    (pulsar-pulse t)
+    (pulsar-delay 0.055)
+    (pulsar-pulse-functions '(recenter-top-bottom
                               move-to-window-line-top-bottom
                               reposition-window
                               bookmark-jump
@@ -123,35 +137,43 @@
                               ctrlf-backward-alternate
                               ctrlf-forward-symbol
                               ctrlf-forward-symbol-at-point
-                              consult-line))
-    (pulsar-global-mode t))
+                              consult-line)))
 
 
 ;; Окна
-(setup (:straight zoom)
-    (:option zoom-size '(0.618 . 0.618)
-             zoom-ignored-major-modes '(ess-r-mode
-                                        inferior-ess-r-mode
-                                        ess-rdired-mode)
-             zoom-ignored-buffer-names '("*R*"
-                                         "*R dired*"
-                                         "*R view*"))
-    (zoom-mode))
+(use-package zoom
+    :straight t
+    :config
+    (zoom-mode)
+    :custom
+    (zoom-size '(0.618 . 0.618))
+    (zoom-ignored-major-modes '(ess-r-mode
+                                inferior-ess-r-mode
+                                ess-rdired-mode))
+    (zoom-ignored-buffer-names '("*R*"
+                                 "*R dired*"
+                                 "*R view*")))
 
-(setup (:straight dimmer)
-    (:option dimmer-fraction 0.6
-             dimmer-watch-frame-focus-events nil)
+
+(use-package dimmer
+    :straight t
+    :config
     (dimmer-configure-which-key)
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
-    (dimmer-mode t))
+    (dimmer-mode t)
+    :custom
+    (dimmer-fraction 0.6)
+    (dimmer-watch-frame-focus-events nil))
 
 
 ;; Дерево каталогов
-(setup (:straight neotree)
-    (:option neo-smart-open t
-             neo-window-width 40
-             neo-theme (if (display-graphic-p) 'icons 'arrow))
-    (:global "C-x t t" neotree-toggle))
+(use-package neotree
+    :straight t
+    :bind (("C-x t t" . neotree-toggle))
+    :custom
+    (neo-smart-open t)
+    (neo-window-width 40)
+    (neo-theme (if (display-graphic-p) 'icons 'arrow)))
 
 
 (provide 'module-ui)

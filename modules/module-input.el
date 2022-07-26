@@ -41,9 +41,12 @@
                                          (text-scale-decrease 1.1)))
 (define-key global-map (kbd "C-_") nil)
 
-(setup (:straight reverse-im)
-    (:option reverse-im-input-methods '("russian-computer"))
-    (reverse-im-mode t))
+(use-package reverse-im
+    :straight t
+    :config
+    (reverse-im-mode t)
+    :custom
+    (reverse-im-input-methods '("russian-computer")))
 
 (setq cua-keep-region-after-copy t)
 (cua-mode t)

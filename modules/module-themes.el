@@ -15,14 +15,20 @@
 ;;; Code:
 
 ;; Тема
-(setup (:straight doom-themes
-                  solaire-mode)
-    (:option doom-themes-enable-bold t
-             doom-themes-enable-italic t)
+(use-package doom-themes
+    :straight t
+    :config
     (doom-themes-visual-bell-config)
     (doom-themes-neotree-config)
     (doom-themes-org-config)
     (load-theme 'doom-palenight t)
+    :custom
+    (doom-themes-enable-bold t)
+    (doom-themes-enable-italic t))
+
+(use-package solaire-mode
+    :straight t
+    :config
     (solaire-global-mode t))
 
 ;; (setup modus-themes
@@ -41,7 +47,9 @@
 ;; Поддержка лигатур
 ;; Для шрифтов без их поддержки неактуально
 (unless (version< emacs-version "28.1")
-    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
+    (use-package ligature
+        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+        :config
         (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
                                              "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
                                              "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
@@ -57,10 +65,18 @@
 
 
 ;; Иконки
-(when (display-graphic-p)
-    (setup (:straight all-the-icons
-                      all-the-icons-completion)
-        (all-the-icons-completion-mode)))
+(use-package all-the-icons
+    :straight t
+    :if (display-graphic-p))
+
+(use-package all-the-icons-completion
+    :straight t
+    :if (display-graphic-p)
+    :after (all-the-icons marginalia)
+    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+    :config
+    (all-the-icons-completion-mode))
+
 
 (provide 'module-themes)
 ;;; module-themes.el ends here

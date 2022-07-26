@@ -8,10 +8,13 @@
 ;; Большой файл с настройками постепенно становится тяжело читаемым.
 
 ;;; Code:
+(straight-use-package 'use-package)
+(eval-when-compile
+    (require 'use-package))
+
 (defconst init/snippet-engine "yasnippet"
          "Snippet engine to use.")
 
-(require 'module-setup)
 (require 'module-base)
 (require 'module-ui)
 (require 'module-themes)

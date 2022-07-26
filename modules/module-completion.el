@@ -36,109 +36,151 @@
         (unless (null (symbol-function tmp-symbol))
             (funcall (symbol-function tmp-symbol)))))
 
-(setup (:straight lsp-mode)
-    (:option lsp-headerline-breadcrumb-icons-enable nil
-             lsp-enable-file-watchers nil
-             lsp-keymap-prefix "C-c l"
-             lsp-completion-provider :none)
+(use-package lsp-mode
+    :straight t
+    :hook ((lsp-mode . lsp-enable-which-key-integration)
+           (lsp-completion-mode . (lambda ()
+                                      (progn
+                                          (lsp/non-greedy-lsp-mode)
+                                          (lsp/extra-capf)))))
+    :config
     (with-eval-after-load 'lsp-mode
         (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-    (:hook lsp-enable-which-key-integration)
-    (:with-mode lsp-completion-mode
-        (:hook (lambda ()
-                   (progn
-                       (lsp/non-greedy-lsp-mode)
-                       (lsp/extra-capf))))))
+    :custom
+    (lsp-headerline-breadcrumb-icons-enable nil)
+    (lsp-enable-file-watchers nil)
+    (lsp-keymap-prefix "C-c l")
+    (lsp-completion-provider :none))
 
 
 ;; Corfu
-(setup (:straight corfu
-                  corfu-doc
-                  kind-icon
-                  (cape
-                   :type git
-                   :host github
-                   :repo "minad/cape")
-                  (popon
-                   :type git
-                   :repo "https://codeberg.org/akib/emacs-popon.git")
-                  (corfu-terminal
-                   :type git
-                   :repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
-                  (corfu-doc-terminal
-                   :type git
-                   :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git"))
-    (:option corfu-auto nil
-             corfu-cycle t
-             corfu-preselect-first nil
-             corfu-preview-current 'insert
-             tab-always-indent 'complete
-             kind-icon-default-face 'corfu-default)
-    (:hook corfu-doc-mode)
-    (:bind-into corfu-map
-        "TAB" corfu-next
-        [tab] corfu-next
-        "S-TAB" corfu-previous
-        [backtab] corfu-previous)
+(use-package corfu
+    :straight t
+    :bind (:map corfu-map
+                ("TAB" . corfu-next)
+                ([tab] . corfu-next)
+                ("S-TAB" . corfu-previous)
+                ([backtab] . corfu-previous))
+    :init
     (global-corfu-mode)
+    :custom
+    (corfu-auto nil)
+    (corfu-cycle t)
+    (corfu-preselect-first nil)
+    (corfu-preview-current 'insert)
+    (tab-always-indent 'complete))
+
+(use-package corfu-doc
+    :straight t
+    :hook (corfu-mode . corfu-doc-mode))
+
+(use-package kind-icon
+    :straight t
+    :after corfu
+    :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-    (add-to-list 'completion-at-point-functions #'cape-file t)
-    (unless (display-graphic-p)
-        (corfu-terminal-mode t)
-        (corfu-doc-terminal-mode t)))
+    :custom
+    (kind-icon-default-face 'corfu-default))
+
+(use-package popon
+    :straight (popon
+               :type git
+               :repo "https://codeberg.org/akib/emacs-popon.git"))
+
+(use-package corfu-terminal
+    :straight (corfu-terminal
+               :type git
+               :repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
+    :unless (display-graphic-p)
+    :after corfu
+    :config
+    (corfu-terminal-mode t))
+
+(use-package corfu-doc-terminal
+    :straight (corfu-doc-terminal
+               :type git
+               :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git")
+    :unless (display-graphic-p)
+    :after corfu-doc
+    :config
+    (corfu-doc-terminal-mode t))
+
+(use-package cape
+    :straight t
+    :config
+    (add-to-list 'completion-at-point-functions #'cape-file t))
 
 
-;; Vertico+Embark
-(setup (:straight vertico
-                  consult
-                  embark
-                  embark-consult
-                  orderless)
-    (:option vertico-cycle t
-             vertico-mouse-mode t
-             vertico-count 8
-             vertico-resize t
-             prefix-help-command #'embark-prefix-help-command
-             completion-styles '(orderless basic)
-             completion-category-defaults nil
-             completion-category-overrides '((file (styles basic partial-completion))))
-    (:global "<f2>" consult-buffer
-             "C-<f2>" ibuffer
-             "C-." embark-act
-             "C-;" embark-dwim
-             "C-h B" embark-bindings)
-    (:with-hook minibuffer-setup-hook
-        (:hook (lambda ()
-                   (setq completion-in-region-function
-                         (if vertico-mode
-                                 #'consult-completion-in-region
-                             #'completion--in-region)))))
-    (vertico-mode)
-    (:with-mode embark-collect-mode
-        (:hook consult-preview-at-point-mode)))
+;; Vertico
+(use-package vertico
+    :straight t
+    :hook (minibuffer-setup . (lambda ()
+                                  (setq completion-in-region-function
+                                        (if vertico-mode
+                                                #'consult-completion-in-region
+                                            #'completion--in-region))))
+    :init
+    (vertico-mode))
+
+(use-package consult
+    :straight t
+    :bind (("<f2>" . consult-buffer)
+           ("C-<f2>" . ibuffer)))
+
+
+;; Embark
+(use-package embark
+    :straight t
+    :bind (("C-." . embark-act)
+           ("C-;" . embark-dwim)
+           ("C-h B" . embark-bindings))
+    :custom
+    (prefix-help-command #'embark-prefix-help-command))
+
+(use-package embark-consult
+    :straight t
+    :after (embark consult)
+    :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+
+;; Orderless
+(use-package orderless
+    :straight t
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles basic partial-completion)))))
 
 
 ;; Сниппеты
-(when (string-equal init/snippet-engine "tempel")
-    (setup (:straight tempel)
-        (:option tempel-path (expand-file-name
-                              "templates"
-                              (file-name-directory user-init-file)))
-        (:global "<f6>" tempel-complete
-                 "<f7>" tempel-insert
-                 "C-<f6>" tempel-done)))
+(use-package tempel
+    :straight t
+    :if (string-equal init/snippet-engine "tempel")
+    :bind (("<f6>" . tempel-complete)
+           ("<f7>" . tempel-insert)
+           ("C-<f6>" . tempel-done))
+    :custom
+    (tempel-path (expand-file-name
+                  "templates"
+                  (file-name-directory user-init-file))))
 
-(when (string-equal init/snippet-engine "yasnippet")
-    (setup (:straight yasnippet)
-        (:bind-into yas-minor-mode-map
-            [(tab)] nil
-            "TAB" nil)
-        (yas-global-mode 1))
+(use-package yasnippet
+    :straight t
+    :if (string-equal init/snippet-engine "yasnippet")
+    :bind (:map yas-minor-mode-map
+                ([(tab)] . nil)
+                ("TAB" . nil))
+    :config
+    (yas-global-mode 1))
 
-    (setup (:straight yasnippet-snippets))
+(use-package yasnippet-snippets
+    :straight t
+    :if (string-equal init/snippet-engine "yasnippet"))
 
-    (setup (:straight consult-yasnippet)
-        (:global "<f7>" consult-yasnippet)))
+(use-package consult-yasnippet
+    :straight t
+    :if (string-equal init/snippet-engine "yasnippet")
+    :bind ("<f7>" . consult-yasnippet))
 
 
 (provide 'module-completion)
