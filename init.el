@@ -12,6 +12,12 @@
 (eval-when-compile
     (require 'use-package))
 
+(defconst init/lsp-engine "lsp"
+         "LSP engine to use.")
+
+(defconst init/completion-popup "corfu"
+         "Completion popup to use.")
+
 (defconst init/snippet-engine "yasnippet"
          "Snippet engine to use.")
 

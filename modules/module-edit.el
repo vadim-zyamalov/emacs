@@ -54,6 +54,7 @@
 
 (use-package smartparens
     :straight t
+    :demand t
     :bind (:map smartparens-mode-map
 	            ("C-c b r" . sp-rewrap-sexp)
                 ("C-c b d" . sp-splice-sexp))

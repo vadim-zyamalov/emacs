@@ -32,25 +32,25 @@
 
 ;; Сохранение позиции в посещенных файлах
 (use-package saveplace
-    :init
-    (setq save-place-file (expand-file-name
-                           (format "%s/var/%s"
-                                   user-emacs-directory
-                                   "save-place.el")))
     :config
-    (save-place-mode t))
+    (save-place-mode t)
+    :custom
+    (save-place-file (expand-file-name
+                      (format "%s/var/%s"
+                              user-emacs-directory
+                              "save-place.el"))))
 
 
 ;; Сохранение истории
 (use-package savehist
-    :init
-    (setq history-delete-duplicates t
-          savehist-file (expand-file-name
-                         (format "%s/var/%s"
-                                 user-emacs-directory
-                                 "savehist.el")))
     :config
-    (savehist-mode t))
+    (savehist-mode t)
+    :custom
+    (history-delete-duplicates t)
+    (savehist-file (expand-file-name
+                    (format "%s/var/%s"
+                            user-emacs-directory
+                            "savehist.el"))))
 
 
 ;; Ускорение
@@ -61,18 +61,21 @@
 
 
 ;; Настройка работы сборщика мусора
-;; (setup (:straight gcmh)
-;;     (:option gcmh-verbose t
-;;              gcmh-low-cons-threshold (* 8 1024 1024))
-;;     (gcmh-mode t))
+;; (use-package gcmh
+;;     :straight t
+;;     :config
+;;     (gcmh-mode t)
+;;     :custom
+;;     (gcmh-verbose t)
+;;     (gcmh-low-cons-threshold (* 8 1024 1024)))
 
 
 ;; Очистка мусора в файлах
 (use-package no-littering
     :straight t
-    :init
-    (setq auto-save-file-name-transforms
-          `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+    :custom
+    (auto-save-file-name-transforms
+     `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (setq create-lockfiles nil)
 

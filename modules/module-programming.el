@@ -104,7 +104,7 @@
     :straight t
     :mode (("\\.R$" . ess-r-mode)
            ("\\.do$" . ess-stata-mode))
-    :hook ((ess-r-mode . lsp)
+    :hook ((ess-r-mode . lsp/lsp)
            (ess-r-post-run . ess-rdired)
            ((ess-r-mode ess-stata-mode) . (lambda ()
                                               (setq-local fill-column 80)
@@ -143,7 +143,7 @@
 
 (use-package python
     :straight lsp-pyright
-    :hook ((python-mode . lsp)
+    :hook ((python-mode . lsp/lsp)
            (python-mode . (lambda ()
                               (setq-local fill-column 80)
                               (display-fill-column-indicator-mode)))))
@@ -153,7 +153,7 @@
 ;; npm i -g typescript-language-server; npm i -g typescript
 (use-package js
     :mode "\\.js.R$"
-    :hook (js-mode . lsp))
+    :hook (js-mode . lsp/lsp))
 
 
 ;; Lua
@@ -285,7 +285,7 @@ to the LaTeX table."
 
 (use-package LaTeX
     :straight auctex
-    :hook ((LaTeX-mode . lsp)
+    :hook ((LaTeX-mode . lsp/lsp)
            (LaTeX-mode . auctex/latexmk)
            (LaTeX-mode . turn-on-reftex))
     :custom
