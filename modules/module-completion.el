@@ -190,9 +190,6 @@
 
 (when (string-equal init/snippet-engine "yasnippet")
     (setup (:straight yasnippet)
-        (:bind-into yas-minor-mode-map
-            [(tab)] nil
-            "TAB" nil)
         (yas-global-mode 1))
 
     (setup (:straight yasnippet-snippets))
