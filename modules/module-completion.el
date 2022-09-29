@@ -191,6 +191,8 @@
 
 (when (string-equal init/snippet-engine "yasnippet")
     (setup (:straight yasnippet)
+        (:option yas-snippet-dirs (append yas-snippet-dirs
+                                          '("~/.emacs.d/snippets")))
         (yas-global-mode 1))
 
     (setup (:straight yasnippet-snippets))

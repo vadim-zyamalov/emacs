@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# Author: Vadim Zyamalov
+# name: OLS
+# key: ols
+# --
+solve(t($1) %*% $1) %*% t($1) %*% $0
