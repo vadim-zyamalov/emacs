@@ -166,7 +166,8 @@
              "C-<f2>" ibuffer
              "C-." embark-act
              "C-;" embark-dwim
-             "C-h B" embark-bindings)
+             "C-h B" embark-bindings
+             "C-s" consult-line)
     (:with-hook minibuffer-setup-hook
         (:hook (lambda ()
                    (setq completion-in-region-function

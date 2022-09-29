@@ -45,8 +45,8 @@
     (:option reverse-im-input-methods '("russian-computer"))
     (reverse-im-mode t))
 
-(setq cua-keep-region-after-copy t)
-(cua-mode t)
+;; (setq cua-keep-region-after-copy t)
+;; (cua-mode t)
 (transient-mark-mode t)
 
 (provide 'module-input)
