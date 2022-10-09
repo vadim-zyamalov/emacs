@@ -145,6 +145,12 @@
     (dimmer-mode t))
 
 
+;; Перемещение между фреймами и окнами
+(setup (:straight framemove)
+    (:option framemove-hook-into-windmove t)
+    (windmove-default-keybindings))
+
+
 ;; Дерево каталогов
 (setup (:straight neotree)
     (:option neo-smart-open t
