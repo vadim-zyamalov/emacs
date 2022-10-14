@@ -148,7 +148,7 @@
 ;; Перемещение между фреймами и окнами
 (setup (:straight framemove)
     (:option framemove-hook-into-windmove t)
-    (windmove-default-keybindings))
+    (windmove-default-keybindings '(shift ctrl)))
 
 
 ;; Дерево каталогов
