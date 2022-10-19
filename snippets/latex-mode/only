@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# Author: Vadim Zyamalov
+# name: onlyenv
+# key: only
+# --
+\begin{onlyenv}<${1:overlay}>
+$0
+\end{onlyenv}
