@@ -1,0 +1,763 @@
+#+TITLE: Настройки Emcds, основанные на Org-mode
+#+LANGUAGE: ru
+#+PROPERTY: header-args :results silent :noweb no-export
+
+В данном файле представлены настройки =Emacs=, подгружаемые при помощи =Org-babel=. Все блоки кода при загрузке Emacs автоматически извлекаются и исполняются.
+
+Это моя вторая попытка оформления настроек для Emacs при помощи =Org-mode=. Первая попытка вылилась в абсолютно нечитаемый файл, выглядящий как `тарелка спагетти`.
+
+* Содержание :toc:github:
+- [[#базовые-файлы][Базовые файлы]]
+- [[#настройки-setupel][Настройки =setup.el=]]
+- [[#общие-настройки][Общие настройки]]
+  - [[#сохранение-истории-команд-и-позиций][Сохранение истории команд и позиций]]
+  - [[#ускорение-запуска-emacs][Ускорение запуска =Emacs=]]
+  - [[#убираем-мусор][Убираем мусор]]
+  - [[#работа-с-файлами][Работа с файлами]]
+- [[#настройки-пользовательского-интерфейса][Настройки пользовательского интерфейса]]
+  - [[#вкладки][Вкладки]]
+  - [[#статусная-строка][Статусная строка]]
+  - [[#стартовый-экран][Стартовый экран]]
+  - [[#отображение-строк][Отображение строк]]
+  - [[#отображение-окон][Отображение окон]]
+  - [[#дерево-каталогов-проекта][Дерево каталогов проекта]]
+  - [[#украшательства][Украшательства]]
+- [[#настройки-справки][Настройки справки]]
+- [[#настройки-ввода][Настройки ввода]]
+  - [[#мышь][Мышь]]
+  - [[#клавиатура][Клавиатура]]
+- [[#настройки-редактирования][Настройки редактирования]]
+  - [[#настройки-сохранения][Настройки сохранения]]
+  - [[#настройки-отступов][Настройки отступов]]
+  - [[#настройки-отмены-и-повтора][Настройки отмены и повтора]]
+  - [[#настройки-отражения-скобок][Настройки отражения скобок]]
+  - [[#настройки-комментирования][Настройки комментирования]]
+  - [[#настройки-замены][Настройки замены]]
+  - [[#полезные-команды][Полезные команды]]
+
+* Базовые файлы
+
+=Emacs= для загрузки требует наличия файла настроек =init.el=, из которого загружаются все необходимые настройки. Я, вслед за многими пользователями, использую данный файл для загрузки org-документа с конфигурацией.
+Помимо настоящего файла настроек, =Emacs= требует наличия файла =init.el= для загрузки, =init.el= нужен для загрузки данного файла.
+
+#+include: early-init.el src emacs-lisp
+
+#+include: init.el src emacs-lisp
+
+* Настройки =setup.el=
+
+Установка =setup.el= для дальнейшей настройки =Emacs=. Данный пакет функционально в целом аналогичен =use-package=, но он гораздо меньше, и гораздо проще настраивается и расширяется. =setup= -- это макрос, который разворачивается в итоговый исполняемый код. Более подробную информацию можно найти тут [[https://www.emacswiki.org/emacs/SetupEl][EmacsWiki - setup.el]] и тут [[https://git.sr.ht/~pkal/setup][setup.el repo]].
+
+#+begin_src elisp
+(straight-use-package '(setup :type git :host nil :repo "https://git.sr.ht/~pkal/setup"))
+(require 'setup)
+#+end_src
+
+Данный суб-макрос автоматически устанавливает пакет при помощи =straight.el=, если таковой еще не установлен. Макрос понимает как имена пакетов, так и рецепты. Имя первого пакета задает контекст для =setup=.
+
+#+begin_src emacs-lisp
+(setup-define :straight
+    (lambda (recipe)
+        `(unless (straight-use-package ',recipe)
+             ,(setup-quit)))
+    :documentation "Install RECIPE with `straight-use-package'.
+This macro can be used as HEAD, and will replace itself with the
+first RECIPE's package."
+    :repeatable t
+    :shorthand (lambda (sexp)
+                   (let ((recipe (cadr sexp)))
+                       (if (consp recipe)
+                               (car recipe)
+                           recipe))))
+#+end_src
+
+Следующий суб-макрос --- это мое творение, правда, основанное на нескольких других суб-макросах. Он делает так, чтобы некоторый код испольнялся строго после загрузки указанных пакетов.
+
+#+begin_src emacs-lisp
+(setup-define :eval-after
+    (lambda (features &rest body)
+        (let ((body `(progn ,@body))
+              (features (if (listp features)
+                                features
+                            (list features))))
+            (dolist (feature (nreverse features))
+                (setq body `(with-eval-after-load ',feature ,body)))
+            body))
+    :documentation "Evaluate BODY after FEATURES are loaded."
+    :indent 1)
+#+end_src
+
+Суб-макрос для модификации функций пр помощи =advice=.
+
+#+begin_src emacs-lisp
+(setup-define :advice
+    (lambda (symbol where function)
+        `(advice-add ',symbol ,where ,(setup-ensure-function function)))
+    :documentation "Add a piece of advice on a function.
+See `advice-add' for more details."
+    :after-loaded t
+    :debug '(sexp sexp function-form)
+    :repeatable t)
+#+end_src
+
+Следующий суб-макрос имеет крайне странное описание, из которого что-либо понять весьма затруднительно. На самом деле он ограничивает блок кода, в котором может быть инициирован выход из макроса. Обычно, такое событие приводит к завершению исполнения тела макроса. Суб-макрос же позволяет прекратить исполнение ограниченного кода, не прерывая исполнение всего тела макроса.
+
+#+begin_src emacs-lisp
+(setup-define :with-local-quit
+    (lambda (&rest body)
+        `(catch ',(setup-get 'quit)
+             ,@body))
+    :documentation "Prevent any reason to abort from leaving beyond BODY."
+    :debug '(setup))
+#+end_src
+
+И, наконец, суб-макрос, вызывающий безусловный выход из тела макроса (ну или из ограниченного блока кода).
+
+#+begin_src emacs-lisp
+(setup-define :quit
+    #'setup-quit
+    :documentation "Unconditionally abort the evaluation of the current body.")
+#+end_src
+
+* Общие настройки
+
+Организуем вспомогательные константы, показывающие факт запуска =Emacs= в Windows или в 64-битной системе. Они нужны будут в дальнейшем для условной установки пакетов.
+
+#+begin_src emacs-lisp
+(defconst ensure/is64
+    (not (null
+          (string-match "^x86_64-.*" system-configuration)))
+    "Equals t if Emacs works on 64-bit system.")
+
+(defconst ensure/isWindows
+    (memq system-type '(cygwin windows-nt ms-dos))
+    "Equals t if Emacs works on Windows host system.")
+#+end_src
+
+Заставляем =Emacs= использовать =utf-8= как стандартную кодовую таблицу.
+
+#+begin_src emacs-lisp
+(prefer-coding-system 'utf-8)
+(set-language-environment "utf-8")
+#+end_src
+
+=Emacs= по умолчанию требует длинные ответы на вопросы (=yes= и =no=). Следующие настройки позволяют ограничиться одной буквой (=y= и =n=).
+
+#+begin_src emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq confirm-kill-emacs 'y-or-n-p)
+#+end_src
+
+Следовать ли автоматически по символьным ссылкам.
+
+#+begin_src emacs-lisp
+(setq vc-follow-symlinks t)
+#+end_src
+
+** Сохранение истории команд и позиций
+
+=saveplace= --- встроенный пакет, позволяющий сохранять позицию в редактируемых файлах. При повторном открытии курсор (=point=) будет автоматически размещен в сохраненной позиции.
+
+#+begin_src emacs-lisp
+(setup saveplace
+    (:option save-place-file (expand-file-name
+                              (format "%s/var/%s"
+                                      user-emacs-directory
+                                      "save-place.el")))
+    (save-place-mode t))
+
+#+end_src
+
+=savehist= --- другой встроенный пакет, сохраняющий историю введенных команд между сессиями. По умолчанию =Emacs= сохраняет историю *только* в пределах текущей сессии.
+
+#+begin_src emacs-lisp
+(setup savehist
+    (:option history-delete-duplicates t
+             savehist-file (expand-file-name
+                            (format "%s/var/%s"
+                                    user-emacs-directory
+                                    "savehist.el")))
+    (savehist-mode t))
+#+end_src
+
+** Ускорение запуска =Emacs=
+
+В файле =early-init.el= для ускорения запуска было задано очень большое пороговое значение для запуска сборщика мусора, чтобы предотвратить его запуск в процессе старта сессии. Также был обнулен =file-name-handler-alist=. Приведенный ниже хук запускается в конце инициализации, в результате чего пороговое значение устанавливается на более-менее адекватном уровне, а =file-name-handler-alist= --- восстанавливается.
+
+#+begin_src emacs-lisp
+(add-hook 'emacs-startup-hook (lambda ()
+                                  (setq gc-cons-threshold (* 8 1024 1024))
+                                  (setq file-name-handler-alist file-name-handler-alist-original)
+                                  (makunbound 'file-name-handler-alist-original)))
+#+end_src
+
+Установка пакета для настройки работы сборщика мусора. Я не использую этот пакет, так как (возможно только по Windows) он вызывает периодическое подвисание =Emacs=. Судя по всему, =Emacs= в Windows однопоточен, что и приводит к такому эффекту.
+
+#+begin_src emacs-lisp :tangle no
+(setup (:straight gcmh)
+    (:option gcmh-verbose t
+             gcmh-low-cons-threshold (* 8 1024 1024))
+    (gcmh-mode t))
+#+end_src
+
+** Убираем мусор
+
+Устанавливаем пакт =no-littering=, блокирующий замусоривание рабочих папок временными файлами.
+
+#+begin_src emacs-lisp
+(setup (:straight no-littering)
+    (setq auto-save-file-name-transforms
+          `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+#+end_src
+
+Запретить =Emacs= создавать блокирующие файлы.
+
+#+begin_src emacs-lisp
+(setq create-lockfiles nil)
+#+end_src
+
+** Работа с файлами
+
+Следующий хук запускается перед сохранением файлов, обеспечивая создание несуществующих каталогов в пути сохраняемого файла.
+
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook
+          (lambda ()
+              (when buffer-file-name
+                  (let ((dir (file-name-directory buffer-file-name)))
+                      (when (and (not (file-exists-p dir))
+                                 (y-or-n-p (format "Directory %s does not exist. Create it? " dir)))
+                          (make-directory dir t))))))
+#+end_src
+
+Следующий хук полезен в Linux, он дает сохраняемому файлу скрипта право на исполнение. В Windows это бесполезно.
+
+#+begin_src emacs-lisp
+(unless ensure/isWindows
+    (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p))
+#+end_src
+
+Настраиваем рекурсивное удаление директорий в =dired=.
+
+#+begin_src emacs-lisp
+(setup dired
+    (:option dired-recursive-deletes 'top))
+#+end_src
+
+* Настройки пользовательского интерфейса
+
+=Emacs= настроен на изменение размера фрейма (окна, в традиционной терминологии оконных менеджеров) пропорционально размеру символа. В оконных менеджерах это может быть неудобно и некрасиво. Следующие настройки заставляют =Emacs= изменять размер фрейма произвольно.
+
+Также автоматически разворачиваем окно при запуске.
+
+#+begin_src emacs-lisp
+(setq frame-resize-pixelwise t)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+#+end_src
+
+Задаем пороговое значение для автоматического разбиения окон по вертикали. Если ширина фрейма менее 80 символов, то будет применено горизонтальное разбиение.
+
+#+begin_src emacs-lisp
+(setq split-width-threshold 80)
+#+end_src
+
+Лично мне не нравится стандартный прямоугольный курсор, черта, на мой взгляд, удобнее.
+
+#+begin_src emacs-lisp
+(setq-default cursor-type 'bar)
+#+end_src
+
+** Вкладки
+
+Ранее я использовал сторонние пакеты для отображения вкладок, то потом узнал, что аналогичная функциональность встроена в =Emacs=: [[https://www.emacswiki.org/emacs/TabBarMode][TabBarMode]]. Да, эти вкладки не такие красивые, как сторонние, но мне хватает.
+
+#+begin_src emacs-lisp
+(setup tab-line
+    (:global "M-<left>" previous-buffer
+             "M-<right>" next-buffer)
+    (global-tab-line-mode t))
+#+end_src
+
+** Статусная строка
+
+А вот статусную строку я поменял. Как ни странно, стандартная не в полной мере соответствовала моим представлениям о минимализме, так что я остановился на [[https://github.com/seagle0128/doom-modeline][Doom Modeline]].
+
+#+begin_src emacs-lisp
+(setup (:straight doom-modeline)
+    (:option doom-modeline-height 24
+             doom-modeline-minor-modes t)
+    (:with-hook after-init-hook
+        (:hook doom-modeline-mode)))
+#+end_src
+
+Также я установил пакет [[https://github.com/tarsius/minions][Minions]], который заменяет довольно неопрятный список второстепенных режимов на аккуратный смайлик (строго говоря на =;-=, но получается смайлик). В Doom Modeline при загрузке этого пакета опциональный список второстепенных режимов заменяется на кнопку с шестеренкой (а не смайликом).
+
+#+begin_src emacs-lisp
+(setup (:straight minions)
+    (minions-mode t))
+#+end_src
+
+А это просто [[https://github.com/TeMPOraL/nyan-mode][нотка безумия]], которая, конечно, не сильно соотносится с моей тягой к минимализму...
+
+#+begin_src emacs-lisp
+(setup (:straight nyan-mode)
+    (nyan-mode))
+#+end_src
+
+** Стартовый экран
+
+Красивый [[https://github.com/emacs-dashboard/emacs-dashboard][стартовый экран]]. Очень удобный, к слову. Показывает ссылки на последние файлы и проекты, плюс я вывел ссылки на файлы и репозиторий настроек =Emacs=.
+
+#+begin_src emacs-lisp
+(setup (:straight dashboard)
+    (:eval-after all-the-icons
+        (:option dashboard-set-heading-icons t
+                 dashboard-set-file-icons t
+                 dashboard-items '((recents . 15)
+                                   (projects . 5))
+                 dashboard-startup-banner (expand-file-name
+                                           "emacs.png"
+                                           (file-name-directory user-init-file))
+                 dashboard-set-navigator t
+                 dashboard-navigator-buttons
+                 `((
+                    (,(all-the-icons-fileicon "emacs" :height 1.0 :v-adjust 0.0)
+                     "Настройки"
+                     "Открыть файл с настройками (init.el)"
+                     (lambda (&rest _)
+                         (find-file user-init-file)))
+                    (,(all-the-icons-octicon "mark-github" :height 1.0 :v-adjust 0.0)
+                     "dotfiles"
+                     "Github с конфигурационными файлами"
+                     (lambda (&rest _) (browse-url "https://github.com/d9d6ka/dotfiles")))
+                    (,(all-the-icons-octicon "mark-github" :height 1.0 :v-adjust 0.0)
+                     "emacs"
+                     "Github с настройками Emacs"
+                     (lambda (&rest _) (browse-url "https://github.com/d9d6ka/emacs")))
+                    ))))
+    (dashboard-setup-startup-hook))
+#+end_src
+
+** Отображение строк
+
+Vim умеет красиво отображать номер текущей строки и относительные номера соседних строк. =Emacs= тоже так умеет. Это имеет смысл для поклонников =Evil Mode=, так как облегчает перемещение между строками, но и просто так тоже красиво.
+
+#+begin_src emacs-lisp
+(setq display-line-numbers-type 'relative)
+(global-display-line-numbers-mode)
+#+end_src
+
+Просим показывать нам аккуратные стрелочки на границе *визуально* разбитой и перенесенной строки.
+
+#+begin_src emacs-lisp
+(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
+(global-visual-line-mode t)
+#+end_src
+
+Очень полезный пакет [[https://gitlab.com/protesilaos/pulsar][pulsar]]. Он визуально подсвечивает текущую строку при наступлении некоторого события, например, при смене окна. Это облегчает работу, так как позволяет не искать курсор по всему экрану.
+
+#+begin_src emacs-lisp
+(setup (:straight pulsar)
+    (:option pulsar-pulse t
+             pulsar-delay 0.055
+             pulsar-pulse-functions '(recenter-top-bottom
+                                      move-to-window-line-top-bottom
+                                      reposition-window
+                                      bookmark-jump
+                                      other-window
+                                      delete-window
+                                      delete-other-windows
+                                      forward-page
+                                      backward-page
+                                      scroll-up-command
+                                      scroll-down-command
+                                      windmove-right
+                                      windmove-left
+                                      windmove-up
+                                      windmove-down
+                                      windmove-swap-states-right
+                                      windmove-swap-states-left
+                                      windmove-swap-states-up
+                                      windmove-swap-states-down
+                                      tab-new
+                                      tab-close
+                                      tab-next
+                                      org-next-visible-heading
+                                      org-previous-visible-heading
+                                      org-forward-heading-same-level
+                                      org-backward-heading-same-level
+                                      outline-backward-same-level
+                                      outline-forward-same-level
+                                      outline-next-visible-heading
+                                      outline-previous-visible-heading
+                                      outline-up-heading
+                                      ctrlf-forward-default
+                                      ctrlf-backward-default
+                                      ctrlf-forward-alternate
+                                      ctrlf-backward-alternate
+                                      ctrlf-forward-symbol
+                                      ctrlf-forward-symbol-at-point
+                                      consult-line))
+    (pulsar-global-mode t))
+#+end_src
+
+** Отображение окон
+
+Иногда во фрейма =Emacs= мы имеем несколько окон. Пакет [[https://github.com/cyrus-and/zoom][zoom]] автоматически изменяет размеры окон так, чтобы активное имело нужный размер.
+
+#+begin_src emacs-lisp
+(setup (:straight zoom)
+    (:option zoom-size '(0.618 . 0.618)
+             zoom-ignored-major-modes '(ess-r-mode
+                                        inferior-ess-r-mode
+                                        ess-rdired-mode)
+             zoom-ignored-buffer-names '("*R*"
+                                         "*R dired*"
+                                         "*R view*"))
+    (zoom-mode))
+#+end_src
+
+Другой пакет, [[https://github.com/gonewest818/dimmer.el][dimmer]], делает неактивные окна более тусклыми, что дополнительно вызуально выделяет активное.
+
+#+begin_src emacs-lisp
+(setup (:straight dimmer)
+    (:option dimmer-fraction 0.6
+             dimmer-watch-frame-focus-events nil)
+    (dimmer-configure-which-key)
+    (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
+    (dimmer-mode t))
+#+end_src
+
+Пакет [[https://www.emacswiki.org/emacs/download/framemove.el][framemove]], конечно, не связан с отображением активных окон напрямую, но позволяет удобно их менять. Строго говоря, пакет расширяет встроенный функционал перемещения между окнами *windmove*, позволяя перемещаться между фреймами.
+
+#+begin_src emacs-lisp
+(setup (:straight framemove)
+    (:option framemove-hook-into-windmove t)
+    (windmove-default-keybindings '(shift meta ctrl)))
+#+end_src
+
+** Дерево каталогов проекта
+
+Достаточно удобное [[https://github.com/jaypei/emacs-neotree][дерево каталогов]] текущего проекта, позволяющее, помимо переключения между файлами, производить несложные операции с ними.
+
+#+begin_src emacs-lisp
+(setup (:straight neotree)
+    (:option neo-smart-open t
+             neo-window-width 40
+             neo-theme (if (display-graphic-p) 'icons 'arrow))
+    (:global "C-x t t" neotree-toggle))
+#+end_src
+
+** Украшательства
+
+*** Темы
+
+Мой выбор на сегодня --- Doom Palenight из [[https://github.com/doomemacs/themes][набора тем]] для DoomEmacs.
+
+#+begin_src emacs-lisp
+(setup (:straight doom-themes
+                  solaire-mode)
+    (:option doom-themes-enable-bold t
+             doom-themes-enable-italic t)
+    (doom-themes-visual-bell-config)
+    (doom-themes-neotree-config)
+    (doom-themes-org-config)
+    (load-theme 'doom-palenight t)
+    (solaire-global-mode t))
+#+end_src
+
+Также можно попробовать [[https://protesilaos.com/emacs/modus-themes][темы Modus]], отличающиеся повышенной контрастностью.
+
+#+begin_src emacs-lisp :tangle no
+(setup modus-themes
+    (:option modus-themes-mode-line '(borderless)
+             modus-themes-bold-constructs t
+             modus-themes-italic-constructs t)
+    (load-theme 'modus-vivendi t))
+#+end_src
+
+*** Шрифты
+
+Настроим стандартный шрифт. Я предпочитаю [[https://github.com/JetBrains/JetBrainsMono][JetBrains Mono]], хотя это дело вкуса.
+
+#+begin_src emacs-lisp
+(set-face-attribute 'default
+                    nil
+                    :font "JetBrains Mono"
+                    :height 100)
+#+end_src
+
+А вот вледующий пакет не будет работать в версиях =Emacs= старше 28.1 из-за ошибки, фатальной для работы пакета. Он добавляет поддержку [[https://github.com/mickeynp/ligature.el][лигатур]], разумеется, если шрифт их поддерживает. Ранее этот пакет отсутствовал в основных репозиториях, поэтому я устанавливаю его из репозитория напрямую.
+
+#+begin_src emacs-lisp
+;; Поддержка лигатур
+;; Для шрифтов без их поддержки неактуально
+(unless (version< emacs-version "28.1")
+    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
+        (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+                                             "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                                             "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                                             "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                                             "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                                             "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                                             ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                                             "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                                             "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                                             "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                                             "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+        (global-ligature-mode t)))
+#+end_src
+
+Следующие два пакета: [[https://github.com/domtronn/all-the-icons.el][All The Icons]] и [[https://github.com/iyefrat/all-the-icons-completion][All The Icons Completion]] добавляют в интерфейс симуляцию иконок, выполняюемую специальными шрифтами.
+
+#+begin_src emacs-lisp
+(setup (:straight all-the-icons
+                  all-the-icons-completion)
+    (all-the-icons-completion-mode))
+#+end_src
+
+* Настройки справки
+
+Пакет [[https://github.com/minad/marginalia][Marginalia]] увеличивает объем дополнительной информации, отображаемой в минибуферах для различных команд.
+
+#+begin_src emacs-lisp
+(setup (:straight marginalia)
+    (:eval-after all-the-icons-completion
+        (:hook all-the-icons-completion-marginalia-setup))
+    (marginalia-mode))
+#+end_src
+
+[[https://github.com/justbur/emacs-which-key][Which Key]] помогает пользователю с комбинациями клавиш, коих в =Emacs= вагон и маленькая телега. Например, через 1 секунду после нажатия =C-x= появится минибуфер со списком возможных продолжений.
+
+#+begin_src emacs-lisp
+(setup (:straight which-key)
+    (:option which-key-idle-delay 1)
+    (which-key-mode))
+#+end_src
+
+Пакет [[https://github.com/Wilfred/helpful][Helpful]] модифицирует и форматирует окна с документацией по функциям, переменным и т.д.
+
+#+begin_src emacs-lisp
+(setup (:straight helpful)
+    (:global [remap describe-function] helpful-callable
+             [remap describe-variable] helpful-variable
+             [remap describe-key] helpful-key
+             "C-h F" helpful-function
+             "C-h C" helpful-command))
+#+end_src
+
+* Настройки ввода
+
+** Мышь
+
+Следующие настройки меняют настройки прокрутки буферов при помощи мыши, а также включают изменение размера текста при помощи колеса прокрутки. Стандартные настройки приводят к чрезвычайно стремительному перемещению по тексту.
+
+#+begin_src emacs-lisp
+(setq mouse-wheel-scroll-amount '(1
+                                  ((shift) . 5)
+                                  ((meta))
+                                  ((control) . text-scale))
+      mouse-wheel-progressive-speed nil)
+
+(setq auto-window-vscroll nil
+      fast-but-imprecise-scrolling t
+      scroll-conservatively 101
+      scroll-margin 0
+      scroll-preserve-screen-position t)
+#+end_src
+
+** Клавиатура
+
+Используем клавишу =ESC= для прерывания всего и вся. Работает не так хорошо, как =C-g=, но тем не менее.
+
+#+begin_src emacs-lisp
+(define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+Настраиваем клавиши для изменения размера текста.
+
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-=") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-set 0)))
+(define-key global-map (kbd "C-+") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-increase 1.1)))
+(define-key global-map (kbd "C--") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-decrease 1.1)))
+#+end_src
+
+Убираем комбинацию клавиш, ранее использованную для отмены, так как она может путаться с комбинациями, приведенными выше.
+
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-_") nil)
+#+end_src
+
+[[https://github.com/a13/reverse-im.el][Reverse-IM]]... На данный пакет должны молиться все, кто пользуется несколькими раскладками клавиатуры. Пакет позволяет не переключать раскладку для ввода комбинаций клавиш. Не работает для ответов на вопрос =y= или =n=, тут надо, все-таки, переключать.
+
+#+begin_src emacs-lisp
+(setup (:straight reverse-im)
+    (:option reverse-im-input-methods '("russian-computer"))
+    (reverse-im-mode t))
+#+end_src
+
+[[https://www.emacswiki.org/emacs/CuaMode][Cua Mode]] позволяет использовать стандартные комбинации клавиш =C-x=, =C-c=, =C-v=. Тут есть сложность: если есть активный регион (выделение), и нужно ввести комбинацию клавиш, включающую =C-x= или =C-c=, то нужно либо дважды быстро ввести нужное начало, либо использовать начало =C-S-x= или =C-S-c=.
+
+#+begin_src emacs-lisp
+(setup cua
+    (:option cua-keep-region-after-copy t)
+    (cua-mode t)
+    (transient-mark-mode t)
+#+end_src
+
+* Настройки редактирования
+
+Если регион активен (то есть активно выделение), то начало ввода очищает выделение.
+
+#+begin_src emacs-lisp
+(delete-selection-mode t)
+#+end_src
+
+** Настройки сохранения
+
+Удаление пробелов в конце строк во время сохранения.
+
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+end_src
+
+Добавление пустой строки при сохранении.
+
+#+begin_src emacs-lisp
+(setq require-final-newline t)
+#+end_src
+
+** Настройки отступов
+
+Настраиваем ширину табуляции в 4 пробела, а также запрещаем отступы знаками табуляции.
+
+#+begin_src emacs-lisp
+(setq-default indent-tabs-mode nil
+              tab-width 4
+              c-basic-offset 4
+              standart-indent 4
+              lisp-body-indent 4)
+#+end_src
+
+Активация встроенного механизма автоматической расстановки отступов.
+
+#+begin_src emacs-lisp
+(electric-indent-mode t)
+#+end_src
+
+Настраиваем поведение клавиши =RET=: при нажатии на нее происхоит не только перенос строки, но и коррекция отступа введенной строки.
+
+#+begin_src emacs-lisp
+(define-key global-map (kbd "RET") 'newline-and-indent)
+#+end_src
+
+** Настройки отмены и повтора
+
+Пакет [[https://gitlab.com/ideasman42/emacs-undo-fu][Undo-Fu]] заменяет стандартный механизм отмены и повтора. Главное отличие: отмена или повтор не заносятся в историю замен, тем самым, с одной стороны, мы уже не можем вернуться к *любому* состоянию буфера, с другой, --- поведение =Emacs= становится более предсказуемым.
+
+#+begin_src emacs-lisp
+(setup (:straight undo-fu)
+    (:require undo-fu)
+    (:option undo-fu-allow-undo-in-region nil
+             undo-fu-ignore-keyboard-quit t)
+    (:with-map global-map
+        (:unbind "C-z"
+                 "C-_"
+                 "C-M-_")
+        (:bind "C-z" undo-fu-only-undo
+               "C-S-z" undo-fu-only-redo))
+    (:bind-into cua--cua-keys-keymap
+        "C-z" undo-fu-only-undo))
+#+end_src
+
+** Настройки отражения скобок
+
+Активация подсветки парных скобок.
+
+#+begin_src emacs-lisp
+(show-paren-mode t)
+#+end_src
+
+Пакет [[https://github.com/Fanael/rainbow-delimiters][Rainbow Delimeters]] раскрашивает парные скобки в зависимости от глубины вложенности.
+
+#+begin_src emacs-lisp
+(setup (:straight rainbow-delimiters)
+    (:hook-into prog-mode org-mode))
+#+end_src
+
+Пакет [[https://github.com/Fuco1/smartparens][Smartparens]] автоматически добавляет закрывающие скобки, причем и довольно сложные, такие как скобки LaTeX. Также пакет добавляет функции для смены окружающих скобок и их удаления.
+
+#+begin_src emacs-lisp
+(setup (:straight (smartparens :type git :host github :repo "Fuco1/smartparens"))
+    (:require smartparens-config)
+    (:bind "C-c b r" sp-rewrap-sexp
+           "C-c b d" sp-splice-sexp)
+    (smartparens-global-mode t)
+    (sp-with-modes '(tex-mode
+                     latex-mode
+                     LaTeX-mode)
+        (sp-local-pair "<<" ">>"
+                       :unless '(sp-in-math-p))))
+#+end_src
+
+** Настройки комментирования
+
+[[https://stackoverflow.com/a/9697222][Данная функция]] позволяет одной комбинацией клавиш закомментировать либо строку, либо регион.
+
+#+begin_src emacs-lisp
+(defun comment-or-uncomment-region-or-line ()
+    "Comments or uncomments the region or the current line."
+    (interactive)
+    (let (beg end)
+        (if (region-active-p)
+                (setq beg (region-beginning) end (region-end))
+            (setq beg (line-beginning-position) end (line-end-position)))
+        (comment-or-uncomment-region beg end)
+        (forward-line)))
+
+(global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line)
+#+end_src
+
+** Настройки замены
+
+[[https://github.com/benma/visual-regexp.el][Visual Regexp]] показывает результат предположительной замены. Причем понимает регулярные выражения.
+
+#+begin_src emacs-lisp
+(setup (:straight visual-regexp)
+    (:require visual-regexp)
+    (:global "M-%" vr/replace
+             "C-M-%" vr/query-replace
+             "C-c v m" vr/mc-mark))
+#+end_src
+
+Пакет [[https://github.com/magnars/multiple-cursors.el][Multiple Cursors]] позволяет создавать несколько курсоров, либо выделяющих одинаковый текст в разных строках, либо создающих столбец из курсоров.
+
+#+begin_src emacs-lisp
+(setup (:straight multiple-cursors)
+    (:option mc/match-cursor-style nil)
+    (:global "C-c m l" mc/edit-lines
+             "C->" mc/mark-next-like-this
+             "C-<" mc/mark-previous-like-this
+             "C-c m a" mc/mark-all-like-this))
+#+end_src
+
+** Полезные команды
+
+[[https://github.com/bbatsov/crux][Crux]] --- набор различных полезных функций.
+
+#+begin_src emacs-lisp
+(setup (:straight crux)
+    (:require crux)
+    (:bind-into global-map
+        "C-c I" crux-find-user-init-file
+        "C-c d" crux-duplicate-current-line-or-region
+        "C-c M-d" crux-duplicate-and-comment-current-line-or-region
+        "S-<return>" crux-smart-open-line
+        "C-S-<return>" crux-smart-open-line-above))
+#+end_src

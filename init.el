@@ -27,4 +27,6 @@
 (require 'module-completion)
 (require 'module-programming)
 
+;; (org-babel-load-file (concat (expand-file-name "~/.emacs.d/") "config.org"))
+
 ;;; init.el ends here
