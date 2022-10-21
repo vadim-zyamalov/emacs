@@ -1,11 +1,10 @@
 ;; init.el --- Emacs config -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Мой модульный файл настроек для Emacs.
-;; Ранее использовал Org-файл для настроек, но его удобство,
-;; заключающееся в возможности написания кода вместе с его описанием,
-;; одновременно является и его недостатком.
-;; Большой файл с настройками постепенно становится тяжело читаемым.
+;; Точка входа для основной настройки Emacs.
+;; Сначала определяем используемые пакеты для автодополнений.
+;; Затем запускаем последнюю версию org-mode.
+;; После чего загружаем настройки из org-документа.
 
 ;;; Code:
 (defconst init/lsp-engine "lsp"
@@ -17,16 +16,10 @@
 (defconst init/snippet-engine "yasnippet"
          "Snippet engine to use.")
 
-;; (require 'module-setup)
-;; (require 'module-base)
-;; (require 'module-ui)
-;; (require 'module-themes)
-;; (require 'module-help)
-;; (require 'module-input)
-;; (require 'module-edit)
-;; (require 'module-completion)
-;; (require 'module-programming)
+;; Гарантируем запуск последней установленной версии org-mode
+(straight-use-package 'org)
 
-(org-babel-load-file (concat (expand-file-name "~/.emacs.d/") "config.org"))
+;; Загружаем настройки из org-файла
+(org-babel-load-file (concat (file-name-directory user-init-file) "config.org"))
 
 ;;; init.el ends here
