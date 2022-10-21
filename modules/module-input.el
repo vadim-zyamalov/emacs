@@ -50,5 +50,8 @@
     (cua-mode t)
     (transient-mark-mode t))
 
+(setup (:straight hydra)
+    (require 'hydra))
+
 (provide 'module-input)
 ;;; module-input.el ends here

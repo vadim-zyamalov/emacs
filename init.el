@@ -17,16 +17,16 @@
 (defconst init/snippet-engine "yasnippet"
          "Snippet engine to use.")
 
-(require 'module-setup)
-(require 'module-base)
-(require 'module-ui)
-(require 'module-themes)
-(require 'module-help)
-(require 'module-input)
-(require 'module-edit)
-(require 'module-completion)
-(require 'module-programming)
+;; (require 'module-setup)
+;; (require 'module-base)
+;; (require 'module-ui)
+;; (require 'module-themes)
+;; (require 'module-help)
+;; (require 'module-input)
+;; (require 'module-edit)
+;; (require 'module-completion)
+;; (require 'module-programming)
 
-;; (org-babel-load-file (concat (expand-file-name "~/.emacs.d/") "config.org"))
+(org-babel-load-file (concat (expand-file-name "~/.emacs.d/") "config.org"))
 
 ;;; init.el ends here

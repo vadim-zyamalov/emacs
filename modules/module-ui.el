@@ -148,7 +148,12 @@
 ;; Перемещение между фреймами и окнами
 (setup (:straight framemove)
     (:option framemove-hook-into-windmove t)
-    (windmove-default-keybindings '(shift meta ctrl)))
+    (:eval-after hydra
+        (defhydra hydra-wind (global-map "<f6>") "Moving between windows"
+            ("<left>" windmove-left "left")
+            ("<right>" windmove-right "right")
+            ("<up>" windmove-up "up")
+            ("<down>" windmove-down "down"))))
 
 
 ;; Дерево каталогов
