@@ -225,7 +225,7 @@ See `advice-add' for more details."
 (setup (:straight framemove)
     (:option framemove-hook-into-windmove t)
     (:eval-after hydra
-        (defhydra hydra-wind (global-map "C-S-v")
+        (defhydra hydra-wind (global-map "<f6>")
             "Moving between windows"
             ("<left>"  windmove-left  "left")
             ("<right>" windmove-right "right")
@@ -253,20 +253,20 @@ See `advice-add' for more details."
                     :font "JetBrains Mono"
                     :height 100)
 
-;;(unless (version< emacs-version "28.1")
-;;    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
-;;        (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-;;                                             "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-;;                                             "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-;;                                             "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-;;                                             "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-;;                                             "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-;;                                             ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-;;                                             "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-;;                                             "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-;;                                             "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-;;                                             "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-;;        (global-ligature-mode t)))
+(unless (version< emacs-version "28.1")
+   (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
+       (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+                                            "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                                            "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                                            "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                                            "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                                            "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                                            ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                                            "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                                            "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                                            "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                                            "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+       (global-ligature-mode t)))
 
 (setup (:straight all-the-icons
                   all-the-icons-completion)
@@ -587,15 +587,15 @@ See `advice-add' for more details."
     (:option markdown-fontify-code-blocks-natively t
              markdown-command "multimarkdown"))
 
-;;(defun my/angle-brackets-fix ()
-;;    (modify-syntax-entry ?< "." org-mode-syntax-table)
-;;    (modify-syntax-entry ?> "." org-mode-syntax-table))
+(defun my/angle-brackets-fix ()
+    (modify-syntax-entry ?< "." org-mode-syntax-table)
+    (modify-syntax-entry ?> "." org-mode-syntax-table))
 
-(setup org
-    (:straight edit-indirect
-               org-bullets
-               toc-org
-               org-appear)
+(setup (:straight org
+                  edit-indirect
+                  org-bullets
+                  toc-org
+                  org-appear)
     (:option org-edit-src-content-indentation 0
              org-src-preserve-indentation nil
              org-src-fontify-natively t

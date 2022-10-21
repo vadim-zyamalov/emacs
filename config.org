@@ -448,7 +448,7 @@ Vim умеет красиво отображать номер текущей с�
 (setup (:straight framemove)
     (:option framemove-hook-into-windmove t)
     (:eval-after hydra
-        (defhydra hydra-wind (global-map "C-S-v")
+        (defhydra hydra-wind (global-map "<f6>")
             "Moving between windows"
             ("<left>"  windmove-left  "left")
             ("<right>" windmove-right "right")
@@ -510,20 +510,20 @@ Vim умеет красиво отображать номер текущей с�
 А вот вледующий пакет не будет работать в версиях =Emacs= старше 28.1 из-за ошибки, фатальной для работы пакета. Он добавляет поддержку [[https://github.com/mickeynp/ligature.el][лигатур]], разумеется, если шрифт их поддерживает. Ранее этот пакет отсутствовал в основных репозиториях, поэтому я устанавливаю его из репозитория напрямую.
 
 #+begin_src emacs-lisp :noweb no
-;;(unless (version< emacs-version "28.1")
-;;    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
-;;        (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-;;                                             "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-;;                                             "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-;;                                             "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-;;                                             "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-;;                                             "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-;;                                             ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-;;                                             "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-;;                                             "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-;;                                             "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-;;                                             "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-;;        (global-ligature-mode t)))
+(unless (version< emacs-version "28.1")
+   (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
+       (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+                                            "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                                            "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                                            "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                                            "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                                            "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                                            ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                                            "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                                            "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                                            "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                                            "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+       (global-ligature-mode t)))
 #+end_src
 
 Следующие два пакета: [[https://github.com/domtronn/all-the-icons.el][All The Icons]] и [[https://github.com/iyefrat/all-the-icons-completion][All The Icons Completion]] добавляют в интерфейс симуляцию иконок, выполняюемую специальными шрифтами.
@@ -1036,17 +1036,17 @@ Vim умеет красиво отображать номер текущей с�
 ** Org-mode
 
 #+begin_src emacs-lisp
-;;(defun my/angle-brackets-fix ()
-;;    (modify-syntax-entry ?< "." org-mode-syntax-table)
-;;    (modify-syntax-entry ?> "." org-mode-syntax-table))
+(defun my/angle-brackets-fix ()
+    (modify-syntax-entry ?< "." org-mode-syntax-table)
+    (modify-syntax-entry ?> "." org-mode-syntax-table))
 #+end_src
 
 #+begin_src emacs-lisp
-(setup org
-    (:straight edit-indirect
-               org-bullets
-               toc-org
-               org-appear)
+(setup (:straight org
+                  edit-indirect
+                  org-bullets
+                  toc-org
+                  org-appear)
     (:option org-edit-src-content-indentation 0
              org-src-preserve-indentation nil
              org-src-fontify-natively t
