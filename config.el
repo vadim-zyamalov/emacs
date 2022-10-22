@@ -514,10 +514,10 @@ See `advice-add' for more details."
                                         company-sort-by-occurrence
                                         company-sort-prefer-same-case-prefix))
         (:global [remap indent-for-tab-command] company-indent-or-complete-common)
-        (:with-map company-active-map
-            (:bind "RET" my/ret-handle
-                   "<return>" my/ret-handle
-                   "<tab>" company-complete-common-or-cycle))
+        (:bind-into company-active-map
+            "RET" my/ret-handle
+            "<return>" my/ret-handle
+            "<tab>" company-complete-common-or-cycle)
         (:hook company-box-mode)
         (:with-hook after-init
             (:hook global-company-mode))))
@@ -557,8 +557,8 @@ See `advice-add' for more details."
                               (file-name-directory user-init-file)))
         (:global "<backtab>" tempel-complete
                  "<f7>" tempel-insert)
-        (:with-map tempel-map
-            (:bind "<backtab>" tempel-done))))
+        (:bind-into tempel-map
+            "<backtab>" tempel-done)))
 
 (when (string-equal init/snippet-engine "yasnippet")
     (setup (:straight yasnippet)
