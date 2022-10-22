@@ -758,9 +758,9 @@ See `advice-add' for more details."
     (interactive "r")
     (save-excursion
         (goto-char end)
-        (if (and (equal end (point-max))
-                 (equal end (line-end-position))
-                 (not (equal end (line-beginning-position))))
+        (if (and (= end (point-max))
+                 (= end (line-end-position))
+                 (/= end (line-beginning-position)))
                 (insert "\n"))))
 
 (defun auctex/table-format (delim)
