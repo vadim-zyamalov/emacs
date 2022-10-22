@@ -718,7 +718,7 @@ Vim умеет красиво отображать номер текущей с�
 
 Пакет [[https://github.com/Fuco1/smartparens][Smartparens]] автоматически добавляет закрывающие скобки, причем и довольно сложные, такие как скобки LaTeX. Также пакет добавляет функции для смены окружающих скобок и их удаления.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :noweb no
 (setup (:straight smartparens)
     (:require smartparens-config)
     (:bind "C-c b r" sp-rewrap-sexp
@@ -946,9 +946,19 @@ Vim умеет красиво отображать номер текущей с�
 
 [[https://github.com/minad/consult][Consult]] представляет собой набор функций, расширяющих встроенные в =Emacs= аналоги.
 
-[[https://github.com/minad/consult][Embark]] позволяет выполнить некоторое стандартное действие в зависимости от того, что находится под курсором.
+[[https://github.com/oantolin/embark][Embark]] позволяет выполнить некоторое стандартное действие в зависимости от того, что находится под курсором.
 
 [[https://github.com/oantolin/orderless][Orderless]] дает возможность поиска в минибуфере при помощи ввода некоторого набора условий (например частей строк), разделенных пробелами. Будут показаны кандидаты, соответствующие всем условиям в *произвольном* порядке.
+
+| Клавиша | Команда         | Действие                                     |
+|---------+-----------------+----------------------------------------------|
+| =<f2>=    | consult-buffer  | Меню выбора буфера                           |
+| =C-<f2>=  | ibuffer         | "Стандартное" меню выбора буфера             |
+| =C-.=     | embark-act      | Меню выбора действия с объектом под курсором |
+| =C-;=     | embark-dwim     | Выполнение стандартного действия с объектом  |
+| =C-h B=   | embark-bindings | Меню со справкой по комбинациям клавиш       |
+| =C-s=     | consult-line    | Поиск строк по шаблону                       |
+|---------+-----------------+----------------------------------------------|
 
 #+begin_src emacs-lisp
 (setup (:straight vertico
@@ -982,16 +992,36 @@ Vim умеет красиво отображать номер текущей с�
 
 ** Сниппеты
 
+[[https://github.com/minad/tempel][Tempel]] является переосмыслением встроенного механизма сниппетов =tempo= от автора =Vertico= и =Corfu=. Удобен, привычен для давних пользователей =Emacs=, поскольку в целом повторяет синтаксис описания шаблонов =tempo=.
+
+| Клавиша | Команда       | Действие                      |
+|---------+---------------+-------------------------------|
+| =S-TAB=   | tempel-expand | Разворачивание шаблона        |
+|         | tempel-done   | Завершение заполнения шаблона |
+|---------+---------------+-------------------------------|
+| =<f7>=    | tempel-insert | Меню шаблонов                 |
+|---------+---------------+-------------------------------|
+
 #+begin_src emacs-lisp
 (when (string-equal init/snippet-engine "tempel")
     (setup (:straight tempel)
         (:option tempel-path (expand-file-name
                               "templates"
                               (file-name-directory user-init-file)))
-        (:global "<f6>" tempel-complete
-                 "<f7>" tempel-insert
-                 "C-<f6>" tempel-done)))
+        (:global "<backtab>" tempel-complete
+                 "<f7>" tempel-insert)
+        (:with-map tempel-map
+            (:bind "<backtab>" tempel-done))))
 #+end_src
+
+Но на текущий момент многие воспринимают как стандарт [[https://github.com/joaotavora/yasnippet][Yasnippet]] (а точнее формат шаблонов [[http://manual.macromates.com/en/snippets][TextMate]]): ряд LSP возвращают сниппеты в совместимом с Yasnippet формате, что позволяет ему подхватывать их `на лету`.
+
+[[https://github.com/AndreaCrotti/yasnippet-snippets][Yasnippet-snippets]] добавляет коллекцию сниппетов для большого числа разных языков программирования. [[https://github.com/mohkale/consult-yasnippet][Consut-Yasnippet]] включает поддержку =Yasnippet= в =Consult=.
+
+| Клавиша | Команда           | Действие      |
+|---------+-------------------+---------------|
+| =<f7>=    | consult-yasnippet | Меню шаблонов |
+|---------+-------------------+---------------|
 
 #+begin_src emacs-lisp
 (when (string-equal init/snippet-engine "yasnippet")
@@ -1042,42 +1072,42 @@ Vim умеет красиво отображать номер текущей с�
 #+end_src
 
 #+begin_src emacs-lisp
-(setup (:straight org
-                  edit-indirect
-                  org-bullets
-                  toc-org
-                  org-appear)
-    (:option org-edit-src-content-indentation 0
-             org-src-preserve-indentation nil
-             org-src-fontify-natively t
-             org-src-tab-acts-natively t
-             org-return-follows-link t
-             org-mouse-1-follows-link t
-             org-descriptive-links t
-             org-hide-emphasis-markers t
-             org-support-shift-select t
-             org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")
-             org-appear-autolinks t
-             org-appear-autosubmarkers t)
-    (require 'org-tempo)
-    (org-babel-do-load-languages
-     'org-babel-load-languages '((emacs-lisp . t)
-                                 (python . t)
-                                 (lua . t)
-                                 (haskell . t)
-                                 (shell . t)))
-    (progn
-        (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-        (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-        (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
-        (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
-        (add-to-list 'org-structure-template-alist '("py" . "src python"))
-        (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
-    (:hook org-indent-mode
-           my/angle-brackets-fix
-           org-bullets-mode
-           toc-org-mode
-           org-appear-mode))
+  (setup org
+      (:straight edit-indirect
+                 org-bullets
+                 toc-org
+                 org-appear)
+      (:option org-edit-src-content-indentation 0
+               org-src-preserve-indentation nil
+               org-src-fontify-natively t
+               org-src-tab-acts-natively t
+               org-return-follows-link t
+               org-mouse-1-follows-link t
+               org-descriptive-links t
+               org-hide-emphasis-markers t
+               org-support-shift-select t
+               org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")
+               org-appear-autolinks t
+               org-appear-autosubmarkers t)
+      (require 'org-tempo)
+      (org-babel-do-load-languages
+       'org-babel-load-languages '((emacs-lisp . t)
+                                   (python . t)
+                                   (lua . t)
+                                   (haskell . t)
+                                   (shell . t)))
+      (progn
+          (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+          (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+          (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
+          (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
+          (add-to-list 'org-structure-template-alist '("py" . "src python"))
+          (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
+      (:hook org-indent-mode
+             my/angle-brackets-fix
+             org-bullets-mode
+             toc-org-mode
+             org-appear-mode))
 #+end_src
 
 ** ESS

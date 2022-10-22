@@ -555,9 +555,10 @@ See `advice-add' for more details."
         (:option tempel-path (expand-file-name
                               "templates"
                               (file-name-directory user-init-file)))
-        (:global "<f6>" tempel-complete
-                 "<f7>" tempel-insert
-                 "C-<f6>" tempel-done)))
+        (:global "<backtab>" tempel-complete
+                 "<f7>" tempel-insert)
+        (:with-map tempel-map
+            (:bind "<backtab>" tempel-done))))
 
 (when (string-equal init/snippet-engine "yasnippet")
     (setup (:straight yasnippet)
@@ -591,11 +592,11 @@ See `advice-add' for more details."
     (modify-syntax-entry ?< "." org-mode-syntax-table)
     (modify-syntax-entry ?> "." org-mode-syntax-table))
 
-(setup (:straight org
-                  edit-indirect
-                  org-bullets
-                  toc-org
-                  org-appear)
+(setup org
+    (:straight edit-indirect
+               org-bullets
+               toc-org
+               org-appear)
     (:option org-edit-src-content-indentation 0
              org-src-preserve-indentation nil
              org-src-fontify-natively t
