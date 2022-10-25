@@ -283,9 +283,10 @@ See `advice-add' for more details."
 
 (setup (:straight helpful)
     (:global [remap describe-function] helpful-callable
+             "<f1> f" helpful-function
              [remap describe-variable] helpful-variable
+             "<f1> v" helpful-variable
              [remap describe-key] helpful-key
-             "C-h F" helpful-function
              "C-h C" helpful-command))
 
 (setq mouse-wheel-scroll-amount '(1
@@ -360,16 +361,18 @@ See `advice-add' for more details."
 (setup (:straight rainbow-delimiters)
     (:hook-into prog-mode org-mode))
 
-(setup (:straight smartparens)
-    (:require smartparens-config)
-    (:bind "C-c b r" sp-rewrap-sexp
-           "C-c b d" sp-splice-sexp)
-    (smartparens-global-mode t)
-    (sp-with-modes '(tex-mode
-                     latex-mode
-                     LaTeX-mode)
-        (sp-local-pair "<<" ">>"
-                       :unless '(sp-in-math-p))))
+(if (not (string-equal init/completion-popup "company"))
+        (setup (:straight smartparens)
+            (:require smartparens-config)
+            (:bind "C-c b r" sp-rewrap-sexp
+                   "C-c b d" sp-splice-sexp)
+            (smartparens-global-mode t)
+            (sp-with-modes '(tex-mode
+                             latex-mode
+                             LaTeX-mode)
+                (sp-local-pair "<<" ">>"
+                               :unless '(sp-in-math-p))))
+    (electric-pair-mode t))
 
 (defun comment-or-uncomment-region-or-line ()
     "Comments or uncomments the region or the current line."
@@ -405,6 +408,8 @@ See `advice-add' for more details."
         "S-<return>" crux-smart-open-line
         "C-S-<return>" crux-smart-open-line-above))
 
+(setup (:straight cape))
+
 (defun lsp/lsp ()
     "Using an appropriate LSP-engine."
     (cond ((string-equal init/lsp-engine "lsp")
@@ -418,8 +423,7 @@ See `advice-add' for more details."
     "Making LSP capf non-greedy."
     (progn
         (fset 'non-greedy-lsp
-              (cape-capf-buster
-               (cape-capf-properties #'lsp-completion-at-point :exclusive 'no)))
+              (cape-capf-properties #'lsp-completion-at-point :exclusive 'no))
         (setq completion-at-point-functions
               (list #'non-greedy-lsp))))
 
@@ -427,8 +431,7 @@ See `advice-add' for more details."
     "Making Eglot capf non-greedy."
     (progn
         (fset 'non-greedy-eglot
-              (cape-capf-buster
-               (cape-capf-properties #'eglot-completion-at-point :exclusive 'no)))
+              (cape-capf-properties #'eglot-completion-at-point :exclusive 'no))
         (setq completion-at-point-functions
               (list #'non-greedy-eglot))))
 
@@ -439,19 +442,20 @@ See `advice-add' for more details."
             (funcall (symbol-function tmp-symbol)))))
 
 (when (string-equal init/lsp-engine "lsp")
-(setup (:straight lsp-mode)
-    (:option lsp-headerline-breadcrumb-icons-enable nil
-             lsp-enable-file-watchers nil
-             lsp-keymap-prefix "C-c l"
-             lsp-completion-provider :none)
-    (with-eval-after-load 'lsp-mode
-        (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-    (:hook lsp-enable-which-key-integration)
-    (:with-mode lsp-completion-mode
-        (:hook (lambda ()
-                   (progn
-                       (lsp/non-greedy-lsp-mode)
-                       (lsp/extra-capf)))))))
+    (setup (:straight lsp-mode)
+        (:option lsp-headerline-breadcrumb-icons-enable nil
+                 lsp-enable-file-watchers nil
+                 lsp-keymap-prefix "C-c l")
+        (if (equal init/completion-popup "corfu")
+                (:option lsp-completion-provider :none))
+        (with-eval-after-load 'lsp-mode
+            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
+        (:hook lsp-enable-which-key-integration)
+        (:with-mode lsp-completion-mode
+            (:hook (lambda ()
+                       (progn
+                           (lsp/non-greedy-lsp-mode)
+                           (lsp/extra-capf)))))))
 
 (when (string-equal init/lsp-engine "eglot")
     (setup (:straight eglot)
@@ -469,7 +473,6 @@ See `advice-add' for more details."
     (setup (:straight corfu
                       corfu-doc
                       kind-icon
-                      cape
                       popon
                       corfu-terminal
                       (corfu-doc-terminal
@@ -505,7 +508,8 @@ See `advice-add' for more details."
 
     (setup (:straight company
                       company-box)
-        (:option company-backends '((company-capf))
+        (:option tab-always-indent 'complete
+                 company-backends '((company-capf))
                  company-selection-wrap-around t
                  company-minimum-prefix-length 1
                  company-idle-delay nil
@@ -519,36 +523,57 @@ See `advice-add' for more details."
             "<return>" my/ret-handle
             "<tab>" company-complete-common-or-cycle)
         (:hook company-box-mode)
-        (:with-hook after-init
-            (:hook global-company-mode))))
+        (global-company-mode)))
 
-(setup (:straight vertico
-                  consult
-                  embark
-                  orderless)
-    (:option vertico-cycle t
-             vertico-mouse-mode t
-             vertico-count 8
-             vertico-resize t
-             prefix-help-command #'embark-prefix-help-command
-             completion-styles '(orderless basic)
-             completion-category-defaults nil
-             completion-category-overrides '((file (styles basic partial-completion))))
-    (:global "<f2>" consult-buffer
-             "C-<f2>" ibuffer
-             "C-." embark-act
-             "C-;" embark-dwim
-             "C-h B" embark-bindings
-             "C-s" consult-line)
-    (:with-hook minibuffer-setup-hook
-        (:hook (lambda ()
-                   (setq completion-in-region-function
-                         (if vertico-mode
-                                 #'consult-completion-in-region
-                             #'completion--in-region)))))
-    (vertico-mode)
-    (:with-mode embark-collect-mode
-        (:hook consult-preview-at-point-mode)))
+(when (equal init/completion-minibuf "vertico")
+    (setup (:straight vertico
+                      consult
+                      embark
+                      orderless)
+        (:option vertico-cycle t
+                 vertico-mouse-mode t
+                 vertico-count 8
+                 vertico-resize t
+                 prefix-help-command #'embark-prefix-help-command
+                 completion-styles '(orderless basic)
+                 completion-category-defaults nil
+                 completion-category-overrides '((file (styles basic partial-completion))))
+        (:global "C-x b" consult-buffer
+                 "C-x C-b" ibuffer
+                 "C-." embark-act
+                 "C-;" embark-dwim
+                 "C-h B" embark-bindings
+                 "C-s" consult-line)
+        (:with-hook minibuffer-setup-hook
+            (:hook (lambda ()
+                       (setq completion-in-region-function
+                             (if vertico-mode
+                                     #'consult-completion-in-region
+                                 #'completion--in-region)))))
+        (vertico-mode)
+        (:with-mode embark-collect-mode
+            (:hook consult-preview-at-point-mode))))
+
+(when (equal init/completion-minibuf "ivy")
+    (setup (:straight ivy
+                      swiper
+                      counsel)
+        (:option ivy-use-virtual-buffers t
+                 ivy-count-format "(%d/%d) "
+                 ivy-wrap t)
+        (:global "C-s" swiper-isearch
+                 "M-x" counsel-M-x
+                 "C-x C-f" counsel-find-file
+                 "M-y" counsel-yank-pop
+                 "<f1> l" counsel-find-library
+                 "<f2> i" counsel-info-lookup-symbol
+                 "<f2> u" counsel-unicode-char
+                 "<f2> j" counsel-set-variable
+                 "C-x b" ivy-switch-buffer
+                 "C-x C-b" ibuffer
+                 "C-c v" ivy-push-view
+                 "C-c V" ivy-pop-view)
+        (ivy-mode t)))
 
 (when (string-equal init/snippet-engine "tempel")
     (setup (:straight tempel)
@@ -629,7 +654,9 @@ See `advice-add' for more details."
            toc-org-mode
            org-appear-mode))
 
-(setup (:straight ess)
+(setup (:straight ess
+                  poly-R)
+    (:option polymode-lsp-integration nil)
     (unless (getenv "LC_ALL")
         (setenv "LC_ALL" "ru_RU.UTF-8"))
     (setq display-buffer-alist
