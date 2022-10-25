@@ -572,7 +572,8 @@ See `advice-add' for more details."
                  "C-x b" ivy-switch-buffer
                  "C-x C-b" ibuffer
                  "C-c v" ivy-push-view
-                 "C-c V" ivy-pop-view)
+                 "C-c V" ivy-pop-view
+                 "C-c C-r" ivy-resume)
         (ivy-mode t)))
 
 (when (string-equal init/snippet-engine "tempel")

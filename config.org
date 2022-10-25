@@ -1119,7 +1119,8 @@ Vim умеет красиво отображать номер текущей с�
                  "C-x b" ivy-switch-buffer
                  "C-x C-b" ibuffer
                  "C-c v" ivy-push-view
-                 "C-c V" ivy-pop-view)
+                 "C-c V" ivy-pop-view
+                 "C-c C-r" ivy-resume)
         (ivy-mode t)))
 #+end_src
 
