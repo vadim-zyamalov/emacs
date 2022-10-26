@@ -834,7 +834,8 @@ to the LaTeX table."
                company-reftex
                company-auctex
                company-math)
-    (:option preview-pdf-color-adjust-method t
+    (:option LaTeX-electric-left-right-brace t
+             preview-pdf-color-adjust-method t
              preview-auto-cache-preamble t
              bibtex-dialect 'biblatex
              reftex-cite-format '((?\C-m . "\\cite[]{%l}")
