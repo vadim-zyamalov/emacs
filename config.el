@@ -557,7 +557,8 @@ See `advice-add' for more details."
 (when (equal init/completion-minibuf "ivy")
     (setup (:straight ivy
                       swiper
-                      counsel)
+                      counsel
+                      smex)
         (:option ivy-use-virtual-buffers t
                  ivy-count-format "(%d/%d) "
                  ivy-wrap t)
@@ -745,12 +746,12 @@ See `advice-add' for more details."
 
 (defun auctex/latexmk ()
     "Add a command for TeX-file compilation via latexmk."
-    (push
+    (add-to-list
+     'TeX-command-list
      '("LaTeX Make"
        "latexmk -pdf -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
-       :help "Make the file using latexmk.")
-     TeX-command-list))
+       :help "Make the file using latexmk.")))
 
 (defun my/region-or-env-or-paragraph ()
     "Produce region from LaTeX environment or paragraph if no any already."

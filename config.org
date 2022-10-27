@@ -1104,7 +1104,8 @@ Vim умеет красиво отображать номер текущей с�
 (when (equal init/completion-minibuf "ivy")
     (setup (:straight ivy
                       swiper
-                      counsel)
+                      counsel
+                      smex)
         (:option ivy-use-virtual-buffers t
                  ivy-count-format "(%d/%d) "
                  ivy-wrap t)
@@ -1382,12 +1383,12 @@ npm i -g typescript-language-server; npm i -g typescript
 #+begin_src emacs-lisp
 (defun auctex/latexmk ()
     "Add a command for TeX-file compilation via latexmk."
-    (push
+    (add-to-list
+     'TeX-command-list
      '("LaTeX Make"
        "latexmk -pdf -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
-       :help "Make the file using latexmk.")
-     TeX-command-list))
+       :help "Make the file using latexmk.")))
 #+end_src
 
 Далее ряд служебных *неинтерактивных* функций. Первая активирует регион, основанный на текущем окружении LaTeX или параграфе.
