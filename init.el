@@ -10,10 +10,10 @@
 (defconst init/lsp-engine "lsp"
          "LSP engine to use.")
 
-(defconst init/completion-popup "company"
+(defconst init/completion-popup "corfu"
          "Completion popup to use.")
 
-(defconst init/completion-minibuf "ivy"
+(defconst init/completion-minibuf "vertico"
          "Completion in minibuffer selector to use.")
 
 (defconst init/snippet-engine "yasnippet"

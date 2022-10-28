@@ -498,14 +498,6 @@ See `advice-add' for more details."
             (corfu-doc-terminal-mode t))))
 
 (when (string-equal init/completion-popup "company")
-    (defun my/ret-handle ()
-        (interactive)
-        (if (company-explicit-action-p)
-                (company-complete)
-            (call-interactively
-             (or (key-binding (this-command-keys))
-                 (key-binding (kbd "RET"))))))
-
     (setup (:straight company
                       company-box)
         (:option tab-always-indent 'complete
@@ -519,8 +511,6 @@ See `advice-add' for more details."
                                         company-sort-prefer-same-case-prefix))
         (:global [remap indent-for-tab-command] company-indent-or-complete-common)
         (:bind-into company-active-map
-            "RET" my/ret-handle
-            "<return>" my/ret-handle
             "<tab>" company-complete-common-or-cycle)
         (:hook company-box-mode)
         (global-company-mode)))
@@ -835,8 +825,7 @@ to the LaTeX table."
                company-reftex
                company-auctex
                company-math)
-    (:option LaTeX-electric-left-right-brace t
-             preview-pdf-color-adjust-method t
+    (:option preview-pdf-color-adjust-method t
              preview-auto-cache-preamble t
              bibtex-dialect 'biblatex
              reftex-cite-format '((?\C-m . "\\cite[]{%l}")
