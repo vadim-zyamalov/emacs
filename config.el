@@ -343,18 +343,16 @@ See `advice-add' for more details."
 
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
-(setup (:straight undo-fu)
-    (:require undo-fu)
-    (:option undo-fu-allow-undo-in-region nil
-             undo-fu-ignore-keyboard-quit t)
+(setup (:straight undo-tree)
+    (global-undo-tree-mode)
     (:with-map global-map
         (:unbind "C-z"
                  "C-_"
                  "C-M-_")
-        (:bind "C-z" undo-fu-only-undo
-               "C-S-z" undo-fu-only-redo))
+        (:bind "C-z" undo-tree-undo
+               "C-S-z" undo-tree-redo))
     (:bind-into cua--cua-keys-keymap
-        "C-z" undo-fu-only-undo))
+        "C-z" undo-tree-undo))
 
 (show-paren-mode t)
 
