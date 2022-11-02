@@ -514,7 +514,9 @@ See `advice-add' for more details."
         (global-company-mode)))
 
 (when (equal init/completion-minibuf "vertico")
-    (setup (:straight vertico
+    (setup (:straight (vertico :files (:defaults "extensions/*")
+                               :includes (vertico-mouse
+                                          vertico-repeat))
                       consult
                       embark
                       orderless)
@@ -531,13 +533,15 @@ See `advice-add' for more details."
                  "C-." embark-act
                  "C-;" embark-dwim
                  "C-h B" embark-bindings
-                 "C-s" consult-line)
+                 "C-s" consult-line
+                 "M-R" vertico-repeat)
         (:with-hook minibuffer-setup-hook
             (:hook (lambda ()
                        (setq completion-in-region-function
                              (if vertico-mode
                                      #'consult-completion-in-region
-                                 #'completion--in-region)))))
+                                 #'completion--in-region)))
+                   vertico-repeat-save))
         (vertico-mode)
         (:with-mode embark-collect-mode
             (:hook consult-preview-at-point-mode))))
