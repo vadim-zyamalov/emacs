@@ -1405,7 +1405,13 @@ npm i -g typescript-language-server; npm i -g typescript
      '("XeLaTeX"
        "%`xelatex%(mode)%' --output-directory=outputx %t"
        TeX-run-TeX nil t
-       :help "Make the file using XeTeX.")))
+       :help "Make the file using XeTeX."))
+    (add-to-list
+     'TeX-command-list
+     '("LuaLaTeX"
+       "%`lualatex -output-directory=outputl %t"
+       TeX-run-TeX nil t
+       :help "Make the file using LuaTeX.")))
 #+end_src
 
 Далее ряд служебных *неинтерактивных* функций. Первая активирует регион, основанный на текущем окружении LaTeX или параграфе.
@@ -1524,8 +1530,7 @@ to the LaTeX table."
                                   (?n . "\\nocite{%l}"))
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
-             reftex-plug-into-AUCTeX t
-             TeX-show-compilation t)
+             reftex-plug-into-AUCTeX t)
     (:hook lsp/lsp
            auctex/extra-commands
            turn-on-reftex))
