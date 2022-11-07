@@ -1392,14 +1392,20 @@ npm i -g typescript-language-server; npm i -g typescript
 Добавление =LaTeX Make= в список процедур для компиляции LaTeX-документов.
 
 #+begin_src emacs-lisp
-(defun auctex/latexmk ()
+(defun auctex/extra-commands ()
     "Add a command for TeX-file compilation via latexmk."
     (add-to-list
      'TeX-command-list
      '("LaTeX Make"
        "latexmk -pdf -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
-       :help "Make the file using latexmk.")))
+       :help "Make the file using latexmk."))
+    (add-to-list
+     'TeX-command-list
+     '("XeLaTeX"
+       "%`xelatex%(mode)%' --output-directory=outputx %t"
+       TeX-run-TeX nil t
+       :help "Make the file using XeTeX.")))
 #+end_src
 
 Далее ряд служебных *неинтерактивных* функций. Первая активирует регион, основанный на текущем окружении LaTeX или параграфе.
@@ -1518,8 +1524,9 @@ to the LaTeX table."
                                   (?n . "\\nocite{%l}"))
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
-             reftex-plug-into-AUCTeX t)
+             reftex-plug-into-AUCTeX t
+             TeX-show-compilation t)
     (:hook lsp/lsp
-           auctex/latexmk
+           auctex/extra-commands
            turn-on-reftex))
 #+end_src

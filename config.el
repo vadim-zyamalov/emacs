@@ -758,14 +758,20 @@ See `advice-add' for more details."
         (setq completion-at-point-functions
               (list 'non-greedy-tex))))
 
-(defun auctex/latexmk ()
+(defun auctex/extra-commands ()
     "Add a command for TeX-file compilation via latexmk."
     (add-to-list
      'TeX-command-list
      '("LaTeX Make"
        "latexmk -pdf -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
-       :help "Make the file using latexmk.")))
+       :help "Make the file using latexmk."))
+    (add-to-list
+     'TeX-command-list
+     '("XeLaTeX"
+       "%`xelatex%(mode)%' --output-directory=outputx %t"
+       TeX-run-TeX nil t
+       :help "Make the file using XeTeX.")))
 
 (defun my/region-or-env-or-paragraph ()
     "Produce region from LaTeX environment or paragraph if no any already."
@@ -862,7 +868,8 @@ to the LaTeX table."
                                   (?n . "\\nocite{%l}"))
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
-             reftex-plug-into-AUCTeX t)
+             reftex-plug-into-AUCTeX t
+             TeX-show-compilation t)
     (:hook lsp/lsp
-           auctex/latexmk
+           auctex/extra-commands
            turn-on-reftex))
