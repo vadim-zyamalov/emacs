@@ -769,13 +769,13 @@ See `advice-add' for more details."
     (add-to-list
      'TeX-command-list
      '("XeLaTeX"
-       "%`xelatex%(mode)%' --output-directory=outputx %t"
+       "%`xelatex%(mode)%' --shell-escape --output-directory=outputx %t"
        TeX-run-TeX nil t
        :help "Make the file using XeTeX."))
     (add-to-list
      'TeX-command-list
      '("LuaLaTeX"
-       "%`lualatex -output-directory=outputl %t"
+       "%`lualatex --shell-escape -output-directory=outputl %t"
        TeX-run-TeX nil t
        :help "Make the file using LuaTeX.")))
 
@@ -874,7 +874,8 @@ to the LaTeX table."
                                   (?n . "\\nocite{%l}"))
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
-             reftex-plug-into-AUCTeX t)
+             reftex-plug-into-AUCTeX t
+             TeX-command-default "LaTeX Make")
     (:hook lsp/lsp
            auctex/extra-commands
            turn-on-reftex))
