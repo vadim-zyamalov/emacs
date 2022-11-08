@@ -762,20 +762,20 @@ See `advice-add' for more details."
     "Add a command for TeX-file compilation via latexmk."
     (add-to-list
      'TeX-command-list
-     '("LaTeX Make"
+     '("LaTeX Make / PDFLaTeX"
        "latexmk -pdf -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
-       :help "Make the file using latexmk."))
+       :help "Make the file using Latexmk/PDFLaTeX."))
     (add-to-list
      'TeX-command-list
-     '("XeLaTeX"
-       "%`xelatex%(mode)%' --shell-escape --output-directory=outputx %t"
+     '("LaTeX Make / XeLaTeX"
+       "latexmk -pdfxe -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
        :help "Make the file using XeTeX."))
     (add-to-list
      'TeX-command-list
-     '("LuaLaTeX"
-       "%`lualatex --shell-escape -output-directory=outputl %t"
+     '("LaTeX Make / LuaLaTeX"
+       "latexmk -pdflua -cd -f -interaction=nonstopmode -synctex=1 -shell-escape -outdir=output %t"
        TeX-run-TeX nil t
        :help "Make the file using LuaTeX.")))
 
@@ -874,8 +874,7 @@ to the LaTeX table."
                                   (?n . "\\nocite{%l}"))
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
-             reftex-plug-into-AUCTeX t
-             TeX-command-default "LaTeX Make")
+             reftex-plug-into-AUCTeX t)
     (:hook lsp/lsp
            auctex/extra-commands
            turn-on-reftex))
