@@ -381,18 +381,7 @@ See `advice-add' for more details."
 (setup (:straight rainbow-delimiters)
     (:hook-into prog-mode org-mode))
 
-(if (not (string-equal init/completion-popup "company"))
-        (setup (:straight smartparens)
-            (:require smartparens-config)
-            (:bind "C-c b r" sp-rewrap-sexp
-                   "C-c b d" sp-splice-sexp)
-            (smartparens-global-mode t)
-            (sp-with-modes '(tex-mode
-                             latex-mode
-                             LaTeX-mode)
-                (sp-local-pair "<<" ">>"
-                               :unless '(sp-in-math-p))))
-    (electric-pair-mode t))
+(electric-pair-mode t)
 
 (defun comment-or-uncomment-region-or-line ()
     "Comments or uncomments the region or the current line."
@@ -861,7 +850,8 @@ to the LaTeX table."
                company-reftex
                company-auctex
                company-math)
-    (:option preview-pdf-color-adjust-method t
+    (:option LaTeX-electric-left-right-brace t
+             preview-pdf-color-adjust-method t
              preview-auto-cache-preamble t
              bibtex-dialect 'biblatex
              reftex-cite-format '((?\C-m . "\\cite[]{%l}")
