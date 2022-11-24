@@ -1,4 +1,4 @@
-;; init.el --- Emacs config -*- lexical-binding: t; -*-
+;; init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;;; Commentary:
 ;; Точка входа для основной настройки Emacs.

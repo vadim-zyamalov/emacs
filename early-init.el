@@ -1,4 +1,4 @@
-;; early-init.el --- Emacs config -*- lexical-binding: t; -*-
+;; early-init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
 
 ;;; Commentary:
 ;; Файл с настройками, применяемыми на раннем этапе, т. е. до основной инициализации.
@@ -12,6 +12,9 @@
 
 (setq user-emacs-directory
       (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/")))
+
+(setq native-comp-eln-load-path
+      `(,(expand-file-name "eln-cache/" (or (getenv "XDG_CACHE_HOME") "~/.cache/"))))
 
 (push (expand-file-name "modules/" (file-name-directory user-init-file))
       load-path)
@@ -36,6 +39,7 @@
 (setq package-enable-at-startup nil
       package-quickstart nil)
 
+(setq native-comp-speed -1)
 (setq straight-check-for-modifications '(check-on-save find-when-checking))
 
 (defvar bootstrap-version)
