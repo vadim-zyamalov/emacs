@@ -983,6 +983,9 @@ Vim умеет красиво отображать номер текущей с�
                "C-c l o" eglot-code-action-organize-imports
                "C-c l h" eldoc
                "C-c l d" xref-find-definitions)
+        (:eval-after eglot
+            (add-to-list 'eglot-server-programs
+               '(latex-mode . ("texlab"))))
         (:with-mode eglot-managed-mode
             (:hook (lambda ()
                        (progn
@@ -1214,6 +1217,12 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (setup (:straight flycheck)
     (global-flycheck-mode))
+#+end_src
+
+Magit --- пакет для работы с git внутри Emacs.
+
+#+begin_src emacs-lisp
+(setup (:straight magit))
 #+end_src
 
 ** Markdown

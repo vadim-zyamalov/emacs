@@ -472,6 +472,9 @@ See `advice-add' for more details."
                "C-c l o" eglot-code-action-organize-imports
                "C-c l h" eldoc
                "C-c l d" xref-find-definitions)
+        (:eval-after eglot
+            (add-to-list 'eglot-server-programs
+               '(latex-mode . ("texlab"))))
         (:with-mode eglot-managed-mode
             (:hook (lambda ()
                        (progn
@@ -608,6 +611,8 @@ See `advice-add' for more details."
 
 (setup (:straight flycheck)
     (global-flycheck-mode))
+
+(setup (:straight magit))
 
 (setup (:straight markdown-mode)
     (:with-mode gfm-mode
