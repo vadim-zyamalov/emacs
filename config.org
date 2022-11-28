@@ -433,7 +433,7 @@ Vim умеет красиво отображать номер текущей с�
 
 Иногда во фрейма =Emacs= мы имеем несколько окон. Пакет [[https://github.com/cyrus-and/zoom][zoom]] автоматически изменяет размеры окон так, чтобы активное имело нужный размер.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (setup (:straight zoom)
     (:option zoom-size '(0.618 . 0.618)
              zoom-ignored-major-modes '(ess-r-mode
@@ -961,36 +961,38 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c l d= | eglot-mode-map | xref-find-definitions              | Переход к определению символа                        |
 
 #+begin_src emacs-lisp
-(when (string-equal init/lsp-engine "lsp")
-    (setup (:straight lsp-mode)
-        (:option lsp-headerline-breadcrumb-icons-enable nil
-                 lsp-enable-file-watchers nil
-                 lsp-keymap-prefix "C-c l")
-        (if (equal init/completion-popup "corfu")
-                (:option lsp-completion-provider :none))
-        (with-eval-after-load 'lsp-mode
-            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-        (:hook lsp-enable-which-key-integration)
-        (:with-mode lsp-completion-mode
-            (:hook (lambda ()
-                       (progn
-                           (lsp/non-greedy-lsp-mode)
-                           (lsp/extra-capf)))))))
+    (when (string-equal init/lsp-engine "lsp")
+        (setup (:straight lsp-mode)
+            (:option lsp-headerline-breadcrumb-icons-enable nil
+                     lsp-enable-file-watchers nil
+                     lsp-keymap-prefix "C-c l")
+            (if (equal init/completion-popup "corfu")
+                    (:option lsp-completion-provider :none))
+            (with-eval-after-load 'lsp-mode
+                (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
+            (:hook lsp-enable-which-key-integration)
+            (:with-mode lsp-completion-mode
+                (:hook (lambda ()
+                           (progn
+                               (lsp/non-greedy-lsp-mode)
+                               (lsp/extra-capf)))))))
 
-(when (string-equal init/lsp-engine "eglot")
-    (setup (:straight eglot)
-        (:bind "C-c l r" eglot-rename
-               "C-c l o" eglot-code-action-organize-imports
-               "C-c l h" eldoc
-               "C-c l d" xref-find-definitions)
-        (:eval-after eglot
-            (add-to-list 'eglot-server-programs
-               '(latex-mode . ("texlab"))))
-        (:with-mode eglot-managed-mode
-            (:hook (lambda ()
-                       (progn
-                           (lsp/non-greedy-eglot)
-                           (lsp/extra-capf)))))))
+    (when (string-equal init/lsp-engine "eglot")
+        (setup (:straight eglot)
+            (:bind "C-c l r" eglot-rename
+                   "C-c l o" eglot-code-action-organize-imports
+                   "C-c l h" eldoc
+                   "C-c l d" xref-find-definitions)
+            (:eval-after eglot
+                (add-to-list 'eglot-server-programs
+                   '(latex-mode . ("texlab")))
+                (add-to-list 'flycheck-disabled-checkers
+                             'python-pycompile))
+            (:with-mode eglot-managed-mode
+                (:hook (lambda ()
+                           (progn
+                               (lsp/non-greedy-eglot)
+                               (lsp/extra-capf)))))))
 #+end_src
 
 ** =Corfu= или =Company=
@@ -1348,7 +1350,8 @@ Magit --- пакет для работы с git внутри Emacs.
 #+begin_src emacs-lisp
 (setup python
     (:straight lsp-pyright)
-    (:option python-shell-interpreter "python3")
+    (:option python-shell-interpreter "python"
+             eglot-ignored-server-capabilites '(:documentHighlightProvider :hoverProvider))
     (:hook lsp/lsp
            (lambda ()
                (setq-local fill-column 80)

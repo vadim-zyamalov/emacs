@@ -205,16 +205,6 @@ See `advice-add' for more details."
                                       consult-line))
     (pulsar-global-mode t))
 
-(setup (:straight zoom)
-    (:option zoom-size '(0.618 . 0.618)
-             zoom-ignored-major-modes '(ess-r-mode
-                                        inferior-ess-r-mode
-                                        ess-rdired-mode)
-             zoom-ignored-buffer-names '("*R*"
-                                         "*R dired*"
-                                         "*R view*"))
-    (zoom-mode))
-
 (setup (:straight dimmer)
     (:option dimmer-fraction 0.6
              dimmer-watch-frame-focus-events nil)
@@ -474,7 +464,9 @@ See `advice-add' for more details."
                "C-c l d" xref-find-definitions)
         (:eval-after eglot
             (add-to-list 'eglot-server-programs
-               '(latex-mode . ("texlab"))))
+               '(latex-mode . ("texlab")))
+            (add-to-list 'flycheck-disabled-checkers
+                         'python-pycompile))
         (:with-mode eglot-managed-mode
             (:hook (lambda ()
                        (progn
@@ -712,7 +704,8 @@ See `advice-add' for more details."
 
 (setup python
     (:straight lsp-pyright)
-    (:option python-shell-interpreter "python3")
+    (:option python-shell-interpreter "python"
+             eglot-ignored-server-capabilites '(:documentHighlightProvider :hoverProvider))
     (:hook lsp/lsp
            (lambda ()
                (setq-local fill-column 80)
