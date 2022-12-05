@@ -371,7 +371,18 @@ See `advice-add' for more details."
 (setup (:straight rainbow-delimiters)
     (:hook-into prog-mode org-mode))
 
-(electric-pair-mode t)
+(if (not (string-equal init/completion-popup "company"))
+        (setup (:straight smartparens)
+            (:require smartparens-config)
+            (:bind "C-c b r" sp-rewrap-sexp
+                   "C-c b d" sp-splice-sexp)
+            (smartparens-global-mode t)
+            (sp-with-modes '(tex-mode
+                             latex-mode
+                             LaTeX-mode)
+                (sp-local-pair "<<" ">>"
+                               :unless '(sp-in-math-p))))
+    (electric-pair-mode t))
 
 (defun comment-or-uncomment-region-or-line ()
     "Comments or uncomments the region or the current line."
