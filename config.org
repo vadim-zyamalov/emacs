@@ -844,10 +844,28 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c v m= | global | vr/mc-mark       | Создание нескольких курсоров согласно регулярномы выражению |
 
 #+begin_src emacs-lisp
+(defun my/vr/replace ()
+    "Replace in whole buffer."
+    (interactive)
+    (if (region-active-p)
+            (call-interactively #'vr/replace)
+        (save-excursion
+            (goto-char (point-min))
+            (call-interactively #'vr/replace))))
+
+(defun my/vr/query-replace ()
+    "Replace in whole buffer."
+    (interactive)
+    (if (region-active-p)
+            (call-interactively #'vr/query-replace)
+        (save-excursion
+            (goto-char (point-min))
+            (call-interactively #'vr/query-replace))))
+
 (setup (:straight visual-regexp)
     (:require visual-regexp)
-    (:global "M-%" vr/replace
-             "C-M-%" vr/query-replace
+    (:global "M-%" my/vr/replace
+             "C-M-%" my/vr/query-replace
              "C-c v m" vr/mc-mark))
 #+end_src
 

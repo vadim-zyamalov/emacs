@@ -385,10 +385,28 @@ See `advice-add' for more details."
 
 (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line)
 
+(defun my/vr/replace ()
+    "Replace in whole buffer."
+    (interactive)
+    (if (region-active-p)
+            (call-interactively #'vr/replace)
+        (save-excursion
+            (goto-char (point-min))
+            (call-interactively #'vr/replace))))
+
+(defun my/vr/query-replace ()
+    "Replace in whole buffer."
+    (interactive)
+    (if (region-active-p)
+            (call-interactively #'vr/query-replace)
+        (save-excursion
+            (goto-char (point-min))
+            (call-interactively #'vr/query-replace))))
+
 (setup (:straight visual-regexp)
     (:require visual-regexp)
-    (:global "M-%" vr/replace
-             "C-M-%" vr/query-replace
+    (:global "M-%" my/vr/replace
+             "C-M-%" my/vr/query-replace
              "C-c v m" vr/mc-mark))
 
 (setup (:straight multiple-cursors)
