@@ -212,15 +212,8 @@ See `advice-add' for more details."
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
     (dimmer-mode t))
 
-(setup (:straight framemove)
-    (:option framemove-hook-into-windmove t)
-    (:eval-after hydra
-        (defhydra hydra-wind (global-map "<f6>")
-            "Moving between windows"
-            ("<left>"  windmove-left  "left")
-            ("<right>" windmove-right "right")
-            ("<up>"    windmove-up    "up")
-            ("<down>"  windmove-down  "down"))))
+(setup (:straight ace-window)
+    (:global "M-o" ace-window))
 
 (setup (:straight neotree)
     (:option neo-smart-open t
