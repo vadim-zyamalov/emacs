@@ -464,8 +464,7 @@ See `advice-add' for more details."
 
 (when (string-equal init/lsp-engine "lsp")
     (setup (:straight lsp-mode)
-        (:option lsp-headerline-breadcrumb-icons-enable nil
-                 lsp-enable-file-watchers nil
+        (:option lsp-enable-file-watchers nil
                  lsp-keymap-prefix "C-c l")
         (if (equal init/completion-popup "corfu")
                 (:option lsp-completion-provider :none))
@@ -486,9 +485,7 @@ See `advice-add' for more details."
                "C-c l d" xref-find-definitions)
         (:eval-after eglot
             (add-to-list 'eglot-server-programs
-               '(latex-mode . ("texlab")))
-            (add-to-list 'flycheck-disabled-checkers
-                         'python-pycompile))
+               '(latex-mode . ("texlab"))))
         (:with-mode eglot-managed-mode
             (:hook (lambda ()
                        (progn
