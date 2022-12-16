@@ -210,6 +210,7 @@ See `advice-add' for more details."
              dimmer-watch-frame-focus-events nil)
     (dimmer-configure-which-key)
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
+    (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu-popupinfo\\*.*$")
     (dimmer-mode t))
 
 (setup (:straight ace-window)
@@ -493,32 +494,25 @@ See `advice-add' for more details."
                            (lsp/extra-capf)))))))
 
 (when (string-equal init/completion-popup "corfu")
-    (setup (:straight corfu
-                      corfu-doc
-                      kind-icon
-                      popon
-                      corfu-terminal
-                      (corfu-doc-terminal
-                       :type git
-                       :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git"))
+    (setup (:straight (corfu :files (:defaults "extensions/*")
+                             :includes (corfu-popupinfo))
+                      kind-icon)
         (:option corfu-auto nil
                  corfu-cycle t
                  corfu-preselect-first nil
                  corfu-preview-current 'insert
                  tab-always-indent 'complete
-                 kind-icon-default-face 'corfu-default)
-        (:hook corfu-doc-mode)
+                 kind-icon-default-face 'corfu-default
+                 corfu-popupinfo-delay 0.2)
         (:bind-into corfu-map
             "TAB" corfu-next
             [tab] corfu-next
             "S-TAB" corfu-previous
             [backtab] corfu-previous)
+        (corfu-popupinfo-mode)
         (global-corfu-mode)
         (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-        (add-to-list 'completion-at-point-functions #'cape-file t)
-        (unless (display-graphic-p)
-            (corfu-terminal-mode t)
-            (corfu-doc-terminal-mode t))))
+        (add-to-list 'completion-at-point-functions #'cape-file t)))
 
 (when (string-equal init/completion-popup "company")
     (setup (:straight company
