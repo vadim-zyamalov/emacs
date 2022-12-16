@@ -876,6 +876,11 @@ to the LaTeX table."
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
              reftex-plug-into-AUCTeX t)
+    (:eval-after reftex
+        (add-to-list 'reftex-section-levels
+                     '("frametitle" . -2))
+        (add-to-list 'reftex-section-levels
+                     '("framesubtitle" . -3)))
     (:hook lsp/lsp
            auctex/extra-commands
            turn-on-reftex))
