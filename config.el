@@ -234,7 +234,7 @@ See `advice-add' for more details."
 
 (set-face-attribute 'default
                     nil
-                    :font "Fira Code"
+                    :font "Iosevka"
                     :height 100)
 
 (unless (version< emacs-version "28.1")

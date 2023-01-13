@@ -538,12 +538,12 @@ Vim умеет красиво отображать номер текущей с�
 
 *** Шрифты
 
-Настроим стандартный шрифт. Я предпочитаю [[https://github.com/JetBrains/JetBrainsMono][JetBrains Mono]], хотя это дело вкуса. Сейчас вот для разнообразия взял [[https://github.com/tonsky/FiraCode][Fira Code]].
+Настроим стандартный шрифт. Я предпочитаю [[https://github.com/JetBrains/JetBrainsMono][JetBrains Mono]], хотя это дело вкуса. Некоторое время использовал [[https://github.com/tonsky/FiraCode][Fira Code]]; сейчас буду использовать [[https://github.com/be5invis/Iosevka][Iosevka]].
 
 #+begin_src emacs-lisp
 (set-face-attribute 'default
                     nil
-                    :font "Fira Code"
+                    :font "Iosevka"
                     :height 100)
 #+end_src
 
