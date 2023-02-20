@@ -349,6 +349,9 @@ See `advice-add' for more details."
 
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
+(setup (:straight highlight-indent-guides)
+    (:hook-into prog-mode))
+
 (setup (:straight undo-tree)
     (global-undo-tree-mode)
     (:with-map global-map
