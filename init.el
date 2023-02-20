@@ -7,7 +7,7 @@
 ;; После чего загружаем настройки из org-документа.
 
 ;;; Code:
-(defconst init/lsp-engine "eglot"
+(defconst init/lsp-engine "lsp"
          "LSP engine to use.")
 
 (defconst init/completion-popup "corfu"
