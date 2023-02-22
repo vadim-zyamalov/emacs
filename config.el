@@ -542,6 +542,8 @@ See `advice-add' for more details."
                       consult
                       embark
                       orderless)
+        (add-to-list 'process-coding-system-alist
+                     '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
         (:option vertico-cycle t
                  vertico-mouse-mode t
                  vertico-count 8
@@ -549,13 +551,15 @@ See `advice-add' for more details."
                  prefix-help-command #'embark-prefix-help-command
                  completion-styles '(orderless basic)
                  completion-category-defaults nil
-                 completion-category-overrides '((file (styles basic partial-completion))))
+                 completion-category-overrides '((file (styles basic partial-completion)))
+                 affe-regexp-compiler #'affe-orderless-regexp-compiler)
         (:global "C-x b" consult-buffer
                  "C-x C-b" ibuffer
                  "C-." embark-act
                  "C-;" embark-dwim
                  "C-h B" embark-bindings
                  "C-s" consult-line
+                 "C-S-s" consult-ripgrep
                  "M-R" vertico-repeat)
         (:with-hook minibuffer-setup-hook
             (:hook (lambda ()
