@@ -343,7 +343,8 @@ See `advice-add' for more details."
               lisp-body-indent 4)
 
 (setup (:straight aggressive-indent)
-    (:hook-into prog-mode))
+    (:hook-into prog-mode
+                LaTeX-mode))
 
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
