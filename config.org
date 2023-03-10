@@ -1001,35 +1001,35 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c l d= | eglot-mode-map | xref-find-definitions              | Переход к определению символа                        |
 
 #+begin_src emacs-lisp
-    (when (string-equal init/lsp-engine "lsp")
-        (setup (:straight lsp-mode)
-            (:option lsp-enable-file-watchers nil
-                     lsp-keymap-prefix "C-c l")
-            (if (equal init/completion-popup "corfu")
-                    (:option lsp-completion-provider :none))
-            (with-eval-after-load 'lsp-mode
-                (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-            (:hook lsp-enable-which-key-integration)
-            (:with-mode lsp-completion-mode
-                (:hook (lambda ()
-                           (progn
-                               (lsp/non-greedy-lsp-mode)
-                               (lsp/extra-capf)))))))
+(when (string-equal init/lsp-engine "lsp")
+    (setup (:straight lsp-mode)
+        (:option lsp-enable-file-watchers nil
+                 lsp-keymap-prefix "C-c l")
+        (if (equal init/completion-popup "corfu")
+                (:option lsp-completion-provider :none))
+        (with-eval-after-load 'lsp-mode
+            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
+        (:hook lsp-enable-which-key-integration)
+        (:with-mode lsp-completion-mode
+            (:hook (lambda ()
+                       (progn
+                           (lsp/non-greedy-lsp-mode)
+                           (lsp/extra-capf)))))))
 
-    (when (string-equal init/lsp-engine "eglot")
-        (setup (:straight eglot)
-            (:bind "C-c l r" eglot-rename
-                   "C-c l o" eglot-code-action-organize-imports
-                   "C-c l h" eldoc
-                   "C-c l d" xref-find-definitions)
-            (:eval-after eglot
-                (add-to-list 'eglot-server-programs
-                   '(latex-mode . ("texlab"))))
-            (:with-mode eglot-managed-mode
-                (:hook (lambda ()
-                           (progn
-                               (lsp/non-greedy-eglot)
-                               (lsp/extra-capf)))))))
+(when (string-equal init/lsp-engine "eglot")
+    (setup (:straight eglot)
+        (:bind "C-c l r" eglot-rename
+               "C-c l o" eglot-code-action-organize-imports
+               "C-c l h" eldoc
+               "C-c l d" xref-find-definitions)
+        (:eval-after eglot
+            (add-to-list 'eglot-server-programs
+               '(latex-mode . ("texlab"))))
+        (:with-mode eglot-managed-mode
+            (:hook (lambda ()
+                       (progn
+                           (lsp/non-greedy-eglot)
+                           (lsp/extra-capf)))))))
 #+end_src
 
 ** =Corfu= или =Company=
