@@ -608,6 +608,9 @@ See `advice-add' for more details."
     (setup (:straight yasnippet)
         (:option yas-snippet-dirs (append yas-snippet-dirs
                                           '("~/.emacs.d/snippets")))
+        (:bind-into yas-minor-mode-map
+            "<tab>" nil
+            "TAB" nil)
         (yas-global-mode 1))
 
     (setup (:straight yasnippet-snippets))
