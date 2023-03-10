@@ -528,13 +528,21 @@ Vim умеет красиво отображать номер текущей с�
 
 Сейчас пробую [[https://protesilaos.com/emacs/modus-themes][темы Modus]], отличающиеся повышенной контрастностью.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (setup (:straight modus-themes)
     (:option modus-themes-bold-constructs t
              modus-themes-italic-constructs t
              modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
                                                      (border-mode-line-inactive unspecified)))
-    (load-theme 'modus-vivendi-tinted t))
+    (load-theme 'modus-vivendi-tinted :no-confirm))
+#+end_src
+
+И еще тестирую [[https://protesilaos.com/emacs/ef-themes][Ef-themes]] от автора тем [[https://protesilaos.com/emacs/modus-themes][Modus]].
+
+#+begin_src emacs-lisp
+(setup (:straight ef-themes)
+    (mapc #'disable-theme custom-enabled-themes)
+    (load-theme 'ef-autumn :no-confirm))
 #+end_src
 
 *** Шрифты
