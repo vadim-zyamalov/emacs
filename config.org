@@ -512,9 +512,9 @@ Vim умеет красиво отображать номер текущей с�
 
 *** Темы
 
-Мой выбор на сегодня --- Doom Palenight из [[https://github.com/doomemacs/themes][набора тем]] для DoomEmacs.
+До этого я пользовался Doom Palenight из [[https://github.com/doomemacs/themes][набора тем]] для DoomEmacs.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (setup (:straight doom-themes
                   solaire-mode)
     (:option doom-themes-enable-bold t
@@ -526,14 +526,15 @@ Vim умеет красиво отображать номер текущей с�
     (solaire-global-mode t))
 #+end_src
 
-Также можно попробовать [[https://protesilaos.com/emacs/modus-themes][темы Modus]], отличающиеся повышенной контрастностью.
+Сейчас пробую [[https://protesilaos.com/emacs/modus-themes][темы Modus]], отличающиеся повышенной контрастностью.
 
-#+begin_src emacs-lisp :tangle no
-(setup modus-themes
-    (:option modus-themes-mode-line '(borderless)
-             modus-themes-bold-constructs t
-             modus-themes-italic-constructs t)
-    (load-theme 'modus-vivendi t))
+#+begin_src emacs-lisp
+(setup (:straight modus-themes)
+    (:option modus-themes-bold-constructs t
+             modus-themes-italic-constructs t
+             modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
+                                                     (border-mode-line-inactive unspecified)))
+    (load-theme 'modus-vivendi-tinted t))
 #+end_src
 
 *** Шрифты

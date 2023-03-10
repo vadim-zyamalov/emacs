@@ -222,20 +222,17 @@ See `advice-add' for more details."
              neo-theme (if (display-graphic-p) 'icons 'arrow))
     (:global "C-x t t" neotree-toggle))
 
-(setup (:straight doom-themes
-                  solaire-mode)
-    (:option doom-themes-enable-bold t
-             doom-themes-enable-italic t)
-    (doom-themes-visual-bell-config)
-    (doom-themes-neotree-config)
-    (doom-themes-org-config)
-    (load-theme 'doom-palenight t)
-    (solaire-global-mode t))
+(setup (:straight modus-themes)
+    (:option modus-themes-bold-constructs t
+             modus-themes-italic-constructs t
+             modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
+                                                     (border-mode-line-inactive unspecified)))
+    (load-theme 'modus-vivendi-tinted t))
 
 (set-face-attribute 'default
                     nil
                     :font "Iosevka"
-                    :height 100)
+                    :height 120)
 
 (unless (version< emacs-version "28.1")
     (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
