@@ -560,7 +560,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp :noweb no
 (unless (version< emacs-version "28.1")
-    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
+    (setup (:straight ligature)
         (ligature-set-ligatures 'prog-mode (pcase (face-attribute 'default :family)
                                                ("JetBrains Mono" '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
                                                                    "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"

@@ -232,7 +232,7 @@ See `advice-add' for more details."
                     :height 120)
 
 (unless (version< emacs-version "28.1")
-    (setup (:straight (ligature :type git :host github :repo "mickeynp/ligature.el"))
+    (setup (:straight ligature)
         (ligature-set-ligatures 'prog-mode (pcase (face-attribute 'default :family)
                                                ("JetBrains Mono" '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
                                                                    "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
