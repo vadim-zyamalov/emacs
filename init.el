@@ -7,17 +7,20 @@
 ;; После чего загружаем настройки из org-документа.
 
 ;;; Code:
+(defconst init/be-evil t
+    "To be or not to be evil.")
+
 (defconst init/lsp-engine "eglot"
-         "LSP engine to use.")
+    "LSP engine to use.")
 
 (defconst init/completion-popup "corfu"
-         "Completion popup to use.")
+    "Completion popup to use.")
 
 (defconst init/completion-minibuf "vertico"
-         "Completion in minibuffer selector to use.")
+    "Completion in minibuffer selector to use.")
 
 (defconst init/snippet-engine "yasnippet"
-         "Snippet engine to use.")
+    "Snippet engine to use.")
 
 ;; Гарантируем запуск последней установленной версии org-mode
 (straight-use-package 'org)

@@ -327,6 +327,20 @@ See `advice-add' for more details."
     (cua-mode t)
     (transient-mark-mode t))
 
+(when init/be-evil
+    (setup (:straight evil
+                      evil-collection
+                      evil-surround
+                      evil-nerd-commenter)
+        (:option evil-want-integration t
+                 evil-want-keybinding nil
+                 evil-respect-visual-line-mode t
+                 evil-undo-system 'undo-tree)
+        (evil-mode 1)
+        (global-evil-surround-mode 1)
+        (evil-collection-init)
+        (evilnc-default-hotkeys)))
+
 (delete-selection-mode t)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
