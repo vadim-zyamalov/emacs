@@ -339,9 +339,7 @@ See `advice-add' for more details."
               standart-indent 4
               lisp-body-indent 4)
 
-(setup (:straight aggressive-indent)
-    (:hook-into prog-mode
-                LaTeX-mode))
+(electric-indent-mode t)
 
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
