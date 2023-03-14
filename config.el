@@ -56,8 +56,15 @@ See `advice-add' for more details."
     (memq system-type '(cygwin windows-nt ms-dos))
     "Equals t if Emacs works on Windows host system.")
 
+(set-language-environment 'utf-8)
+(setq locale-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-selection-coding-system
+ (if (eq system-type 'windows-nt)
+         'utf-16-le
+     'utf-8))
 (prefer-coding-system 'utf-8)
-(set-language-environment "utf-8")
 
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq confirm-kill-emacs 'y-or-n-p)
@@ -690,8 +697,6 @@ See `advice-add' for more details."
 (setup (:straight ess
                   poly-R)
     (:option polymode-lsp-integration nil)
-    (unless (getenv "LC_ALL")
-        (setenv "LC_ALL" "ru_RU.UTF-8"))
     (setq display-buffer-alist
           (append `(("^\\*R Dired"
                      (display-buffer-reuse-window display-buffer-in-side-window)

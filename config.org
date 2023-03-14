@@ -161,8 +161,15 @@ See `advice-add' for more details."
 Заставляем =Emacs= использовать =utf-8= как стандартную кодовую таблицу.
 
 #+begin_src emacs-lisp
+(set-language-environment 'utf-8)
+(setq locale-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-selection-coding-system
+ (if (eq system-type 'windows-nt)
+         'utf-16-le
+     'utf-8))
 (prefer-coding-system 'utf-8)
-(set-language-environment "utf-8")
 #+end_src
 
 =Emacs= по умолчанию требует длинные ответы на вопросы (=yes= и =no=). Следующие настройки позволяют ограничиться одной буквой (=y= и =n=).
@@ -1363,8 +1370,6 @@ Magit --- пакет для работы с git внутри Emacs.
 (setup (:straight ess
                   poly-R)
     (:option polymode-lsp-integration nil)
-    (unless (getenv "LC_ALL")
-        (setenv "LC_ALL" "ru_RU.UTF-8"))
     (setq display-buffer-alist
           (append `(("^\\*R Dired"
                      (display-buffer-reuse-window display-buffer-in-side-window)
