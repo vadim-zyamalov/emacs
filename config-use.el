@@ -661,8 +661,7 @@
         (add-to-list 'process-coding-system-alist
                      '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
         (vertico-mode)
-        :bind (:map vertico-map
-                    ("M-R" . vertico-repeat))
+        :bind (("M-R" . vertico-repeat))
         :custom
         (vertico-cycle t)
         (vertico-mouse-mode t)
