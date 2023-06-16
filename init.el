@@ -26,6 +26,6 @@
 (straight-use-package 'org)
 
 ;; Загружаем настройки из org-файла
-(org-babel-load-file (concat (file-name-directory user-init-file) "config.org"))
+(org-babel-load-file (concat (file-name-directory user-init-file) "config-use.org"))
 
 ;;; init.el ends here
