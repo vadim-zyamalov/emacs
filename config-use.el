@@ -562,6 +562,39 @@
         (unless (null (symbol-function tmp-symbol))
             (funcall (symbol-function tmp-symbol)))))
 
+(when (string-equal init/lsp-engine "lsp")
+    (use-package lsp-mode
+        :straight t
+        :hook ((lsp-mode . lsp-enable-which-key-integration)
+               (lsp-completion-mode . (lambda ()
+                                          (progn
+                                              (lsp/non-greedy-lsp-mode)
+                                              (lsp/extra-capf)))))
+        :config
+        (with-eval-after-load 'lsp-mode
+            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
+        :custom
+        (lsp-headerline-breadcrumb-icons-enable nil)
+        (lsp-enable-file-watchers nil)
+        (lsp-keymap-prefix "C-c l")
+        (lsp-completion-provider :none)))
+
+(when (string-equal init/lsp-engine "eglot")
+    (use-package eglot
+        :straight t
+        :hook (eglot-managed-mode . (lambda ()
+                                        (progn
+                                            (lsp/non-greedy-eglot)
+                                            (lsp/extra-capf))))
+        :bind (:map eglot-map
+                    ("C-c l r" . eglot-rename)
+                    ("C-c l o" . eglot-code-action-organize-imports)
+                    ("C-c l h" . eldoc)
+                    ("C-c l d" . xref-find-definitions))
+        :config
+        (add-to-list 'eglot-server-programs
+                     '(latex-mode . ("texlab")))))
+
 (when (string-equal init/completion-popup "corfu")
     (use-package corfu
         :straight (:files (:defaults "extensions/*"))
