@@ -223,13 +223,37 @@
     :straight t
     :bind (("M-o" . ace-window)))
 
-(use-package neotree
+(use-package treemacs
     :straight t
-    :bind (("C-x t t" . neotree-toggle))
-    :custom
-    (neo-smart-open t)
-    (neo-window-width 40)
-    (neo-theme (if (display-graphic-p) 'icons 'arrow)))
+    :defer t
+    :bind (("M-0"       . treemacs-select-window)
+           ("C-x t 1"   . treemacs-delete-other-windows)
+           ("C-x t t"   . treemacs)
+           ("C-x t d"   . treemacs-select-directory)
+           ("C-x t B"   . treemacs-bookmark)
+           ("C-x t C-t" . treemacs-find-file)
+           ("C-x t M-t" . treemacs-find-tag))
+    :config
+    (treemacs-fringe-indicator-mode 'always)
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-project-follow-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+        (`(t . t)
+         (treemacs-git-mode 'deferred))
+        (`(t . _)
+         (treemacs-git-mode 'simple))))
+
+(use-package treemacs-magit
+    :straight t
+    :after (treemacs magit))
+
+(use-package treemacs-nerd-icons
+    :straight t
+    :after (treemacs nerd-icons)
+    :config
+    (treemacs-load-theme "nerd-icons"))
 
 (use-package ef-themes
     :straight t

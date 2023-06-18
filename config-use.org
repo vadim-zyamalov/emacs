@@ -478,7 +478,7 @@ Vim умеет красиво отображать номер текущей с�
     :bind (("M-o" . ace-window)))
 #+end_src
 
-** Дерево каталогов проекта
+** TODO Дерево каталогов проекта
 
 Достаточно удобное [[https://github.com/jaypei/emacs-neotree][дерево каталогов]] текущего проекта, позволяющее, помимо переключения между файлами, производить несложные операции с ними.
 
@@ -486,7 +486,7 @@ Vim умеет красиво отображать номер текущей с�
 |---------+--------+----------------+-----------------------|
 | =C-x t t= | global | neotree-toggle | Показ/скрытие NeoTree |
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package neotree
     :straight t
     :bind (("C-x t t" . neotree-toggle))
@@ -494,6 +494,51 @@ Vim умеет красиво отображать номер текущей с�
     (neo-smart-open t)
     (neo-window-width 40)
     (neo-theme (if (display-graphic-p) 'icons 'arrow)))
+#+end_src
+
+Еще одно удобное [[https://github.com/Alexander-Miller/treemacs/][дерево]], ориентированное на работу с проектами.
+
+| Клавиша   | Карта  | Команда                       | Действие                                                                                    |
+|-----------+--------+-------------------------------+---------------------------------------------------------------------------------------------|
+| =C-x t t=   | global | treemacs                      | Запуск treemacs                                                                             |
+| =M-0=       | global | treemacs-select-window        | Либо запуск treemacs, либо вызов его окна, либо переключение между treemcs и другими окнами |
+| =C-x t 1=   | global | treemacs-delete-other-windows | Закрытие других окон с сохранением окна treemacs                                            |
+| =C-x t d=   | global | treemacs-select-directory     | Добавление в treemacs новой корневой папки                                                  |
+| =C-x t C-t= | global | treemacs-find-file            | Поиск файла в дереве в окне treemacs                                                        |
+| =C-x t M-t= | global | treemacs-find-tag             | Поиск тега в дереве в окне treemacs                                                         |
+
+#+Begin_src emacs-lisp
+(use-package treemacs
+    :straight t
+    :defer t
+    :bind (("M-0"       . treemacs-select-window)
+           ("C-x t 1"   . treemacs-delete-other-windows)
+           ("C-x t t"   . treemacs)
+           ("C-x t d"   . treemacs-select-directory)
+           ("C-x t B"   . treemacs-bookmark)
+           ("C-x t C-t" . treemacs-find-file)
+           ("C-x t M-t" . treemacs-find-tag))
+    :config
+    (treemacs-fringe-indicator-mode 'always)
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-project-follow-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+        (`(t . t)
+         (treemacs-git-mode 'deferred))
+        (`(t . _)
+         (treemacs-git-mode 'simple))))
+
+(use-package treemacs-magit
+    :straight t
+    :after (treemacs magit))
+
+(use-package treemacs-nerd-icons
+    :straight t
+    :after (treemacs nerd-icons)
+    :config
+    (treemacs-load-theme "nerd-icons"))
 #+end_src
 
 ** Украшательства
