@@ -937,7 +937,8 @@
                                (line-end-position))
                        (region-end))))
             (set-mark beg)
-            (goto-char end))))
+            (goto-char end)
+            (setq deactivate-mark nil))))
 
 (defun my/region-expand-one-char ()
     "Add extra char to the end of region if possible."
@@ -957,14 +958,33 @@
                  (/= end (line-beginning-position)))
                 (insert "\n"))))
 
+(defun my/protect-inner-amps ()
+    "Protect ampersands in curly brackets."
+    (let ((pos (region-beginning))
+          (innerno 0))
+        (save-excursion
+            (save-restriction
+                (narrow-to-region
+                 (region-beginning)
+                 (region-end))
+                (while (< pos (point-max))
+                    (goto-char pos)
+                    (pcase (string (char-after pos))
+                        ("{" (setq innerno (1+ innerno)))
+                        ("}" (setq innerno (1- innerno)))
+                        ("&" (if (> innerno 0) (progn
+                                                   (delete-char 1)
+                                                   (insert (nerd-icons-sucicon "nf-custom-emacs"))))))
+                    (setq pos (1+ pos)))))))
+
 (defun auctex/table-format (delim)
     "Convert table delimited by DELIM (usually copy-pasted from Excel)
 to the LaTeX table."
     (interactive "sEnter delimiter (TAB by default): ")
     (when (string= delim "")
         (setq delim "\t"))
-    (save-restriction
-        (save-excursion
+    (save-excursion
+        (save-restriction
             (my/region-or-env-or-paragraph)
             (my/point-add-one-char (region-end))
             (narrow-to-region
@@ -980,8 +1000,10 @@ to the LaTeX table."
 (defun auctex/table-align ()
     "Align LaTeX table by its inner delimeters."
     (interactive)
-    (save-restriction
-        (save-excursion
+    (save-excursion
+        (save-restriction
+            (my/region-or-env-or-paragraph)
+            (my/protect-inner-amps)
             (my/region-or-env-or-paragraph)
             (my/point-add-one-char (region-end))
             (narrow-to-region
@@ -989,11 +1011,14 @@ to the LaTeX table."
              (my/region-expand-one-char))
             (goto-char (point-min))
             (while (search-forward-regexp "[ ]*[^\\]&[ ]*" nil t)
-                (replace-match " & " nil nil)))
-        (align-regexp (point-min) (point-max) "\\(\\s-*\\)[^\\]&"
-                      1 1 t)
-        (align-regexp (point-min) (point-max) "\\(\\s-*\\)\\\\\\\\"
-                      1 1 t)))
+                (replace-match " & " nil nil))
+            (align-regexp (point-min) (point-max) "\\(\\s-*\\)[^\\]&"
+                          1 1 t)
+            (align-regexp (point-min) (point-max) "\\(\\s-*\\)\\\\\\\\"
+                          1 1 t)
+            (goto-char (point-min))
+            (while (search-forward (nerd-icons-sucicon "nf-custom-emacs") nil t)
+                (replace-match "&" nil nil)))))
 
 (use-package company-reftex
     :straight t)
