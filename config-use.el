@@ -311,18 +311,6 @@
                 "+++"))))
         (global-ligature-mode t)))
 
-(use-package all-the-icons
-    :straight t
-    :if (display-graphic-p))
-
-;; (use-package all-the-icons-completion
-;;     :straight t
-;;     :if (display-graphic-p)
-;;     :after (all-the-icons marginalia)
-;;     :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-;;     :config
-;;     (all-the-icons-completion-mode))
-
 (use-package nerd-icons
     :straight t)
 
@@ -444,7 +432,7 @@
 
 (use-package highlight-indent-guides
     :straight t
-    :hook (prog . highlight-indent-guides-mode))
+    :hook (prog-mode . highlight-indent-guides-mode))
 
 (use-package undo-tree
     :straight t
