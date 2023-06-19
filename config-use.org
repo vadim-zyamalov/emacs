@@ -127,27 +127,28 @@ pacman -S mingw-w64-i686-libgccjit
 
 #+begin_src emacs-lisp
 (use-package saveplace
+    :init
+    (setq save-place-file (expand-file-name
+                           (format "%s/var/%s"
+                                   user-emacs-directory
+                                   "save-place.el")))
     :config
-    (save-place-mode t)
-    :custom
-    (save-place-file (expand-file-name
-                      (format "%s/var/%s"
-                              user-emacs-directory
-                              "save-place.el"))))
+    (save-place-mode 1))
 #+end_src
 
 =savehist= --- другой встроенный пакет, сохраняющий историю введенных команд между сессиями. По умолчанию =Emacs= сохраняет историю *только* в пределах текущей сессии.
 
 #+begin_src emacs-lisp
 (use-package savehist
-    :config
-    (savehist-mode t)
-    :custom
-    (history-delete-duplicates t)
-    (savehist-file (expand-file-name
-                    (format "%s/var/%s"
+    :init
+    (setq savehist-file (expand-file-name
+                    (format "%s/data/%s"
                             user-emacs-directory
-                            "savehist.el"))))
+                            "savehist.el")))
+    :config
+    (setq history-delete-duplicates t
+          history-length 25)
+    (savehist-mode))
 #+end_src
 
 ** Ускорение запуска =Emacs=
@@ -180,6 +181,7 @@ pacman -S mingw-w64-i686-libgccjit
 #+begin_src emacs-lisp
 (use-package no-littering
     :straight t
+    :after savehist
     :init
     (setq no-littering-etc-directory
           (expand-file-name "config/" user-emacs-directory))
@@ -656,7 +658,9 @@ Vim умеет красиво отображать номер текущей с�
 (use-package all-the-icons
     :straight t
     :if (display-graphic-p))
+#+end_src
 
+#+begin_src emacs-lisp :tangle no
 (use-package all-the-icons-completion
     :straight t
     :if (display-graphic-p)

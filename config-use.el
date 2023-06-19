@@ -28,23 +28,24 @@
 (setq vc-follow-symlinks t)
 
 (use-package saveplace
+    :init
+    (setq save-place-file (expand-file-name
+                           (format "%s/var/%s"
+                                   user-emacs-directory
+                                   "save-place.el")))
     :config
-    (save-place-mode t)
-    :custom
-    (save-place-file (expand-file-name
-                      (format "%s/var/%s"
-                              user-emacs-directory
-                              "save-place.el"))))
+    (save-place-mode 1))
 
 (use-package savehist
-    :config
-    (savehist-mode t)
-    :custom
-    (history-delete-duplicates t)
-    (savehist-file (expand-file-name
-                    (format "%s/var/%s"
+    :init
+    (setq savehist-file (expand-file-name
+                    (format "%s/data/%s"
                             user-emacs-directory
-                            "savehist.el"))))
+                            "savehist.el")))
+    :config
+    (setq history-delete-duplicates t
+          history-length 25)
+    (savehist-mode))
 
 (add-hook 'emacs-startup-hook (lambda ()
                                   (setq gc-cons-threshold (* 8 1024 1024))
@@ -53,6 +54,7 @@
 
 (use-package no-littering
     :straight t
+    :after savehist
     :init
     (setq no-littering-etc-directory
           (expand-file-name "config/" user-emacs-directory))
