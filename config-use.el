@@ -993,22 +993,26 @@
 
 (defun my/protect-inner-amps ()
     "Protect ampersands in curly brackets."
-    (let ((pos (region-beginning))
+    (let ((pos (point-min))
           (innerno 0))
-        (save-excursion
-            (save-restriction
-                (narrow-to-region
-                 (region-beginning)
-                 (region-end))
-                (while (< pos (point-max))
-                    (goto-char pos)
-                    (pcase (string (char-after pos))
-                        ("{" (setq innerno (1+ innerno)))
-                        ("}" (setq innerno (1- innerno)))
-                        ("&" (if (> innerno 0) (progn
-                                                   (delete-char 1)
-                                                   (insert (nerd-icons-sucicon "nf-custom-emacs"))))))
-                    (setq pos (1+ pos)))))))
+        (while (< pos (point-max))
+            (goto-char pos)
+            (pcase (string (char-after pos))
+                ("{" (setq innerno (1+ innerno)))
+                ("}" (setq innerno (1- innerno)))
+                ("&" (if (> innerno 0) (progn
+                                           (delete-char 1)
+                                           (insert "@")))))
+            (setq pos (1+ pos)))
+        (goto-char (point-min))
+        (while (search-forward-regexp "\\\\&" nil t)
+            (replace-match "\\\\@" nil nil))))
+
+(defun my/unprotect-inner-amps ()
+    "Restore protected ampersands."
+    (goto-char (point-min))
+            (while (search-forward "@" nil t)
+                (replace-match "&" nil nil)))
 
 (defun auctex/table-format (delim)
     "Convert table delimited by DELIM (usually copy-pasted from Excel)
@@ -1036,22 +1040,23 @@ to the LaTeX table."
     (save-excursion
         (save-restriction
             (my/region-or-env-or-paragraph)
-            (my/protect-inner-amps)
-            (my/region-or-env-or-paragraph)
             (my/point-add-one-char (region-end))
             (narrow-to-region
              (region-beginning)
              (my/region-expand-one-char))
+            (my/protect-inner-amps)
             (goto-char (point-min))
-            (while (search-forward-regexp "[ ]*[^\\]&[ ]*" nil t)
+            (while (search-forward-regexp "^&[ ]*" nil t)
+                (replace-match " & " nil nil))
+            (goto-char (point-min))
+            (while (search-forward-regexp "[ ]*&[ ]*" nil t)
                 (replace-match " & " nil nil))
             (align-regexp (point-min) (point-max) "\\(\\s-*\\)[^\\]&"
                           1 1 t)
             (align-regexp (point-min) (point-max) "\\(\\s-*\\)\\\\\\\\"
                           1 1 t)
             (goto-char (point-min))
-            (while (search-forward (nerd-icons-sucicon "nf-custom-emacs") nil t)
-                (replace-match "&" nil nil)))))
+            (my/unprotect-inner-amps))))
 
 (use-package company-reftex
     :straight t)
