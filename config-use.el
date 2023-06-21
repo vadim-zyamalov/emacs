@@ -588,7 +588,7 @@
                                         (progn
                                             (lsp/non-greedy-eglot)
                                             (lsp/extra-capf))))
-        :bind (:map eglot-map
+        :bind (:map eglot-mode-map
                     ("C-c l r" . eglot-rename)
                     ("C-c l o" . eglot-code-action-organize-imports)
                     ("C-c l h" . eldoc)
