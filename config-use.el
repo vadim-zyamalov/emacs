@@ -264,10 +264,21 @@
     :config
     (load-theme 'ef-autumn :no-confirm))
 
-(set-face-attribute 'default
-                    nil
-                    :font "Iosevka"
-                    :height 120)
+(cond ((find-font (font-spec :name "Iosevka"))
+       (set-face-attribute 'default
+                           nil
+                           :font "Iosevka"
+                           :height 120))
+      ((find-font (font-spec :name "Fira Code"))
+       (set-face-attribute 'default
+                           nil
+                           :font "Fira Code"
+                           :height 120))
+      ((find-font (font-spec :name "JetBrains Mono"))
+       (set-face-attribute 'default
+                           nil
+                           :font "JetBrains Mono"
+                           :height 120)))
 
 (unless (version< emacs-version "28.1")
     (use-package ligature
