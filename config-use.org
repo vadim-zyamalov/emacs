@@ -27,7 +27,6 @@
 - [[#настройки-ввода][Настройки ввода]]
   - [[#мышь][Мышь]]
   - [[#клавиатура][Клавиатура]]
-- [[#зло-и-коварство-evil-mode][Зло и коварство: Evil mode]]
 - [[#настройки-редактирования][Настройки редактирования]]
   - [[#настройки-сохранения][Настройки сохранения]]
   - [[#настройки-отступов][Настройки отступов]]
@@ -73,7 +72,8 @@ pacman -S mingw-w64-i686-libgccjit
 Установка [[https://github.com/jwiegley/use-package][use-package]] для далнейшей настройки =Emacs=.
 
 #+begin_src emacs-lisp
-(straight-use-package 'use-package)
+(when (< emacs-major-version 29)
+    (straight-use-package 'use-package))
 (require 'use-package)
 (use-package use-package-hydra
     :straight t)
@@ -444,13 +444,13 @@ Vim умеет красиво отображать номер текущей с�
 
 Пакет [[https://www.emacswiki.org/emacs/download/framemove.el][framemove]], конечно, не связан с отображением активных окон напрямую, но позволяет удобно их менять. Строго говоря, пакет расширяет встроенный функционал перемещения между окнами *windmove*, позволяя перемещаться между фреймами. Пока не использую.
 
-| Клавиша | Карта      | Команда        | Действие                    |
-|---------+------------+----------------+-----------------------------|
-| =<f6>=    | global     |                | Вход в тело "гидры"         |
-| =<left>=  | hydra-wind | windmove-left  | Переход в окно/фрейм слева  |
-| =<right>= | hydra-wind | windmove-right | Переход в окно/фрейм справа |
-| =<up>=    | hydra-wind | windmove-up    | Переход в окно/фрейм сверху |
-| =<down>=  | hydra-wind | windmove-down  | Переход в окно/фрейм снизу  |
+| Карта      | Клавиша | Команда        | Действие                    |
+|------------+---------+----------------+-----------------------------|
+| global     | =<f6>=    |                | Вход в тело "гидры"         |
+| hydra-wind | =<left>=  | windmove-left  | Переход в окно/фрейм слева  |
+| hydra-wind | =<right>= | windmove-right | Переход в окно/фрейм справа |
+| hydra-wind | =<up>=    | windmove-up    | Переход в окно/фрейм сверху |
+| hydra-wind | =<down>=  | windmove-down  | Переход в окно/фрейм снизу  |
 
 #+begin_src emacs-lisp
 (use-package framemove
@@ -827,38 +827,6 @@ Vim умеет красиво отображать номер текущей с�
 (transient-mark-mode t)
 #+end_src
 
-* Зло и коварство: Evil mode
-
-Зло и коварство! В Emacs можно работать как в Vi/Vim/Neovim. [[https://github.com/emacs-evil/evil][Evil-mode]] позволяет достичь этого легко и просто. Мне нравится работать в Neovim, но в нем есть определенные ограничения в силу его консольности.
-
-#+begin_src emacs-lisp
-(when init/be-evil
-    (use-package evil
-        :straight t
-        :config
-        (evil-mode 1)
-        (global-evil-surround-mode 1)
-        (evil-collection-init)
-        (evilnc-default-hotkeys)
-        :custom
-        (evil-want-integration t)
-        (evil-want-integration t)
-        (evil-respect-visual-line-mode t)
-        (evil-undo-system 'undo-tree))
-
-    (use-package evil-collection
-        :straight t
-        :after (evil))
-
-    (use-package evil-surround
-        :straight t
-        :after (evil))
-
-    (use-package evil-nerd-commenter
-        :straight t
-        :after (evil)))
-#+end_src
-
 * Настройки редактирования
 
 Если регион активен (то есть активно выделение), то начало ввода очищает выделение.
@@ -902,7 +870,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp :tangle no
 (use-package aggressive-indent
     :straight t
-    :hook (((prog LaTeX) . aggressive-indent-mode)))
+    :hook (((prog-mode LaTeX) . aggressive-indent-mode)))
 #+end_src
 
 Настраиваем поведение клавиши =RET=: при нажатии на нее происхоит не только перенос строки, но и коррекция отступа введенной строки.
@@ -916,7 +884,11 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (use-package highlight-indent-guides
     :straight t
-    :hook (prog-mode . highlight-indent-guides-mode))
+    :if ensure/isWindows
+    :hook (prog-mode . highlight-indent-guides-mode)
+    :custom
+    (highlight-indent-guides-method 'character)
+    (highlight-indent-guides-responsive 'top))
 #+end_src
 
 ** Настройки отмены и повтора
@@ -1175,11 +1147,16 @@ Vim умеет красиво отображать номер текущей с�
         (lsp-headerline-breadcrumb-icons-enable nil)
         (lsp-enable-file-watchers nil)
         (lsp-keymap-prefix "C-c l")
-        (lsp-completion-provider :none)))
+        (lsp-completion-provider :none))
+    (use-package lsp-ui
+        :straight t))
 
 (when (string-equal init/lsp-engine "eglot")
     (use-package eglot
-        :straight t
+    	:init
+    	(when (< emacs-major-version 29)
+    		(straight-use-package 'eglot))
+        ;; :straight t
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
                                             (lsp/non-greedy-eglot)

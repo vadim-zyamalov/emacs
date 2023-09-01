@@ -7,9 +7,6 @@
 ;; После чего загружаем настройки из org-документа.
 
 ;;; Code:
-(defconst init/be-evil nil
-    "To be or not to be evil.")
-
 (defconst init/lsp-engine "eglot"
     "LSP engine to use.")
 

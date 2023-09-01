@@ -1,4 +1,5 @@
-(straight-use-package 'use-package)
+(when (< emacs-major-version 29)
+    (straight-use-package 'use-package))
 (require 'use-package)
 (use-package use-package-hydra
     :straight t)
@@ -401,32 +402,6 @@
 (cua-mode t)
 (transient-mark-mode t)
 
-(when init/be-evil
-    (use-package evil
-        :straight t
-        :config
-        (evil-mode 1)
-        (global-evil-surround-mode 1)
-        (evil-collection-init)
-        (evilnc-default-hotkeys)
-        :custom
-        (evil-want-integration t)
-        (evil-want-integration t)
-        (evil-respect-visual-line-mode t)
-        (evil-undo-system 'undo-tree))
-
-    (use-package evil-collection
-        :straight t
-        :after (evil))
-
-    (use-package evil-surround
-        :straight t
-        :after (evil))
-
-    (use-package evil-nerd-commenter
-        :straight t
-        :after (evil)))
-
 (delete-selection-mode t)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -445,7 +420,11 @@
 
 (use-package highlight-indent-guides
     :straight t
-    :hook (prog-mode . highlight-indent-guides-mode))
+    :if ensure/isWindows
+    :hook (prog-mode . highlight-indent-guides-mode)
+    :custom
+    (highlight-indent-guides-method 'character)
+    (highlight-indent-guides-responsive 'top))
 
 (use-package undo-tree
     :straight t
@@ -590,11 +569,16 @@
         (lsp-headerline-breadcrumb-icons-enable nil)
         (lsp-enable-file-watchers nil)
         (lsp-keymap-prefix "C-c l")
-        (lsp-completion-provider :none)))
+        (lsp-completion-provider :none))
+    (use-package lsp-ui
+        :straight t))
 
 (when (string-equal init/lsp-engine "eglot")
     (use-package eglot
-        :straight t
+    	:init
+    	(when (< emacs-major-version 29)
+    		(straight-use-package 'eglot))
+        ;; :straight t
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
                                             (lsp/non-greedy-eglot)
