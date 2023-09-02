@@ -164,7 +164,7 @@ pacman -S mingw-w64-i686-libgccjit
 
 Установка пакета для настройки работы сборщика мусора. Я не использую этот пакет, так как (возможно только по Windows) он вызывает периодическое подвисание =Emacs=. Судя по всему, =Emacs= в Windows однопоточен, что и приводит к такому эффекту.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package gcmh
     :straight t
     :config
