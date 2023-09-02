@@ -765,8 +765,8 @@ Vim умеет красиво отображать номер текущей с�
       scroll-conservatively 101
       scroll-margin 0
       scroll-preserve-screen-position t)
-
-(pixel-scroll-precision-mode)
+(when (>= emacs-major-version 29)
+    (pixel-scroll-precision-mode))
 #+end_src
 
 [[https://github.com/abo-abo/hydra][Hydra]] позволяет снизить число нажатий клавиш при цепочке последовательных нажатий: достаточно ввести начальную комбинацию, затем ее можно опустить.

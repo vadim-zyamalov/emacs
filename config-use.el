@@ -381,8 +381,8 @@
       scroll-conservatively 101
       scroll-margin 0
       scroll-preserve-screen-position t)
-
-(pixel-scroll-precision-mode)
+(when (>= emacs-major-version 29)
+    (pixel-scroll-precision-mode))
 
 (use-package hydra
     :straight t)
