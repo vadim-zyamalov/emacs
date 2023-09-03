@@ -1332,39 +1332,41 @@ Vim умеет красиво отображать номер текущей с�
 | =M-R=     | global | ivy-resume                 | Повтор предыдущего поиска               |
 
 #+begin_src emacs-lisp
-(when (equal init/completion-minibuf "ivy")
-    (use-package ivy
-        :straight t
-        :config
-        (ivy-mode t)
-        :bind (("C-x b" . ivy-switch-buffer)
-               ("C-x C-b" . ibuffer)
-               ("C-c v" . ivy-push-view)
-               ("C-c V" . ivy-pop-view)
-               ("M-R" . ivy-resume))
-        :custom
-        (ivy-use-virtual-buffers t)
-        (ivy-count-format "(%d/%d) ")
-        (ivy-wrap t))
+  (when (equal init/completion-minibuf "ivy")
+      (use-package counsel
+          :straight t
+          :config
+          (ivy-mode t)
+          :bind (("C-x b"   . ivy-switch-buffer)
+                 ("C-x C-b" . ibuffer)
+                 ("C-c v"   . ivy-push-view)
+                 ("C-c V"   . ivy-pop-view)
+                 ("M-R"     . ivy-resume)
+                 ("C-s"     . swiper-isearch)
+                 ("M-x"     . counsel-M-x)
+                 ("C-x C-f" . counsel-find-file)
+                 ("M-y"     . counsel-yank-pop)
+                 ("<f1> l"  . counsel-find-library)
+                 ("<f2> i"  . counsel-info-lookup-symbol)
+                 ("<f2> u"  . counsel-unicode-char)
+                 ("<f2> j"  . counsel-set-variable))
+          :custom
+          (ivy-use-virtual-buffers t)
+          (ivy-count-format "(%d/%d) ")
+          (ivy-wrap t))
 
-    (use-package swiper
-        :straight t
-        :after (ivy)
-        :bind (("C-s" . swiper-isearch)))
+      (use-package ivy-rich
+          :straight t
+          :after (counsel)
+          :init
+          (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+          :config
+          (ivy-rich-mode 1))
 
-    (use-package counsel
-        :straight t
-        :after (ivy)
-        :bind (("M-x" . counsel-M-x)
-               ("C-x C-f" . counsel-find-file)
-               ("M-y" . counsel-yank-pop)
-               ("<f1> l" . counsel-find-library)
-               ("<f2> i" . counsel-info-lookup-symbol)
-               ("<f2> u" . counsel-unicode-char)
-               ("<f2> j" . counsel-set-variable)))
-
-    (use-package smex
-        :straight t))
+      (use-package nerd-icons-ivy-rich
+          :straight t
+          :init
+          (nerd-icons-ivy-rich-mode 1)))
 #+end_src
 
 ** Сниппеты

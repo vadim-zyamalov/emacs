@@ -704,38 +704,40 @@
         (completion-category-overrides '((file (styles basic partial-completion))))))
 
 (when (equal init/completion-minibuf "ivy")
-    (use-package ivy
+    (use-package counsel
         :straight t
         :config
         (ivy-mode t)
-        :bind (("C-x b" . ivy-switch-buffer)
+        :bind (("C-x b"   . ivy-switch-buffer)
                ("C-x C-b" . ibuffer)
-               ("C-c v" . ivy-push-view)
-               ("C-c V" . ivy-pop-view)
-               ("M-R" . ivy-resume))
+               ("C-c v"   . ivy-push-view)
+               ("C-c V"   . ivy-pop-view)
+               ("M-R"     . ivy-resume)
+               ("C-s"     . swiper-isearch)
+               ("M-x"     . counsel-M-x)
+               ("C-x C-f" . counsel-find-file)
+               ("M-y"     . counsel-yank-pop)
+               ("<f1> l"  . counsel-find-library)
+               ("<f2> i"  . counsel-info-lookup-symbol)
+               ("<f2> u"  . counsel-unicode-char)
+               ("<f2> j"  . counsel-set-variable))
         :custom
         (ivy-use-virtual-buffers t)
         (ivy-count-format "(%d/%d) ")
         (ivy-wrap t))
 
-    (use-package swiper
+    (use-package ivy-rich
         :straight t
-        :after (ivy)
-        :bind (("C-s" . swiper-isearch)))
+        :after (counsel)
+        :init
+        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+        :config
+        (ivy-rich-mode 1))
 
-    (use-package counsel
+    (use-package nerd-icons-ivy-rich
         :straight t
-        :after (ivy)
-        :bind (("M-x" . counsel-M-x)
-               ("C-x C-f" . counsel-find-file)
-               ("M-y" . counsel-yank-pop)
-               ("<f1> l" . counsel-find-library)
-               ("<f2> i" . counsel-info-lookup-symbol)
-               ("<f2> u" . counsel-unicode-char)
-               ("<f2> j" . counsel-set-variable)))
-
-    (use-package smex
-        :straight t))
+        :init
+        (nerd-icons-ivy-rich-mode 1)))
 
 (when (string-equal init/snippet-engine "tempel")
     (use-package tempel
