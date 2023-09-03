@@ -50,11 +50,6 @@
           history-length 25)
     (savehist-mode))
 
-(add-hook 'emacs-startup-hook (lambda ()
-                                  (setq gc-cons-threshold (* 8 1024 1024))
-                                  (setq file-name-handler-alist file-name-handler-alist-original)
-                                  (makunbound 'file-name-handler-alist-original)))
-
 (use-package gcmh
     :straight t
     :config
@@ -145,15 +140,15 @@
          "Настройки"
          "Открыть файл с настройками (init.el)"
          (lambda (&rest _)
-             (find-file user-init-file)))
+             (find-file (concat (file-name-directory user-init-file) "config-use.org"))))
         (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
          "dotfiles"
          "Github с конфигурационными файлами"
-         (lambda (&rest _) (browse-url "https://github.com/d9d6ka/dotfiles")))
+         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
         (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
          "emacs"
          "Github с настройками Emacs"
-         (lambda (&rest _) (browse-url "https://github.com/d9d6ka/emacs")))
+         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
         ))))
 
 (setq display-line-numbers-type 'relative)
@@ -275,7 +270,12 @@
     :config
     (load-theme 'ef-autumn :no-confirm))
 
-(cond ((find-font (font-spec :name "Iosevka"))
+(cond ((find-font (font-spec :name "JetBrains Mono"))
+       (set-face-attribute 'default
+                           nil
+                           :font "JetBrains Mono"
+                           :height 120))
+      ((find-font (font-spec :name "Iosevka"))
        (set-face-attribute 'default
                            nil
                            :font "Iosevka"
@@ -284,11 +284,6 @@
        (set-face-attribute 'default
                            nil
                            :font "Fira Code"
-                           :height 120))
-      ((find-font (font-spec :name "JetBrains Mono"))
-       (set-face-attribute 'default
-                           nil
-                           :font "JetBrains Mono"
                            :height 120)))
 
 (unless (version< emacs-version "28.1")
@@ -461,22 +456,20 @@
     :straight t
     :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
 
-(if (not (string-equal init/completion-popup "company"))
-        (use-package smartparens
-            :straight t
-            :demand t
-            :bind (:map smartparens-mode-map
-	                    ("C-c b r" . sp-rewrap-sexp)
-                        ("C-c b d" . sp-splice-sexp))
-            :config
-            (require 'smartparens-config)
-            (smartparens-global-mode t)
-            (sp-with-modes '(tex-mode
-                             latex-mode
-                             LaTeX-mode)
-                (sp-local-pair "<<" ">>"
-                               :unless '(sp-in-math-p))))
-    (electric-pair-mode t))
+(use-package smartparens
+    :straight t
+    :demand t
+    :bind (:map smartparens-mode-map
+	            ("C-c b r" . sp-rewrap-sexp)
+                ("C-c b d" . sp-splice-sexp))
+    :config
+    (require 'smartparens-config)
+    (smartparens-global-mode t)
+    (sp-with-modes '(tex-mode
+                     latex-mode
+                     LaTeX-mode)
+                   (sp-local-pair "<<" ">>"
+                                  :unless '(sp-in-math-p))))
 
 (defun comment-or-uncomment-region-or-line ()
     "Comments or uncomments the region or the current line."
@@ -512,7 +505,7 @@
     :straight t
     :bind (("M-%" . my/vr/replace)
            ("C-M-%" . my/vr/query-replace)
-           ("C-c v m" . my/vr/mc-mark)))
+           ("C-c v m" . vr/mc-mark)))
 
 (use-package multiple-cursors
     :straight t
@@ -583,6 +576,7 @@
         (lsp-enable-file-watchers nil)
         (lsp-keymap-prefix "C-c l")
         (lsp-completion-provider :none))
+
     (use-package lsp-ui
         :straight t))
 
@@ -604,171 +598,93 @@
         (add-to-list 'eglot-server-programs
                      '(latex-mode . ("texlab")))))
 
-(when (string-equal init/completion-popup "corfu")
-    (use-package corfu
-        :straight (:files (:defaults "extensions/*"))
-        :bind (:map corfu-map
-                    ("TAB" . corfu-next)
-                    ([tab] . corfu-next)
-                    ("S-TAB" . corfu-previous)
-                    ([backtab] . corfu-previous))
-        :init
-        (corfu-popupinfo-mode)
-        (global-corfu-mode)
-        :custom
-        (corfu-auto nil)
-        (corfu-cycle t)
-        (corfu-preselect-first nil)
-        (corfu-preview-current 'insert)
-        (tab-always-indent 'complete)
-        (corfu-popupinfo-delay 0.2))
+(use-package corfu
+    :straight (:files (:defaults "extensions/*"))
+    :bind (:map corfu-map
+                ("TAB" . corfu-next)
+                ([tab] . corfu-next)
+                ("S-TAB" . corfu-previous)
+                ([backtab] . corfu-previous))
+    :init
+    (corfu-popupinfo-mode)
+    (global-corfu-mode)
+    :custom
+    (corfu-auto nil)
+    (corfu-cycle t)
+    (corfu-preselect-first nil)
+    (corfu-preview-current 'insert)
+    (tab-always-indent 'complete)
+    (corfu-popupinfo-delay 0.2))
 
-    (use-package kind-icon
-        :straight t
-        :after (corfu nerd-icons)
-        :config
-        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-        :custom
-        (kind-icon-default-face 'corfu-default)))
+(use-package kind-icon
+    :straight t
+    :after (corfu nerd-icons)
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+    :custom
+    (kind-icon-default-face 'corfu-default))
 
-(when (string-equal init/completion-popup "company")
-    (use-package company
-        :straight t
-        :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
-               :map company-active-map
-               ("RET". company-complete-selection)
-               ("<return>". company-complete-selection)
-               ("<tab>" . company-complete-common-or-cycle)
-               ("ESC" . company-abort)
-               ("<esc>" . company-abort))
-        :hook (after-init . global-company-mode)
-        :init
-        (setq company-backends '((company-capf)))
-        :custom
-        (company-selection-wrap-around t)
-        (company-minimum-prefix-length 1)
-        (company-idle-delay nil)
-        (company-tooltip-align-annotations t)
-        (company-transformers '(delete-consecutive-dups
-                                company-sort-by-occurrence
-                                company-sort-prefer-same-case-prefix)))
+(use-package vertico
+    :straight (:files (:defaults "extensions/*"))
+    :hook ((minibuffer-setup . (lambda ()
+                                   (setq completion-in-region-function
+                                         (if vertico-mode
+                                                 #'consult-completion-in-region
+                                             #'completion--in-region))))
+           (minibuffer-setup . vertico-repeat-save))
+    :init
+    (add-to-list 'process-coding-system-alist
+                 '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
+    (vertico-mode)
+    :bind (("C-c C-r" . vertico-repeat))
+    :custom
+    (vertico-cycle t)
+    (vertico-mouse-mode t)
+    (vertico-count 8)
+    (vertico-count 8))
 
-    (use-package company-box
-        :straight t
-        :hook (company-mode . company-box-mode)))
+(use-package consult
+    :straight t
+    :bind (("C-x b" . consult-buffer)
+           ("C-x C-b" . ibuffer)
+           ("C-s" . consult-line)
+           ("C-S-s" . consult-ripgrep)))
 
-(when (equal init/completion-minibuf "vertico")
-    (use-package vertico
-        :straight (:files (:defaults "extensions/*"))
-        :hook ((minibuffer-setup . (lambda ()
-                                      (setq completion-in-region-function
-                                            (if vertico-mode
-                                                    #'consult-completion-in-region
-                                                #'completion--in-region))))
-               (minibuffer-setup . vertico-repeat-save))
-        :init
-        (add-to-list 'process-coding-system-alist
-                     '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
-        (vertico-mode)
-        :bind (("M-R" . vertico-repeat))
-        :custom
-        (vertico-cycle t)
-        (vertico-mouse-mode t)
-        (vertico-count 8)
-        (vertico-count 8))
+(use-package embark
+    :straight t
+    :bind (("C-." . embark-act)
+           ("C-;" . embark-dwim)
+           ("C-h B" . embark-bindings))
+    :custom
+    (prefix-help-command #'embark-prefix-help-command))
 
-    (use-package consult
-        :straight t
-        :bind (("C-x b" . consult-buffer)
-               ("C-x C-b" . ibuffer)
-               ("C-s" . consult-line)
-               ("C-S-s" . consult-ripgrep)))
+(use-package embark-consult
+    :straight t
+    :after (embark consult)
+    :hook (embark-collect-mode . consult-preview-at-point-mode))
 
-    (use-package embark
-        :straight t
-        :bind (("C-." . embark-act)
-               ("C-;" . embark-dwim)
-               ("C-h B" . embark-bindings))
-        :custom
-        (prefix-help-command #'embark-prefix-help-command))
+(use-package orderless
+    :straight t
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles basic partial-completion)))))
 
-    (use-package embark-consult
-        :straight t
-        :after (embark consult)
-        :hook (embark-collect-mode . consult-preview-at-point-mode))
+(use-package yasnippet
+    :straight t
+    :bind (:map yas-minor-mode-map
+                ([(tab)] . nil)
+                ("TAB" . nil))
+    :config
+    (yas-global-mode 1))
 
+(use-package yasnippet-snippets
+    :straight t)
 
-    (use-package orderless
-        :straight t
-        :custom
-        (completion-styles '(orderless basic))
-        (completion-category-defaults nil)
-        (completion-category-overrides '((file (styles basic partial-completion))))))
-
-(when (equal init/completion-minibuf "ivy")
-    (use-package counsel
-        :straight t
-        :config
-        (ivy-mode t)
-        :bind (("C-x b"   . ivy-switch-buffer)
-               ("C-x C-b" . ibuffer)
-               ("C-c v"   . ivy-push-view)
-               ("C-c V"   . ivy-pop-view)
-               ("M-R"     . ivy-resume)
-               ("C-s"     . swiper-isearch)
-               ("M-x"     . counsel-M-x)
-               ("C-x C-f" . counsel-find-file)
-               ("M-y"     . counsel-yank-pop)
-               ("<f1> l"  . counsel-find-library)
-               ("<f2> i"  . counsel-info-lookup-symbol)
-               ("<f2> u"  . counsel-unicode-char)
-               ("<f2> j"  . counsel-set-variable))
-        :custom
-        (ivy-use-virtual-buffers t)
-        (ivy-count-format "(%d/%d) ")
-        (ivy-wrap t))
-
-    (use-package ivy-rich
-        :straight t
-        :after (counsel)
-        :init
-        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-        :config
-        (ivy-rich-mode 1))
-
-    (use-package nerd-icons-ivy-rich
-        :straight t
-        :init
-        (nerd-icons-ivy-rich-mode 1)))
-
-(when (string-equal init/snippet-engine "tempel")
-    (use-package tempel
-        :straight t
-        :bind (("<backtab>" . tempel-complete)
-               ("<f7>" . tempel-insert)
-               :map tempel-map
-               ("<backtab>" . tempel-done))
-        :custom
-        (tempel-path (expand-file-name
-                      "templates"
-                      (file-name-directory user-init-file)))))
-
-(when (string-equal init/snippet-engine "yasnippet")
-    (use-package yasnippet
-        :straight t
-        :bind (:map yas-minor-mode-map
-                     ([(tab)] . nil)
-                     ("TAB" . nil))
-        :config
-        (yas-global-mode 1))
-
-    (use-package yasnippet-snippets
-        :straight t)
-
-    (use-package consult-yasnippet
-        :straight t
-        :after (vertico)
-        :bind ("<f7>" . consult-yasnippet)))
+(use-package consult-yasnippet
+    :straight t
+    :after (vertico)
+    :bind ("<f7>" . consult-yasnippet))
 
 (use-package projectile
     :straight t

@@ -38,8 +38,8 @@
 - [[#настройки-автодополнения][Настройки автодополнения]]
   - [[#вспомогательные-функции][Вспомогательные функции]]
   - [[#lsp][LSP]]
-  - [[#corfu-или-company][=Corfu= или =Company=]]
-  - [[#vertico-consult-и-embark-или-ivy][=Vertico=, =Consult= и =Embark= или =Ivy=]]
+  - [[#автодополнение-в-буфере-corfu][Автодополнение в буфере: =Corfu=]]
+  - [[#автодополнение-в-минибуфере-vertico-consult-и-embark][Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark=]]
   - [[#сниппеты][Сниппеты]]
 - [[#настройки-для-языков-программирования][Настройки для языков программирования]]
   - [[#markdown][Markdown]]
@@ -69,7 +69,7 @@ pacman -S mingw-w64-i686-libgccjit
 
 * Настройки =use-package=
 
-Установка [[https://github.com/jwiegley/use-package][use-package]] для дальнейшей настройки =Emacs=. В =Emacs 29= use-package встроен, так что устанавливать его не нужно.
+Установка [[https://github.com/jwiegley/use-package][use-package]] для дальнейшей настройки =Emacs=. В =Emacs 29= =use-package= встроен, так что устанавливать его не нужно.
 
 #+begin_src emacs-lisp
 (when (< emacs-major-version 29)
@@ -154,15 +154,6 @@ pacman -S mingw-w64-i686-libgccjit
 #+end_src
 
 ** Ускорение запуска =Emacs=
-
-В файле =early-init.el= для ускорения запуска было задано очень большое пороговое значение для запуска сборщика мусора, чтобы предотвратить его запуск в процессе старта сессии. Также был обнулен =file-name-handler-alist=. Приведенный ниже хук запускается в конце инициализации, в результате чего пороговое значение устанавливается на более-менее адекватном уровне, а =file-name-handler-alist= --- восстанавливается.
-
-#+begin_src emacs-lisp
-(add-hook 'emacs-startup-hook (lambda ()
-                                  (setq gc-cons-threshold (* 8 1024 1024))
-                                  (setq file-name-handler-alist file-name-handler-alist-original)
-                                  (makunbound 'file-name-handler-alist-original)))
-#+end_src
 
 Установка пакета для настройки работы сборщика мусора. В Windows он вызывает периодическое подвисание =Emacs=. Судя по всему, =Emacs= в Windows однопоточен, что и приводит к такому эффекту.
 
@@ -332,15 +323,15 @@ pacman -S mingw-w64-i686-libgccjit
          "Настройки"
          "Открыть файл с настройками (init.el)"
          (lambda (&rest _)
-             (find-file user-init-file)))
+             (find-file (concat (file-name-directory user-init-file) "config-use.org"))))
         (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
          "dotfiles"
          "Github с конфигурационными файлами"
-         (lambda (&rest _) (browse-url "https://github.com/d9d6ka/dotfiles")))
+         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
         (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
          "emacs"
          "Github с настройками Emacs"
-         (lambda (&rest _) (browse-url "https://github.com/d9d6ka/emacs")))
+         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
         ))))
 #+end_src
 
@@ -600,7 +591,12 @@ Vim умеет красиво отображать номер текущей с�
 Настроим стандартный шрифт. Я предпочитаю [[https://github.com/JetBrains/JetBrainsMono][JetBrains Mono]], хотя это дело вкуса. Некоторое время использовал [[https://github.com/tonsky/FiraCode][Fira Code]]; сейчас буду использовать [[https://github.com/be5invis/Iosevka][Iosevka]].
 
 #+begin_src emacs-lisp
-(cond ((find-font (font-spec :name "Iosevka"))
+(cond ((find-font (font-spec :name "JetBrains Mono"))
+       (set-face-attribute 'default
+                           nil
+                           :font "JetBrains Mono"
+                           :height 120))
+      ((find-font (font-spec :name "Iosevka"))
        (set-face-attribute 'default
                            nil
                            :font "Iosevka"
@@ -609,11 +605,6 @@ Vim умеет красиво отображать номер текущей с�
        (set-face-attribute 'default
                            nil
                            :font "Fira Code"
-                           :height 120))
-      ((find-font (font-spec :name "JetBrains Mono"))
-       (set-face-attribute 'default
-                           nil
-                           :font "JetBrains Mono"
                            :height 120)))
 #+end_src
 
@@ -945,22 +936,20 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c b d= | global | sp-splice-sexp | Удаление окружающих скобок |
 
 #+begin_src emacs-lisp :noweb
-(if (not (string-equal init/completion-popup "company"))
-        (use-package smartparens
-            :straight t
-            :demand t
-            :bind (:map smartparens-mode-map
-	                    ("C-c b r" . sp-rewrap-sexp)
-                        ("C-c b d" . sp-splice-sexp))
-            :config
-            (require 'smartparens-config)
-            (smartparens-global-mode t)
-            (sp-with-modes '(tex-mode
-                             latex-mode
-                             LaTeX-mode)
-                (sp-local-pair "<<" ">>"
-                               :unless '(sp-in-math-p))))
-    (electric-pair-mode t))
+(use-package smartparens
+    :straight t
+    :demand t
+    :bind (:map smartparens-mode-map
+	            ("C-c b r" . sp-rewrap-sexp)
+                ("C-c b d" . sp-splice-sexp))
+    :config
+    (require 'smartparens-config)
+    (smartparens-global-mode t)
+    (sp-with-modes '(tex-mode
+                     latex-mode
+                     LaTeX-mode)
+                   (sp-local-pair "<<" ">>"
+                                  :unless '(sp-in-math-p))))
 #+end_src
 
 ** Настройки комментирования
@@ -1018,7 +1007,7 @@ Vim умеет красиво отображать номер текущей с�
     :straight t
     :bind (("M-%" . my/vr/replace)
            ("C-M-%" . my/vr/query-replace)
-           ("C-c v m" . my/vr/mc-mark)))
+           ("C-c v m" . vr/mc-mark)))
 #+end_src
 
 Пакет [[https://github.com/magnars/multiple-cursors.el][Multiple Cursors]] позволяет создавать несколько курсоров, либо выделяющих одинаковый текст в разных строках, либо создающих столбец из курсоров.
@@ -1151,6 +1140,7 @@ Vim умеет красиво отображать номер текущей с�
         (lsp-enable-file-watchers nil)
         (lsp-keymap-prefix "C-c l")
         (lsp-completion-provider :none))
+
     (use-package lsp-ui
         :straight t))
 
@@ -1173,7 +1163,7 @@ Vim умеет красиво отображать номер текущей с�
                      '(latex-mode . ("texlab")))))
 #+end_src
 
-** =Corfu= или =Company=
+** Автодополнение в буфере: =Corfu=
 
 [[https://github.com/minad/corfu][Corfu]] --- минималистичное всплывающее окно для автодополнения. Не требует дополнительных `бэкендов` для работы, использует встроенную в =Emacs= функциональность. Также устанавливается пакет [[https://github.com/galeo/corfu-doc][Corfu-doc]], добавляющий всплявающее окно со справкой. Для визуальных красот устанавливается пакет [[https://github.com/jdtsmith/kind-icon][Kind-icon]], добавляющий красивые иконки. Пакет [[https://github.com/minad/cape][Cape]] содержит набор инструментов для модификации CAPF, при помощи которых, собственно, и модифицировались выше CAPF для LSP.
 
@@ -1185,67 +1175,36 @@ Vim умеет красиво отображать номер текущей с�
 | =S-TAB=   | corfu-map | corfu-previous | Предыдущий вариант |
 
 #+begin_src emacs-lisp
-(when (string-equal init/completion-popup "corfu")
-    (use-package corfu
-        :straight (:files (:defaults "extensions/*"))
-        :bind (:map corfu-map
-                    ("TAB" . corfu-next)
-                    ([tab] . corfu-next)
-                    ("S-TAB" . corfu-previous)
-                    ([backtab] . corfu-previous))
-        :init
-        (corfu-popupinfo-mode)
-        (global-corfu-mode)
-        :custom
-        (corfu-auto nil)
-        (corfu-cycle t)
-        (corfu-preselect-first nil)
-        (corfu-preview-current 'insert)
-        (tab-always-indent 'complete)
-        (corfu-popupinfo-delay 0.2))
+(use-package corfu
+    :straight (:files (:defaults "extensions/*"))
+    :bind (:map corfu-map
+                ("TAB" . corfu-next)
+                ([tab] . corfu-next)
+                ("S-TAB" . corfu-previous)
+                ([backtab] . corfu-previous))
+    :init
+    (corfu-popupinfo-mode)
+    (global-corfu-mode)
+    :custom
+    (corfu-auto nil)
+    (corfu-cycle t)
+    (corfu-preselect-first nil)
+    (corfu-preview-current 'insert)
+    (tab-always-indent 'complete)
+    (corfu-popupinfo-delay 0.2))
 
-    (use-package kind-icon
-        :straight t
-        :after (corfu nerd-icons)
-        :config
-        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-        :custom
-        (kind-icon-default-face 'corfu-default)))
+(use-package kind-icon
+    :straight t
+    :after (corfu nerd-icons)
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+    :custom
+    (kind-icon-default-face 'corfu-default))
 #+end_src
 
-При желании можно использовать [[https://company-mode.github.io/][Company Mode]] в связке с [[https://github.com/sebastiencs/company-box][Company Box]] (для иконок). В целом, все аналогично приведенному выше набору пакетов, однако есть нюансы. Во-первых, =Company= использует собственный механизм бэкендов, а во-вторых, он не совместим со =Smartparens=, происходит дублирование закрывающей скобки. Насколько мне известно, это еще [[https://github.com/Fuco1/smartparens/issues/445][не исправлено]].
+** Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark=
 
-#+begin_src emacs-lisp
-(when (string-equal init/completion-popup "company")
-    (use-package company
-        :straight t
-        :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
-               :map company-active-map
-               ("RET". company-complete-selection)
-               ("<return>". company-complete-selection)
-               ("<tab>" . company-complete-common-or-cycle)
-               ("ESC" . company-abort)
-               ("<esc>" . company-abort))
-        :hook (after-init . global-company-mode)
-        :init
-        (setq company-backends '((company-capf)))
-        :custom
-        (company-selection-wrap-around t)
-        (company-minimum-prefix-length 1)
-        (company-idle-delay nil)
-        (company-tooltip-align-annotations t)
-        (company-transformers '(delete-consecutive-dups
-                                company-sort-by-occurrence
-                                company-sort-prefer-same-case-prefix)))
-
-    (use-package company-box
-        :straight t
-        :hook (company-mode . company-box-mode)))
-#+end_src
-
-** =Vertico=, =Consult= и =Embark= или =Ivy=
-
-Если описанные выше пакеты =Corfu= и =Company= служат для облегчения автодополнения при работе в основных буферах, то следующие предназначены для минибуфера. [[https://github.com/minad/vertico][Vertico]] является облегченным аналогом =Ivy= или =Helm=, опирающимся на встроенные в =Emacs= возможности.
+Если описанный выше пакет =Corfu= и  служат для облегчения автодополнения при работе в основных буферах, то следующие предназначены для минибуфера. [[https://github.com/minad/vertico][Vertico]] является облегченным аналогом =Ivy= или =Helm=, опирающимся на встроенные в =Emacs= возможности.
 
 [[https://github.com/minad/consult][Consult]] представляет собой набор функций, расширяющих встроенные в =Emacs= аналоги.
 
@@ -1264,134 +1223,54 @@ Vim умеет красиво отображать номер текущей с�
 | =M-R=     | global | vertico-repeat  | Повтор предыдущего поиска                    |
 
 #+begin_src emacs-lisp
-(when (equal init/completion-minibuf "vertico")
-    (use-package vertico
-        :straight (:files (:defaults "extensions/*"))
-        :hook ((minibuffer-setup . (lambda ()
-                                      (setq completion-in-region-function
-                                            (if vertico-mode
-                                                    #'consult-completion-in-region
-                                                #'completion--in-region))))
-               (minibuffer-setup . vertico-repeat-save))
-        :init
-        (add-to-list 'process-coding-system-alist
-                     '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
-        (vertico-mode)
-        :bind (("M-R" . vertico-repeat))
-        :custom
-        (vertico-cycle t)
-        (vertico-mouse-mode t)
-        (vertico-count 8)
-        (vertico-count 8))
+(use-package vertico
+    :straight (:files (:defaults "extensions/*"))
+    :hook ((minibuffer-setup . (lambda ()
+                                   (setq completion-in-region-function
+                                         (if vertico-mode
+                                                 #'consult-completion-in-region
+                                             #'completion--in-region))))
+           (minibuffer-setup . vertico-repeat-save))
+    :init
+    (add-to-list 'process-coding-system-alist
+                 '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
+    (vertico-mode)
+    :bind (("C-c C-r" . vertico-repeat))
+    :custom
+    (vertico-cycle t)
+    (vertico-mouse-mode t)
+    (vertico-count 8)
+    (vertico-count 8))
 
-    (use-package consult
-        :straight t
-        :bind (("C-x b" . consult-buffer)
-               ("C-x C-b" . ibuffer)
-               ("C-s" . consult-line)
-               ("C-S-s" . consult-ripgrep)))
+(use-package consult
+    :straight t
+    :bind (("C-x b" . consult-buffer)
+           ("C-x C-b" . ibuffer)
+           ("C-s" . consult-line)
+           ("C-S-s" . consult-ripgrep)))
 
-    (use-package embark
-        :straight t
-        :bind (("C-." . embark-act)
-               ("C-;" . embark-dwim)
-               ("C-h B" . embark-bindings))
-        :custom
-        (prefix-help-command #'embark-prefix-help-command))
+(use-package embark
+    :straight t
+    :bind (("C-." . embark-act)
+           ("C-;" . embark-dwim)
+           ("C-h B" . embark-bindings))
+    :custom
+    (prefix-help-command #'embark-prefix-help-command))
 
-    (use-package embark-consult
-        :straight t
-        :after (embark consult)
-        :hook (embark-collect-mode . consult-preview-at-point-mode))
+(use-package embark-consult
+    :straight t
+    :after (embark consult)
+    :hook (embark-collect-mode . consult-preview-at-point-mode))
 
-
-    (use-package orderless
-        :straight t
-        :custom
-        (completion-styles '(orderless basic))
-        (completion-category-defaults nil)
-        (completion-category-overrides '((file (styles basic partial-completion))))))
-#+end_src
-
-[[https://github.com/abo-abo/swiper][Ivy]] является инструментом, альтернативным =Vertico=.
-
-| Клавиша | Карта  | Команда                    | Действие                                |
-|---------+--------+----------------------------+-----------------------------------------|
-| =C-s=     | global | swiper-isearch             | Поиск строк по шаблону                  |
-| =M-x=     | global | counsel-M-x                | Меню интерактивных команд               |
-| =C-x C-f= | global | counsel-find-file          | Меню открытия файлов                    |
-| =M-y=     | global | counsel-yank-pop           | Меню kill-ring                          |
-| =<f1> l=  | global | counsel-find-library       | Переход к исходному коду библиотеки     |
-| =<f2> i=  | global | counsel-info-lookup-symbol | Поиск справки для символа               |
-| =<f2> u=  | global | counsel-unicode-char       | Поиск символа Юникод                    |
-| =<f2> j=  | global | counsel-set-variable       | Изменение значения переменной           |
-| =C-x b=   | global | ivy-switch-buffer          | Переключение буферов при помощи =Ivy=     |
-| =C-x C-b= | global | ibuffer                    | Переключение буферов при помощи =ibuffer= |
-| =C-c v=   | global | ivy-push-view              |                                         |
-| =C-c V=   | global | ivy-pop-view               |                                         |
-| =M-R=     | global | ivy-resume                 | Повтор предыдущего поиска               |
-
-#+begin_src emacs-lisp
-  (when (equal init/completion-minibuf "ivy")
-      (use-package counsel
-          :straight t
-          :config
-          (ivy-mode t)
-          :bind (("C-x b"   . ivy-switch-buffer)
-                 ("C-x C-b" . ibuffer)
-                 ("C-c v"   . ivy-push-view)
-                 ("C-c V"   . ivy-pop-view)
-                 ("M-R"     . ivy-resume)
-                 ("C-s"     . swiper-isearch)
-                 ("M-x"     . counsel-M-x)
-                 ("C-x C-f" . counsel-find-file)
-                 ("M-y"     . counsel-yank-pop)
-                 ("<f1> l"  . counsel-find-library)
-                 ("<f2> i"  . counsel-info-lookup-symbol)
-                 ("<f2> u"  . counsel-unicode-char)
-                 ("<f2> j"  . counsel-set-variable))
-          :custom
-          (ivy-use-virtual-buffers t)
-          (ivy-count-format "(%d/%d) ")
-          (ivy-wrap t))
-
-      (use-package ivy-rich
-          :straight t
-          :after (counsel)
-          :init
-          (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-          :config
-          (ivy-rich-mode 1))
-
-      (use-package nerd-icons-ivy-rich
-          :straight t
-          :init
-          (nerd-icons-ivy-rich-mode 1)))
+(use-package orderless
+    :straight t
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles basic partial-completion)))))
 #+end_src
 
 ** Сниппеты
-
-[[https://github.com/minad/tempel][Tempel]] является переосмыслением встроенного механизма сниппетов =tempo= от автора =Vertico= и =Corfu=. Удобен, привычен для давних пользователей =Emacs=, поскольку в целом повторяет синтаксис описания шаблонов =tempo=.
-
-| Клавиша | Карта      | Команда       | Действие                      |
-|---------+------------+---------------+-------------------------------|
-| =S-TAB=   | global     | tempel-expand | Разворачивание шаблона        |
-| =S-TAB=   | tempel-map | tempel-done   | Завершение заполнения шаблона |
-| =<f7>=    | global     | tempel-insert | Меню шаблонов                 |
-
-#+begin_src emacs-lisp
-(when (string-equal init/snippet-engine "tempel")
-    (use-package tempel
-        :straight t
-        :bind (("<backtab>" . tempel-complete)
-               ("<f7>" . tempel-insert)
-               :map tempel-map
-               ("<backtab>" . tempel-done))
-        :custom
-        (tempel-path (expand-file-name
-                      "templates"
-                      (file-name-directory user-init-file)))))
-#+end_src
 
 Но на текущий момент многие воспринимают как стандарт [[https://github.com/joaotavora/yasnippet][Yasnippet]] (а точнее формат шаблонов [[http://manual.macromates.com/en/snippets][TextMate]]): ряд LSP возвращают сниппеты в совместимом с Yasnippet формате, что позволяет ему подхватывать их `на лету`.
 
@@ -1402,22 +1281,21 @@ Vim умеет красиво отображать номер текущей с�
 | =<f7>=    | global | consult-yasnippet | Меню шаблонов |
 
 #+begin_src emacs-lisp
-(when (string-equal init/snippet-engine "yasnippet")
-    (use-package yasnippet
-        :straight t
-        :bind (:map yas-minor-mode-map
-                     ([(tab)] . nil)
-                     ("TAB" . nil))
-        :config
-        (yas-global-mode 1))
+(use-package yasnippet
+    :straight t
+    :bind (:map yas-minor-mode-map
+                ([(tab)] . nil)
+                ("TAB" . nil))
+    :config
+    (yas-global-mode 1))
 
-    (use-package yasnippet-snippets
-        :straight t)
+(use-package yasnippet-snippets
+    :straight t)
 
-    (use-package consult-yasnippet
-        :straight t
-        :after (vertico)
-        :bind ("<f7>" . consult-yasnippet)))
+(use-package consult-yasnippet
+    :straight t
+    :after (vertico)
+    :bind ("<f7>" . consult-yasnippet))
 #+end_src
 
 * Настройки для языков программирования

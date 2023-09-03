@@ -10,15 +10,6 @@
 (defconst init/lsp-engine "lsp"
     "LSP engine to use.")
 
-(defconst init/completion-popup "corfu"
-    "Completion popup to use.")
-
-(defconst init/completion-minibuf "vertico"
-    "Completion in minibuffer selector to use.")
-
-(defconst init/snippet-engine "yasnippet"
-    "Snippet engine to use.")
-
 ;; Гарантируем запуск последней установленной версии org-mode
 (straight-use-package 'org)
 
