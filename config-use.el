@@ -1,6 +1,8 @@
 (when (< emacs-major-version 29)
     (straight-use-package 'use-package))
+
 (require 'use-package)
+
 (use-package use-package-hydra
     :straight t)
 
@@ -381,6 +383,7 @@
       scroll-conservatively 101
       scroll-margin 0
       scroll-preserve-screen-position t)
+
 (when (>= emacs-major-version 29)
     (pixel-scroll-precision-mode))
 
@@ -585,10 +588,9 @@
 
 (when (string-equal init/lsp-engine "eglot")
     (use-package eglot
-    	:init
-    	(when (< emacs-major-version 29)
-    		(straight-use-package 'eglot))
-        ;; :straight t
+        :init
+        (when (< emacs-major-version 29)
+            (straight-use-package 'eglot))
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
                                             (lsp/non-greedy-eglot)

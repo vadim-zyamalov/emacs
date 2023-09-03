@@ -69,12 +69,14 @@ pacman -S mingw-w64-i686-libgccjit
 
 * Настройки =use-package=
 
-Установка [[https://github.com/jwiegley/use-package][use-package]] для далнейшей настройки =Emacs=.
+Установка [[https://github.com/jwiegley/use-package][use-package]] для дальнейшей настройки =Emacs=. В =Emacs 29= use-package встроен, так что устанавливать его не нужно.
 
 #+begin_src emacs-lisp
 (when (< emacs-major-version 29)
     (straight-use-package 'use-package))
+
 (require 'use-package)
+
 (use-package use-package-hydra
     :straight t)
 #+end_src
@@ -162,7 +164,7 @@ pacman -S mingw-w64-i686-libgccjit
                                   (makunbound 'file-name-handler-alist-original)))
 #+end_src
 
-Установка пакета для настройки работы сборщика мусора. Я не использую этот пакет, так как (возможно только по Windows) он вызывает периодическое подвисание =Emacs=. Судя по всему, =Emacs= в Windows однопоточен, что и приводит к такому эффекту.
+Установка пакета для настройки работы сборщика мусора. В Windows он вызывает периодическое подвисание =Emacs=. Судя по всему, =Emacs= в Windows однопоточен, что и приводит к такому эффекту.
 
 #+begin_src emacs-lisp
 (use-package gcmh
@@ -669,9 +671,7 @@ Vim умеет красиво отображать номер текущей с�
 (use-package all-the-icons
     :straight t
     :if (display-graphic-p))
-#+end_src
 
-#+begin_src emacs-lisp :tangle no
 (use-package all-the-icons-completion
     :straight t
     :if (display-graphic-p)
@@ -765,6 +765,7 @@ Vim умеет красиво отображать номер текущей с�
       scroll-conservatively 101
       scroll-margin 0
       scroll-preserve-screen-position t)
+
 (when (>= emacs-major-version 29)
     (pixel-scroll-precision-mode))
 #+end_src
@@ -1155,10 +1156,9 @@ Vim умеет красиво отображать номер текущей с�
 
 (when (string-equal init/lsp-engine "eglot")
     (use-package eglot
-    	:init
-    	(when (< emacs-major-version 29)
-    		(straight-use-package 'eglot))
-        ;; :straight t
+        :init
+        (when (< emacs-major-version 29)
+            (straight-use-package 'eglot))
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
                                             (lsp/non-greedy-eglot)
