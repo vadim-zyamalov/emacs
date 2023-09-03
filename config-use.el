@@ -782,6 +782,10 @@
 (use-package magit
     :straight t)
 
+(when (>= emacs-major-version 29)
+    (setq major-mode-remap-alist
+          '((python-mode . python-ts-mode))))
+
 (use-package markdown-mode
     :straight t
     :mode (("README\\.md\\'" . gfm-mode)
@@ -888,12 +892,14 @@
           (append completion-at-point-functions
                   (list 'cape-file))))
 
+(defalias 'capf/python-ts-mode 'capf/python-mode)
+
 (use-package python
     :straight lsp-pyright
-    :hook ((python-mode . lsp/lsp)
-           (python-mode . (lambda ()
-                              (setq-local fill-column 80)
-                              (display-fill-column-indicator-mode)))))
+    :hook (((python-mode python-ts-mode) . lsp/lsp)
+           ((python-mode python-ts-mode) . (lambda ()
+                                               (setq-local fill-column 80)
+                                               (display-fill-column-indicator-mode)))))
 
 (use-package js
     :mode "\\.js.R$"

@@ -1452,6 +1452,14 @@ Magit --- пакет для работы с git внутри Emacs.
     :straight t)
 #+end_src
 
+Переназначение главных режимов для языков программирования для использования =Tree-Sitter=, работает только в Emacs 29 и новее.
+
+#+begin_src emacs-lisp
+(when (>= emacs-major-version 29)
+    (setq major-mode-remap-alist
+          '((python-mode . python-ts-mode))))
+#+end_src
+
 ** Markdown
 
 #+begin_src emacs-lisp
@@ -1580,15 +1588,17 @@ Magit --- пакет для работы с git внутри Emacs.
     (setq completion-at-point-functions
           (append completion-at-point-functions
                   (list 'cape-file))))
+
+(defalias 'capf/python-ts-mode 'capf/python-mode)
 #+end_src
 
 #+begin_src emacs-lisp
 (use-package python
     :straight lsp-pyright
-    :hook ((python-mode . lsp/lsp)
-           (python-mode . (lambda ()
-                              (setq-local fill-column 80)
-                              (display-fill-column-indicator-mode)))))
+    :hook (((python-mode python-ts-mode) . lsp/lsp)
+           ((python-mode python-ts-mode) . (lambda ()
+                                               (setq-local fill-column 80)
+                                               (display-fill-column-indicator-mode)))))
 #+end_src
 
 ** JS
