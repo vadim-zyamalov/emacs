@@ -406,9 +406,35 @@
     :custom
     (reverse-im-input-methods '("russian-computer")))
 
-(setq cua-keep-region-after-copy t)
-(cua-mode t)
-(transient-mark-mode t)
+(unless init/evil
+    (setq cua-keep-region-after-copy t)
+    (cua-mode t)
+    (transient-mark-mode t))
+
+(when init/evil
+    (use-package evil
+        :straight t
+        :init
+        (setq evil-want-integration t
+              evil-want-keybinding nil
+              evil-want-C-u-scroll t
+              evil-want-C-i-jump nil
+              evil-undo-system 'undo-redo
+              evil-respect-visual-line-mode t)
+        :config
+        (evil-mode 1)
+
+        (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+        (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+        (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+        (evil-set-initial-state 'messages-buffer-mode 'normal)
+        (evil-set-initial-state 'dashboard-mode 'normal))
+
+    (use-package evil-collection
+        :straight t
+        :after evil
+        :config
+        (evil-collection-init)))
 
 (delete-selection-mode t)
 
@@ -456,65 +482,50 @@
     :straight t
     :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
 
-(use-package smartparens
-    :straight t
-    :demand t
-    :bind (:map smartparens-mode-map
-	            ("C-c b r" . sp-rewrap-sexp)
-                ("C-c b d" . sp-splice-sexp))
-    :config
-    (require 'smartparens-config)
-    (smartparens-global-mode t)
-    (sp-with-modes '(tex-mode
-                     latex-mode
-                     LaTeX-mode)
-                   (sp-local-pair "<<" ">>"
-                                  :unless '(sp-in-math-p))))
+(unless init/evil
+    (defun comment-or-uncomment-region-or-line ()
+        "Comments or uncomments the region or the current line."
+        (interactive)
+        (let (beg end)
+            (if (region-active-p)
+                    (setq beg (region-beginning) end (region-end))
+                (setq beg (line-beginning-position) end (line-end-position)))
+            (comment-or-uncomment-region beg end)
+            (forward-line)))
 
-(defun comment-or-uncomment-region-or-line ()
-    "Comments or uncomments the region or the current line."
-    (interactive)
-    (let (beg end)
+    (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
+
+(when init/evil
+    (use-package evil-nerd-commenter
+        :straight t
+        :after evil
+        :config
+        (evilnc-default-hotkeys)))
+
+(unless init/evil
+    (defun my/vr/replace ()
+        "Replace in whole buffer."
+        (interactive)
         (if (region-active-p)
-                (setq beg (region-beginning) end (region-end))
-            (setq beg (line-beginning-position) end (line-end-position)))
-        (comment-or-uncomment-region beg end)
-        (forward-line)))
+                (call-interactively #'vr/replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/replace))))
 
-(global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line)
+    (defun my/vr/query-replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/query-replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/query-replace))))
 
-(defun my/vr/replace ()
-    "Replace in whole buffer."
-    (interactive)
-    (if (region-active-p)
-            (call-interactively #'vr/replace)
-        (save-excursion
-            (goto-char (point-min))
-            (call-interactively #'vr/replace))))
-
-(defun my/vr/query-replace ()
-    "Replace in whole buffer."
-    (interactive)
-    (if (region-active-p)
-            (call-interactively #'vr/query-replace)
-        (save-excursion
-            (goto-char (point-min))
-            (call-interactively #'vr/query-replace))))
-
-(use-package visual-regexp
-    :straight t
-    :bind (("M-%" . my/vr/replace)
-           ("C-M-%" . my/vr/query-replace)
-           ("C-c v m" . vr/mc-mark)))
-
-(use-package multiple-cursors
-    :straight t
-    :bind (("C-c m l" . mc/edit-lines)
-           ("C->" . mc/mark-next-like-this)
-           ("C-<" . mc/mark-previous-like-this)
-           ("C-c m a" . mc/mark-all-like-this))
-    :custom
-    (mc/match-cursor-style nil))
+    (use-package visual-regexp
+        :straight t
+        :bind (("M-%" . my/vr/replace)
+               ("C-M-%" . my/vr/query-replace)
+               ("C-c v m" . vr/mc-mark))))
 
 (use-package crux
     :straight t
@@ -531,12 +542,9 @@
 
 (defun lsp/lsp ()
     "Using an appropriate LSP-engine."
-    (cond ((string-equal init/lsp-engine "lsp")
-           (lsp))
-          ((string-equal init/lsp-engine "eglot")
-           (eglot-ensure))
-          (t
-           (error "Unknown LSP-engine `%s'" init/lsp-engine))))
+    (if init/lsp-engine
+            (lsp)
+        (eglot-ensure)))
 
 (defun lsp/non-greedy-lsp-mode ()
     "Making LSP capf non-greedy."
@@ -560,7 +568,7 @@
         (unless (null (symbol-function tmp-symbol))
             (funcall (symbol-function tmp-symbol)))))
 
-(when (string-equal init/lsp-engine "lsp")
+(when init/lsp-engine
     (use-package lsp-mode
         :straight t
         :hook ((lsp-mode . lsp-enable-which-key-integration)
@@ -580,7 +588,7 @@
     (use-package lsp-ui
         :straight t))
 
-(when (string-equal init/lsp-engine "eglot")
+(unless init/lsp-engine
     (use-package eglot
         :init
         (when (< emacs-major-version 29)

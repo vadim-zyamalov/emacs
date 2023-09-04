@@ -27,6 +27,7 @@
 - [[#настройки-ввода][Настройки ввода]]
   - [[#мышь][Мышь]]
   - [[#клавиатура][Клавиатура]]
+  - [[#evil][=Evil=]]
 - [[#настройки-редактирования][Настройки редактирования]]
   - [[#настройки-сохранения][Настройки сохранения]]
   - [[#настройки-отступов][Настройки отступов]]
@@ -816,9 +817,39 @@ Vim умеет красиво отображать номер текущей с�
 [[https://www.emacswiki.org/emacs/CuaMode][Cua Mode]] позволяет использовать стандартные комбинации клавиш =C-x=, =C-c=, =C-v=. Тут есть сложность: если есть активный регион (выделение), и нужно ввести комбинацию клавиш, включающую =C-x= или =C-c=, то нужно либо дважды быстро ввести нужное начало, либо использовать начало =C-S-x= или =C-S-c=.
 
 #+begin_src emacs-lisp
-(setq cua-keep-region-after-copy t)
-(cua-mode t)
-(transient-mark-mode t)
+(unless init/evil
+    (setq cua-keep-region-after-copy t)
+    (cua-mode t)
+    (transient-mark-mode t))
+#+end_src
+
+** =Evil=
+
+#+begin_src emacs-lisp
+(when init/evil
+    (use-package evil
+        :straight t
+        :init
+        (setq evil-want-integration t
+              evil-want-keybinding nil
+              evil-want-C-u-scroll t
+              evil-want-C-i-jump nil
+              evil-undo-system 'undo-redo
+              evil-respect-visual-line-mode t)
+        :config
+        (evil-mode 1)
+
+        (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+        (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+        (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+        (evil-set-initial-state 'messages-buffer-mode 'normal)
+        (evil-set-initial-state 'dashboard-mode 'normal))
+
+    (use-package evil-collection
+        :straight t
+        :after evil
+        :config
+        (evil-collection-init)))
 #+end_src
 
 * Настройки редактирования
@@ -935,21 +966,29 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c b r= | global | sp-rewrap-sexp | Смена окружающих скобок    |
 | =C-c b d= | global | sp-splice-sexp | Удаление окружающих скобок |
 
-#+begin_src emacs-lisp :noweb
-(use-package smartparens
-    :straight t
-    :demand t
-    :bind (:map smartparens-mode-map
-	            ("C-c b r" . sp-rewrap-sexp)
-                ("C-c b d" . sp-splice-sexp))
-    :config
-    (require 'smartparens-config)
-    (smartparens-global-mode t)
-    (sp-with-modes '(tex-mode
-                     latex-mode
-                     LaTeX-mode)
-                   (sp-local-pair "<<" ">>"
-                                  :unless '(sp-in-math-p))))
+#+begin_src emacs-lisp :noweb :tangle no
+(unless init/evil
+    (use-package smartparens
+        :straight t
+        :demand t
+        :bind (:map smartparens-mode-map
+	                ("C-c b r" . sp-rewrap-sexp)
+                    ("C-c b d" . sp-splice-sexp))
+        :config
+        (require 'smartparens-config)
+        (smartparens-global-mode t)
+        (sp-with-modes '(tex-mode
+                         latex-mode
+                         LaTeX-mode)
+                       (sp-local-pair "<<" ">>"
+                                      :unless '(sp-in-math-p)))))
+
+(when init/evil
+    (use-package evil-surround
+        :straight t
+        :after evil
+        :config
+        (global-evil-surround-mode 1)))
 #+end_src
 
 ** Настройки комментирования
@@ -961,17 +1000,25 @@ Vim умеет красиво отображать номер текущей с�
 | =M-;=     | global |         | Комментирование строки или региона |
 
 #+begin_src emacs-lisp
-(defun comment-or-uncomment-region-or-line ()
-    "Comments or uncomments the region or the current line."
-    (interactive)
-    (let (beg end)
-        (if (region-active-p)
-                (setq beg (region-beginning) end (region-end))
-            (setq beg (line-beginning-position) end (line-end-position)))
-        (comment-or-uncomment-region beg end)
-        (forward-line)))
+(unless init/evil
+    (defun comment-or-uncomment-region-or-line ()
+        "Comments or uncomments the region or the current line."
+        (interactive)
+        (let (beg end)
+            (if (region-active-p)
+                    (setq beg (region-beginning) end (region-end))
+                (setq beg (line-beginning-position) end (line-end-position)))
+            (comment-or-uncomment-region beg end)
+            (forward-line)))
 
-(global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line)
+    (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
+
+(when init/evil
+    (use-package evil-nerd-commenter
+        :straight t
+        :after evil
+        :config
+        (evilnc-default-hotkeys)))
 #+end_src
 
 ** Настройки замены
@@ -985,29 +1032,30 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c v m= | global | vr/mc-mark       | Создание нескольких курсоров согласно регулярномы выражению |
 
 #+begin_src emacs-lisp
-(defun my/vr/replace ()
-    "Replace in whole buffer."
-    (interactive)
-    (if (region-active-p)
-            (call-interactively #'vr/replace)
-        (save-excursion
-            (goto-char (point-min))
-            (call-interactively #'vr/replace))))
+(unless init/evil
+    (defun my/vr/replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/replace))))
 
-(defun my/vr/query-replace ()
-    "Replace in whole buffer."
-    (interactive)
-    (if (region-active-p)
-            (call-interactively #'vr/query-replace)
-        (save-excursion
-            (goto-char (point-min))
-            (call-interactively #'vr/query-replace))))
+    (defun my/vr/query-replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/query-replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/query-replace))))
 
-(use-package visual-regexp
-    :straight t
-    :bind (("M-%" . my/vr/replace)
-           ("C-M-%" . my/vr/query-replace)
-           ("C-c v m" . vr/mc-mark)))
+    (use-package visual-regexp
+        :straight t
+        :bind (("M-%" . my/vr/replace)
+               ("C-M-%" . my/vr/query-replace)
+               ("C-c v m" . vr/mc-mark))))
 #+end_src
 
 Пакет [[https://github.com/magnars/multiple-cursors.el][Multiple Cursors]] позволяет создавать несколько курсоров, либо выделяющих одинаковый текст в разных строках, либо создающих столбец из курсоров.
@@ -1019,15 +1067,26 @@ Vim умеет красиво отображать номер текущей с�
 | =C-<=     | global | mc/mark-previous-like this | Создание курсора на предыдущем вхождении слова  |
 | =C-c m a= | global | mc/mark-all-like-this      | Создание курсоров на всех вхождениях слова      |
 
-#+begin_src emacs-lisp
-(use-package multiple-cursors
-    :straight t
-    :bind (("C-c m l" . mc/edit-lines)
-           ("C->" . mc/mark-next-like-this)
-           ("C-<" . mc/mark-previous-like-this)
-           ("C-c m a" . mc/mark-all-like-this))
-    :custom
-    (mc/match-cursor-style nil))
+#+begin_src emacs-lisp :tangle no
+(unless init/evil
+    (use-package multiple-cursors
+        :straight t
+        :bind (("C-c m l" . mc/edit-lines)
+               ("C->" . mc/mark-next-like-this)
+               ("C-<" . mc/mark-previous-like-this)
+               ("C-c m a" . mc/mark-all-like-this))
+        :custom
+        (mc/match-cursor-style nil)))
+
+(when init/evil
+    (use-package evil-mc
+        :straight t
+        :after evil
+        :config
+        (evil-define-key 'visual evil-mc-key-map
+            "A" #'evil-mc-make-cursor-in-visual-selection-end
+            "I" #'evil-mc-make-cursor-in-visual-selection-beg)
+        (global-evil-mc-mode 1)))
 #+end_src
 
 ** Полезные команды
@@ -1070,12 +1129,9 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (defun lsp/lsp ()
     "Using an appropriate LSP-engine."
-    (cond ((string-equal init/lsp-engine "lsp")
-           (lsp))
-          ((string-equal init/lsp-engine "eglot")
-           (eglot-ensure))
-          (t
-           (error "Unknown LSP-engine `%s'" init/lsp-engine))))
+    (if init/lsp-engine
+            (lsp)
+        (eglot-ensure)))
 #+end_src
 
 Клиенты LSP добавляют свои собственные CAPF (Conpletion at Point Function). Однако, эти CAPF являются `жадными`: если они не могут предоставить пользователю результат, то дальнейший поиск вариантов автодополнения останавливается. Так как я настраиваю поиск вариантов автодополнения из нескольких источников, то такое поведение неприемлемо.
@@ -1124,7 +1180,7 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c l d= | eglot-mode-map | xref-find-definitions              | Переход к определению символа                        |
 
 #+begin_src emacs-lisp
-(when (string-equal init/lsp-engine "lsp")
+(when init/lsp-engine
     (use-package lsp-mode
         :straight t
         :hook ((lsp-mode . lsp-enable-which-key-integration)
@@ -1144,7 +1200,7 @@ Vim умеет красиво отображать номер текущей с�
     (use-package lsp-ui
         :straight t))
 
-(when (string-equal init/lsp-engine "eglot")
+(unless init/lsp-engine
     (use-package eglot
         :init
         (when (< emacs-major-version 29)

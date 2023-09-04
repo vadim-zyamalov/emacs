@@ -7,8 +7,11 @@
 ;; После чего загружаем настройки из org-документа.
 
 ;;; Code:
-(defconst init/lsp-engine "lsp"
-    "LSP engine to use.")
+(defconst init/lsp-engine t
+    "Use LSP-mode or Eglot otherwise.")
+
+(defconst init/evil t
+    "To be evil or not.")
 
 ;; Гарантируем запуск последней установленной версии org-mode
 (straight-use-package 'org)
