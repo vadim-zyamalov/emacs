@@ -52,11 +52,11 @@
 
 (use-package gcmh
     :straight t
+    :init
+    (setq gcmh-verbose t
+          gcmh-low-cons-threshold (* 8 1024 1024))
     :config
-    (gcmh-mode t)
-    :custom
-    (gcmh-verbose t)
-    (gcmh-low-cons-threshold (* 8 1024 1024)))
+    (gcmh-mode t))
 
 (use-package no-littering
     :straight t
@@ -103,10 +103,10 @@
 
 (use-package doom-modeline
     :straight t
-    :hook (after-init . doom-modeline-mode)
-    :custom
-    (doom-modeline-height 24)
-    (doom-modeline-minor-modes t))
+    :init
+    (setq doom-modeline-height 24
+          doom-modeline-minor-modes t)
+    :hook (after-init . doom-modeline-mode))
 
 (use-package minions
     :straight t
@@ -121,35 +121,35 @@
 (use-package dashboard
     :straight t
     :after (nerd-icons)
+    :init
+    (setq dashboard-display-icons-p t
+          dashboard-icon-type 'nerd-icons
+          dashboard-set-heading-icons t
+          dashboard-set-file-icons t
+          dashboard-items '((recents . 15)
+                            (projects . 5))
+          dashboard-startup-banner (expand-file-name
+                                    "emacs.png"
+                                    (file-name-directory user-init-file))
+          dashboard-set-navigator t
+          dashboard-navigator-buttons
+          `((
+             (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
+              "Настройки"
+              "Открыть файл с настройками (init.el)"
+              (lambda (&rest _)
+                  (find-file (concat (file-name-directory user-init-file) "config-use.org"))))
+             (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
+              "dotfiles"
+              "Github с конфигурационными файлами"
+              (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
+             (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
+              "emacs"
+              "Github с настройками Emacs"
+              (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
+             )))
     :config
-    (dashboard-setup-startup-hook)
-    :custom
-    (dashboard-display-icons-p t)
-    (dashboard-icon-type 'nerd-icons)
-    (dashboard-set-heading-icons t)
-    (dashboard-set-file-icons t)
-    (dashboard-items '((recents . 15)
-                       (projects . 5)))
-    (dashboard-startup-banner (expand-file-name
-                               "emacs.png"
-                               (file-name-directory user-init-file)))
-    (dashboard-set-navigator t)
-    (dashboard-navigator-buttons
-     `((
-        (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
-         "Настройки"
-         "Открыть файл с настройками (init.el)"
-         (lambda (&rest _)
-             (find-file (concat (file-name-directory user-init-file) "config-use.org"))))
-        (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
-         "dotfiles"
-         "Github с конфигурационными файлами"
-         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
-        (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
-         "emacs"
-         "Github с настройками Emacs"
-         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
-        ))))
+    (dashboard-setup-startup-hook))
 
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode)
@@ -159,60 +159,60 @@
 
 (use-package pulsar
     :straight t
+    :init
+    (setq pulsar-pulse t
+          pulsar-delay 0.055
+          pulsar-pulse-functions '(recenter-top-bottom
+                                   move-to-window-line-top-bottom
+                                   reposition-window
+                                   bookmark-jump
+                                   other-window
+                                   delete-window
+                                   delete-other-windows
+                                   forward-page
+                                   backward-page
+                                   scroll-up-command
+                                   scroll-down-command
+                                   windmove-right
+                                   windmove-left
+                                   windmove-up
+                                   windmove-down
+                                   windmove-swap-states-right
+                                   windmove-swap-states-left
+                                   windmove-swap-states-up
+                                   windmove-swap-states-down
+                                   tab-new
+                                   tab-close
+                                   tab-next
+                                   org-next-visible-heading
+                                   org-previous-visible-heading
+                                   org-forward-heading-same-level
+                                   org-backward-heading-same-level
+                                   outline-backward-same-level
+                                   outline-forward-same-level
+                                   outline-next-visible-heading
+                                   outline-previous-visible-heading
+                                   outline-up-heading
+                                   ctrlf-forward-default
+                                   ctrlf-backward-default
+                                   ctrlf-forward-alternate
+                                   ctrlf-backward-alternate
+                                   ctrlf-forward-symbol
+                                   ctrlf-forward-symbol-at-point
+                                   consult-line))
     :config
-    (pulsar-global-mode t)
-    :custom
-    (pulsar-pulse t)
-    (pulsar-delay 0.055)
-    (pulsar-pulse-functions '(recenter-top-bottom
-                              move-to-window-line-top-bottom
-                              reposition-window
-                              bookmark-jump
-                              other-window
-                              delete-window
-                              delete-other-windows
-                              forward-page
-                              backward-page
-                              scroll-up-command
-                              scroll-down-command
-                              windmove-right
-                              windmove-left
-                              windmove-up
-                              windmove-down
-                              windmove-swap-states-right
-                              windmove-swap-states-left
-                              windmove-swap-states-up
-                              windmove-swap-states-down
-                              tab-new
-                              tab-close
-                              tab-next
-                              org-next-visible-heading
-                              org-previous-visible-heading
-                              org-forward-heading-same-level
-                              org-backward-heading-same-level
-                              outline-backward-same-level
-                              outline-forward-same-level
-                              outline-next-visible-heading
-                              outline-previous-visible-heading
-                              outline-up-heading
-                              ctrlf-forward-default
-                              ctrlf-backward-default
-                              ctrlf-forward-alternate
-                              ctrlf-backward-alternate
-                              ctrlf-forward-symbol
-                              ctrlf-forward-symbol-at-point
-                              consult-line)))
+    (pulsar-global-mode t))
 
 (use-package dimmer
     :straight t
+    :init
+    (setq dimmer-fraction 0.6
+          dimmer-watch-frame-focus-events nil)
     :config
     (dimmer-configure-which-key)
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu-popupinfo\\*.*$")
-    (dimmer-mode t)
-    :custom
-    (dimmer-fraction 0.6)
-    (dimmer-watch-frame-focus-events nil))
+    (dimmer-mode t))
 
 (use-package framemove
     :straight t
@@ -224,8 +224,8 @@
                        ("<right>" windmove-right "right")
                        ("<up>"    windmove-up    "up")
                        ("<down>"  windmove-down  "down"))
-    :custom
-    (framemove-hook-into-windmove t))
+    :init
+    (setq framemove-hook-into-windmove t))
 
 (use-package ace-window
     :straight t
@@ -352,10 +352,10 @@
 
 (use-package which-key
     :straight t
+    :init
+    (setq which-key-idle-delay 1)
     :config
-    (which-key-mode)
-    :custom
-    (which-key-idle-delay 1))
+    (which-key-mode))
 
 (use-package helpful
     :straight t
@@ -401,10 +401,10 @@
 
 (use-package reverse-im
     :straight t
+    :init
+    (setq reverse-im-input-methods '("russian-computer"))
     :config
-    (reverse-im-mode t)
-    :custom
-    (reverse-im-input-methods '("russian-computer")))
+    (reverse-im-mode t))
 
 (unless init/evil
     (setq cua-keep-region-after-copy t)
@@ -456,25 +456,24 @@
     :straight t
     :if ensure/isWindows
     :hook (prog-mode . highlight-indent-guides-mode)
-    :custom
-    (highlight-indent-guides-method 'character)
-    (highlight-indent-guides-responsive 'top))
+    :init
+    (setq highlight-indent-guides-method 'character
+          highlight-indent-guides-responsive 'top))
 
 (use-package undo-tree
     :straight t
-    :init
-    (unbind-key "C-z" global-map)
-    (unbind-key "C-_" global-map)
-    (unbind-key "C-M-_" global-map)
     :bind (("C-z" . undo-tree-undo)
            ("C-S-z" . undo-tree-redo)
            :map cua--cua-keys-keymap
            ("C-z" . undo-tree-undo))
+    :init
+    (unbind-key "C-z" global-map)
+    (unbind-key "C-_" global-map)
+    (unbind-key "C-M-_" global-map)
+    (setq undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
+                                                              user-emacs-directory))))
     :config
-    (global-undo-tree-mode)
-    :custom
-    (undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
-                                                        user-emacs-directory)))))
+    (global-undo-tree-mode))
 
 (show-paren-mode t)
 
@@ -571,6 +570,11 @@
 (when init/lsp-mode
     (use-package lsp-mode
         :straight t
+        :init
+        (setq lsp-headerline-breadcrumb-icons-enable nil
+              lsp-enable-file-watchers nil
+              lsp-keymap-prefix "C-c l"
+              lsp-completion-provider :none)
         :hook ((lsp-mode . lsp-enable-which-key-integration)
                (lsp-completion-mode . (lambda ()
                                           (progn
@@ -578,21 +582,15 @@
                                               (lsp/extra-capf)))))
         :config
         (with-eval-after-load 'lsp-mode
-            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-        :custom
-        (lsp-headerline-breadcrumb-icons-enable nil)
-        (lsp-enable-file-watchers nil)
-        (lsp-keymap-prefix "C-c l")
-        (lsp-completion-provider :none))
+            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)))
 
     (use-package lsp-ui
         :straight t))
 
 (unless init/lsp-mode
+    (when (< emacs-major-version 29)
+        (straight-use-package 'eglot))
     (use-package eglot
-        :init
-        (when (< emacs-major-version 29)
-            (straight-use-package 'eglot))
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
                                             (lsp/non-greedy-eglot)
@@ -615,23 +613,22 @@
                     ("S-TAB" . corfu-previous)
                     ([backtab] . corfu-previous))
         :init
+        (setq corfu-auto nil
+              corfu-cycle t
+              corfu-preselect-first nil
+              corfu-preview-current 'insert
+              tab-always-indent 'complete
+              corfu-popupinfo-delay 0.2)
         (corfu-popupinfo-mode)
-        (global-corfu-mode)
-        :custom
-        (corfu-auto nil)
-        (corfu-cycle t)
-        (corfu-preselect-first nil)
-        (corfu-preview-current 'insert)
-        (tab-always-indent 'complete)
-        (corfu-popupinfo-delay 0.2))
+        (global-corfu-mode))
 
     (use-package kind-icon
         :straight t
         :after (corfu nerd-icons)
+        :init
+        (setq kind-icon-default-face 'corfu-default)
         :config
-        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-        :custom
-        (kind-icon-default-face 'corfu-default)))
+        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
 
 (unless init/corfu
     (use-package company
@@ -645,15 +642,14 @@
                ("<esc>" . company-abort))
         :hook (after-init . global-company-mode)
         :init
-        (setq company-backends '((company-capf)))
-        :custom
-        (company-selection-wrap-around t)
-        (company-minimum-prefix-length 1)
-        (company-idle-delay nil)
-        (company-tooltip-align-annotations t)
-        (company-transformers '(delete-consecutive-dups
-                                company-sort-by-occurrence
-                                company-sort-prefer-same-case-prefix)))
+        (setq company-backends '((company-capf))
+              company-selection-wrap-around t
+              company-minimum-prefix-length 1
+              company-idle-delay nil
+              company-tooltip-align-annotations t
+              company-transformers '(delete-consecutive-dups
+                                     company-sort-by-occurrence
+                                     company-sort-prefer-same-case-prefix)))
 
     (use-package company-box
         :straight t
@@ -669,15 +665,14 @@
                                                  #'completion--in-region))))
                (minibuffer-setup . vertico-repeat-save))
         :init
+        (setq vertico-cycle t
+              vertico-mouse-mode t
+              vertico-count 8
+              vertico-count 8)
         (add-to-list 'process-coding-system-alist
                      '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
         (vertico-mode)
-        :bind (("C-c C-r" . vertico-repeat))
-        :custom
-        (vertico-cycle t)
-        (vertico-mouse-mode t)
-        (vertico-count 8)
-        (vertico-count 8))
+        :bind (("M-R" . vertico-repeat)))
 
     (use-package consult
         :straight t
@@ -691,8 +686,8 @@
         :bind (("C-." . embark-act)
                ("C-;" . embark-dwim)
                ("C-h B" . embark-bindings))
-        :custom
-        (prefix-help-command #'embark-prefix-help-command))
+        :init
+        (setq prefix-help-command #'embark-prefix-help-command))
 
     (use-package embark-consult
         :straight t
@@ -701,10 +696,10 @@
 
     (use-package orderless
         :straight t
-        :custom
-        (completion-styles '(orderless basic))
-        (completion-category-defaults nil)
-        (completion-category-overrides '((file (styles basic partial-completion))))))
+        :init
+        (setq completion-styles '(orderless basic)
+              completion-category-defaults nil
+              completion-category-overrides '((file (styles basic partial-completion))))))
 
 (unless init/vertico
     (use-package counsel
@@ -724,10 +719,10 @@
                ("<f2> i"  . counsel-info-lookup-symbol)
                ("<f2> u"  . counsel-unicode-char)
                ("<f2> j"  . counsel-set-variable))
-        :custom
-        (ivy-use-virtual-buffers t)
-        (ivy-count-format "(%d/%d) ")
-        (ivy-wrap t))
+        :init
+        (setq ivy-use-virtual-buffers t
+              ivy-count-format "(%d/%d) "
+              ivy-wrap t))
 
     (use-package ivy-rich
         :straight t
@@ -761,10 +756,10 @@
 (use-package projectile
     :straight t
     :bind-keymap ("C-c p" . projectile-command-map)
+    :init
+    (setq projectile-completion-system 'default)
     :config
-    (projectile-mode t)
-    :custom
-    (projectile-completion-system 'default))
+    (projectile-mode t))
 
 (use-package flycheck
     :straight t
@@ -783,9 +778,9 @@
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode))
-    :custom
-    (markdown-fontify-code-blocks-natively t)
-    (markdown-command "multimarkdown"))
+    :init
+    (setq markdown-fontify-code-blocks-natively t
+          markdown-command "multimarkdown"))
 
 (defun my/angle-brackets-fix ()
     (modify-syntax-entry ?< "." org-mode-syntax-table)
@@ -795,6 +790,16 @@
     :straight t
     :hook ((org-mode . org-indent-mode)
            (org-mode . my/angle-brackets-fix))
+    :init
+    (setq org-edit-src-content-indentation 0
+          org-src-preserve-indentation nil
+          org-src-fontify-natively t
+          org-src-tab-acts-natively t
+          org-return-follows-link t
+          org-mouse-1-follows-link t
+          org-descriptive-links t
+          org-hide-emphasis-markers t
+          org-support-shift-select t)
     :config
     (org-babel-do-load-languages
      'org-babel-load-languages '((emacs-lisp . t)
@@ -802,7 +807,6 @@
                                  (lua . t)
                                  (haskell . t)
                                  (shell . t)))
-    :config
     (require 'org-tempo)
     (progn
         (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
@@ -810,17 +814,7 @@
         (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
         (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
         (add-to-list 'org-structure-template-alist '("py" . "src python"))
-        (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
-    :custom
-    (org-edit-src-content-indentation 0)
-    (org-src-preserve-indentation nil)
-    (org-src-fontify-natively t)
-    (org-src-tab-acts-natively t)
-    (org-return-follows-link t)
-    (org-mouse-1-follows-link t)
-    (org-descriptive-links t)
-    (org-hide-emphasis-markers t)
-    (org-support-shift-select t))
+        (add-to-list 'org-structure-template-alist '("tex" . "src tex"))))
 
 (use-package edit-indirect
     :straight t)
@@ -829,8 +823,8 @@
     :straight t
     :after org
     :hook (org-mode . org-bullets-mode)
-    :custom
-    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+    :init
+    (setq org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 (use-package toc-org
     :straight t
@@ -841,9 +835,9 @@
     :straight (org-appear :type git :host github :repo "awth13/org-appear")
     :after org
     :hook (org-mode . org-appear-mode)
-    :custom
-    (org-appear-autolinks t)
-    (org-appear-autosubmarkers t))
+    :init
+    (setq org-appear-autolinks t
+          org-appear-autosubmarkers t))
 
 (use-package ess
     :straight t
@@ -901,8 +895,8 @@
 (use-package lua-mode
     :straight t
     :mode "\\.lua$"
-    :custom
-    (lua-indent-level 4))
+    :init
+    (setq lua-indent-level 4))
 
 (defun capf/latex-mode ()
     "Extra CAPF for `LaTeX-mode'."
@@ -1070,24 +1064,24 @@ to the LaTeX table."
     :hook ((LaTeX-mode . lsp/lsp)
            (LaTeX-mode . auctex/extra-commands)
            (LaTeX-mode . turn-on-reftex))
+    :init
+    (setq preview-pdf-color-adjust-method t
+          preview-auto-cache-preamble t
+          bibtex-dialect 'biblatex
+          reftex-cite-format '((?\C-m . "\\cite[]{%l}")
+                               (?a . "\\autocite[]{%l}")
+                               (?p . "\\parencite[]{%l}")
+                               (?f . "\\footcite[][]{%l}")
+                               (?t . "\\textcite[]{%l}")
+                               (?o . "\\citepr[]{%l}")
+                               (?F . "\\fullcite[]{%l}")
+                               (?n . "\\nocite{%l}"))
+          reftex-cite-prompt-optional-args t
+          LaTeX-reftex-cite-format-auto-activate nil
+          reftex-plug-into-AUCTeX t)
     :config
     (with-eval-after-load 'reftex
         (add-to-list 'reftex-section-levels
                      '("frametitle" . -2))
         (add-to-list 'reftex-section-levels
-                     '("framesubtitle" . -3)))
-    :custom
-    (preview-pdf-color-adjust-method t)
-    (preview-auto-cache-preamble t)
-    (bibtex-dialect 'biblatex)
-    (reftex-cite-format '((?\C-m . "\\cite[]{%l}")
-                          (?a . "\\autocite[]{%l}")
-                          (?p . "\\parencite[]{%l}")
-                          (?f . "\\footcite[][]{%l}")
-                          (?t . "\\textcite[]{%l}")
-                          (?o . "\\citepr[]{%l}")
-                          (?F . "\\fullcite[]{%l}")
-                          (?n . "\\nocite{%l}")))
-    (reftex-cite-prompt-optional-args t)
-    (LaTeX-reftex-cite-format-auto-activate nil)
-    (reftex-plug-into-AUCTeX t))
+                     '("framesubtitle" . -3))))

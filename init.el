@@ -16,7 +16,7 @@
 (defconst init/vertico t
     "Use vertico for minibuffer completion.")
 
-(defconst init/evil t
+(defconst init/evil nil
     "To be evil or not.")
 
 ;; Гарантируем запуск последней установленной версии org-mode

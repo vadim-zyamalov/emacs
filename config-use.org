@@ -161,11 +161,11 @@ pacman -S mingw-w64-i686-libgccjit
 #+begin_src emacs-lisp
 (use-package gcmh
     :straight t
+    :init
+    (setq gcmh-verbose t
+          gcmh-low-cons-threshold (* 8 1024 1024))
     :config
-    (gcmh-mode t)
-    :custom
-    (gcmh-verbose t)
-    (gcmh-low-cons-threshold (* 8 1024 1024)))
+    (gcmh-mode t))
 #+end_src
 
 ** Убираем мусор
@@ -273,10 +273,10 @@ pacman -S mingw-w64-i686-libgccjit
 #+begin_src emacs-lisp
 (use-package doom-modeline
     :straight t
-    :hook (after-init . doom-modeline-mode)
-    :custom
-    (doom-modeline-height 24)
-    (doom-modeline-minor-modes t))
+    :init
+    (setq doom-modeline-height 24
+          doom-modeline-minor-modes t)
+    :hook (after-init . doom-modeline-mode))
 #+end_src
 
 Также я установил пакет [[https://github.com/tarsius/minions][Minions]], который заменяет довольно неопрятный список второстепенных режимов на аккуратный смайлик (строго говоря на =;-=, но получается смайлик). В Doom Modeline при загрузке этого пакета опциональный список второстепенных режимов заменяется на кнопку с шестеренкой (а не смайликом).
@@ -305,35 +305,35 @@ pacman -S mingw-w64-i686-libgccjit
 (use-package dashboard
     :straight t
     :after (nerd-icons)
+    :init
+    (setq dashboard-display-icons-p t
+          dashboard-icon-type 'nerd-icons
+          dashboard-set-heading-icons t
+          dashboard-set-file-icons t
+          dashboard-items '((recents . 15)
+                            (projects . 5))
+          dashboard-startup-banner (expand-file-name
+                                    "emacs.png"
+                                    (file-name-directory user-init-file))
+          dashboard-set-navigator t
+          dashboard-navigator-buttons
+          `((
+             (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
+              "Настройки"
+              "Открыть файл с настройками (init.el)"
+              (lambda (&rest _)
+                  (find-file (concat (file-name-directory user-init-file) "config-use.org"))))
+             (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
+              "dotfiles"
+              "Github с конфигурационными файлами"
+              (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
+             (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
+              "emacs"
+              "Github с настройками Emacs"
+              (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
+             )))
     :config
-    (dashboard-setup-startup-hook)
-    :custom
-    (dashboard-display-icons-p t)
-    (dashboard-icon-type 'nerd-icons)
-    (dashboard-set-heading-icons t)
-    (dashboard-set-file-icons t)
-    (dashboard-items '((recents . 15)
-                       (projects . 5)))
-    (dashboard-startup-banner (expand-file-name
-                               "emacs.png"
-                               (file-name-directory user-init-file)))
-    (dashboard-set-navigator t)
-    (dashboard-navigator-buttons
-     `((
-        (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
-         "Настройки"
-         "Открыть файл с настройками (init.el)"
-         (lambda (&rest _)
-             (find-file (concat (file-name-directory user-init-file) "config-use.org"))))
-        (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
-         "dotfiles"
-         "Github с конфигурационными файлами"
-         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
-        (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
-         "emacs"
-         "Github с настройками Emacs"
-         (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
-        ))))
+    (dashboard-setup-startup-hook))
 #+end_src
 
 ** Отображение строк
@@ -357,49 +357,49 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (use-package pulsar
     :straight t
+    :init
+    (setq pulsar-pulse t
+          pulsar-delay 0.055
+          pulsar-pulse-functions '(recenter-top-bottom
+                                   move-to-window-line-top-bottom
+                                   reposition-window
+                                   bookmark-jump
+                                   other-window
+                                   delete-window
+                                   delete-other-windows
+                                   forward-page
+                                   backward-page
+                                   scroll-up-command
+                                   scroll-down-command
+                                   windmove-right
+                                   windmove-left
+                                   windmove-up
+                                   windmove-down
+                                   windmove-swap-states-right
+                                   windmove-swap-states-left
+                                   windmove-swap-states-up
+                                   windmove-swap-states-down
+                                   tab-new
+                                   tab-close
+                                   tab-next
+                                   org-next-visible-heading
+                                   org-previous-visible-heading
+                                   org-forward-heading-same-level
+                                   org-backward-heading-same-level
+                                   outline-backward-same-level
+                                   outline-forward-same-level
+                                   outline-next-visible-heading
+                                   outline-previous-visible-heading
+                                   outline-up-heading
+                                   ctrlf-forward-default
+                                   ctrlf-backward-default
+                                   ctrlf-forward-alternate
+                                   ctrlf-backward-alternate
+                                   ctrlf-forward-symbol
+                                   ctrlf-forward-symbol-at-point
+                                   consult-line))
     :config
-    (pulsar-global-mode t)
-    :custom
-    (pulsar-pulse t)
-    (pulsar-delay 0.055)
-    (pulsar-pulse-functions '(recenter-top-bottom
-                              move-to-window-line-top-bottom
-                              reposition-window
-                              bookmark-jump
-                              other-window
-                              delete-window
-                              delete-other-windows
-                              forward-page
-                              backward-page
-                              scroll-up-command
-                              scroll-down-command
-                              windmove-right
-                              windmove-left
-                              windmove-up
-                              windmove-down
-                              windmove-swap-states-right
-                              windmove-swap-states-left
-                              windmove-swap-states-up
-                              windmove-swap-states-down
-                              tab-new
-                              tab-close
-                              tab-next
-                              org-next-visible-heading
-                              org-previous-visible-heading
-                              org-forward-heading-same-level
-                              org-backward-heading-same-level
-                              outline-backward-same-level
-                              outline-forward-same-level
-                              outline-next-visible-heading
-                              outline-previous-visible-heading
-                              outline-up-heading
-                              ctrlf-forward-default
-                              ctrlf-backward-default
-                              ctrlf-forward-alternate
-                              ctrlf-backward-alternate
-                              ctrlf-forward-symbol
-                              ctrlf-forward-symbol-at-point
-                              consult-line)))
+    (pulsar-global-mode t))
 #+end_src
 
 ** Отображение окон
@@ -409,16 +409,16 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp :tangle no
 (use-package zoom
     :straight t
+    :init
+    (setq zoom-size '(0.618 . 0.618)
+          zoom-ignored-major-modes '(ess-r-mode
+                                     inferior-ess-r-mode
+                                     ess-rdired-mode)
+          zoom-ignored-buffer-names '("*R*"
+                                      "*R dired*"
+                                      "*R view*"))
     :config
-    (zoom-mode)
-    :custom
-    (zoom-size '(0.618 . 0.618))
-    (zoom-ignored-major-modes '(ess-r-mode
-                                inferior-ess-r-mode
-                                ess-rdired-mode))
-    (zoom-ignored-buffer-names '("*R*"
-                                 "*R dired*"
-                                 "*R view*")))
+    (zoom-mode))
 #+end_src
 
 Другой пакет, [[https://github.com/gonewest818/dimmer.el][dimmer]], делает неактивные окна более тусклыми, что дополнительно вызуально выделяет активное.
@@ -426,14 +426,14 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (use-package dimmer
     :straight t
+    :init
+    (setq dimmer-fraction 0.6
+          dimmer-watch-frame-focus-events nil)
     :config
     (dimmer-configure-which-key)
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu-popupinfo\\*.*$")
-    (dimmer-mode t)
-    :custom
-    (dimmer-fraction 0.6)
-    (dimmer-watch-frame-focus-events nil))
+    (dimmer-mode t))
 #+end_src
 
 Пакет [[https://www.emacswiki.org/emacs/download/framemove.el][framemove]], конечно, не связан с отображением активных окон напрямую, но позволяет удобно их менять. Строго говоря, пакет расширяет встроенный функционал перемещения между окнами *windmove*, позволяя перемещаться между фреймами. Пока не использую.
@@ -457,8 +457,8 @@ Vim умеет красиво отображать номер текущей с�
                        ("<right>" windmove-right "right")
                        ("<up>"    windmove-up    "up")
                        ("<down>"  windmove-down  "down"))
-    :custom
-    (framemove-hook-into-windmove t))
+    :init
+    (setq framemove-hook-into-windmove t))
 #+end_src
 
 Пакет [[https://github.com/abo-abo/ace-window][Ace Window]] делает то же, что и =framemove=, но немного иначе. Если во фрейме всего два окна, то вызов команды =ace-window= приводит к переключению между окнами. Если больше, то на каждом окне появляется некое значение (по умолчанию от 1 до 9). При нажатии на соответствующую клавишу осуществляется переход в это окно.
@@ -487,10 +487,10 @@ Vim умеет красиво отображать номер текущей с�
 (use-package neotree
     :straight t
     :bind (("C-x t t" . neotree-toggle))
-    :custom
-    (neo-smart-open t)
-    (neo-window-width 40)
-    (neo-theme (if (display-graphic-p) 'icons 'arrow)))
+    :init
+    (setq neo-smart-open t
+          neo-window-width 40
+          neo-theme (if (display-graphic-p) 'icons 'arrow)))
 #+end_src
 
 Еще одно удобное [[https://github.com/Alexander-Miller/treemacs/][дерево]], ориентированное на работу с проектами: по умолчанию в нем нужно загрузить нужные папки/проекты, между которыми можно быстро переключаться. Так как мне такая функциональность не нужна, то я настроил его на показ дерева *текущего* проекта.
@@ -547,14 +547,14 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp :tangle no
 (use-package doom-themes
     :straight t
+    :init
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
     :config
     (doom-themes-visual-bell-config)
     (doom-themes-neotree-config)
     (doom-themes-org-config)
-    (load-theme 'doom-palenight t)
-    :custom
-    (doom-themes-enable-bold t)
-    (doom-themes-enable-italic t))
+    (load-theme 'doom-palenight t))
 
 (use-package solaire-mode
     :straight t
@@ -567,13 +567,13 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp :tangle no
 (use-package modus-themes
     :straight t
+    :init
+    (setq modus-themes-bold-constructs t
+          modus-themes-italic-constructs t
+          modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
+                                                  (border-mode-line-inactive unspecified)))
     :config
-    (load-theme 'modus-vivendi-tinted :no-confirm)
-    :custom
-    (modus-themes-bold-constructs t)
-    (modus-themes-italic-constructs t)
-    (modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
-                                             (border-mode-line-inactive unspecified))))
+    (load-theme 'modus-vivendi-tinted :no-confirm))
 #+end_src
 
 И еще тестирую [[https://protesilaos.com/emacs/ef-themes][Ef-themes]] от автора тем [[https://protesilaos.com/emacs/modus-themes][Modus]].
@@ -710,10 +710,10 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (use-package which-key
     :straight t
+    :init
+    (setq which-key-idle-delay 1)
     :config
-    (which-key-mode)
-    :custom
-    (which-key-idle-delay 1))
+    (which-key-mode))
 #+end_src
 
 Пакет [[https://github.com/Wilfred/helpful][Helpful]] модифицирует и форматирует окна с документацией по функциям, переменным и т.д.
@@ -808,10 +808,10 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (use-package reverse-im
     :straight t
+    :init
+    (setq reverse-im-input-methods '("russian-computer"))
     :config
-    (reverse-im-mode t)
-    :custom
-    (reverse-im-input-methods '("russian-computer")))
+    (reverse-im-mode t))
 #+end_src
 
 [[https://www.emacswiki.org/emacs/CuaMode][Cua Mode]] позволяет использовать стандартные комбинации клавиш =C-x=, =C-c=, =C-v=. Тут есть сложность: если есть активный регион (выделение), и нужно ввести комбинацию клавиш, включающую =C-x= или =C-c=, то нужно либо дважды быстро ввести нужное начало, либо использовать начало =C-S-x= или =C-S-c=.
@@ -911,9 +911,9 @@ Vim умеет красиво отображать номер текущей с�
     :straight t
     :if ensure/isWindows
     :hook (prog-mode . highlight-indent-guides-mode)
-    :custom
-    (highlight-indent-guides-method 'character)
-    (highlight-indent-guides-responsive 'top))
+    :init
+    (setq highlight-indent-guides-method 'character
+          highlight-indent-guides-responsive 'top))
 #+end_src
 
 ** Настройки отмены и повтора
@@ -928,19 +928,18 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (use-package undo-tree
     :straight t
-    :init
-    (unbind-key "C-z" global-map)
-    (unbind-key "C-_" global-map)
-    (unbind-key "C-M-_" global-map)
     :bind (("C-z" . undo-tree-undo)
            ("C-S-z" . undo-tree-redo)
            :map cua--cua-keys-keymap
            ("C-z" . undo-tree-undo))
+    :init
+    (unbind-key "C-z" global-map)
+    (unbind-key "C-_" global-map)
+    (unbind-key "C-M-_" global-map)
+    (setq undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
+                                                              user-emacs-directory))))
     :config
-    (global-undo-tree-mode)
-    :custom
-    (undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
-                                                        user-emacs-directory)))))
+    (global-undo-tree-mode))
 #+end_src
 
 ** Настройки отражения скобок
@@ -1075,8 +1074,8 @@ Vim умеет красиво отображать номер текущей с�
                ("C->" . mc/mark-next-like-this)
                ("C-<" . mc/mark-previous-like-this)
                ("C-c m a" . mc/mark-all-like-this))
-        :custom
-        (mc/match-cursor-style nil)))
+        :init
+        (setq mc/match-cursor-style nil)))
 
 (when init/evil
     (use-package evil-mc
@@ -1183,6 +1182,11 @@ Vim умеет красиво отображать номер текущей с�
 (when init/lsp-mode
     (use-package lsp-mode
         :straight t
+        :init
+        (setq lsp-headerline-breadcrumb-icons-enable nil
+              lsp-enable-file-watchers nil
+              lsp-keymap-prefix "C-c l"
+              lsp-completion-provider :none)
         :hook ((lsp-mode . lsp-enable-which-key-integration)
                (lsp-completion-mode . (lambda ()
                                           (progn
@@ -1190,21 +1194,15 @@ Vim умеет красиво отображать номер текущей с�
                                               (lsp/extra-capf)))))
         :config
         (with-eval-after-load 'lsp-mode
-            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
-        :custom
-        (lsp-headerline-breadcrumb-icons-enable nil)
-        (lsp-enable-file-watchers nil)
-        (lsp-keymap-prefix "C-c l")
-        (lsp-completion-provider :none))
+            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)))
 
     (use-package lsp-ui
         :straight t))
 
 (unless init/lsp-mode
+    (when (< emacs-major-version 29)
+        (straight-use-package 'eglot))
     (use-package eglot
-        :init
-        (when (< emacs-major-version 29)
-            (straight-use-package 'eglot))
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
                                             (lsp/non-greedy-eglot)
@@ -1240,23 +1238,22 @@ Vim умеет красиво отображать номер текущей с�
                     ("S-TAB" . corfu-previous)
                     ([backtab] . corfu-previous))
         :init
+        (setq corfu-auto nil
+              corfu-cycle t
+              corfu-preselect-first nil
+              corfu-preview-current 'insert
+              tab-always-indent 'complete
+              corfu-popupinfo-delay 0.2)
         (corfu-popupinfo-mode)
-        (global-corfu-mode)
-        :custom
-        (corfu-auto nil)
-        (corfu-cycle t)
-        (corfu-preselect-first nil)
-        (corfu-preview-current 'insert)
-        (tab-always-indent 'complete)
-        (corfu-popupinfo-delay 0.2))
+        (global-corfu-mode))
 
     (use-package kind-icon
         :straight t
         :after (corfu nerd-icons)
+        :init
+        (setq kind-icon-default-face 'corfu-default)
         :config
-        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-        :custom
-        (kind-icon-default-face 'corfu-default)))
+        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
 #+end_src
 
 При желании можно использовать [[https://company-mode.github.io/][Company Mode]] в связке с [[https://github.com/sebastiencs/company-box][Company Box]] (для иконок). В целом, все аналогично приведенному выше набору пакетов, однако есть нюансы. Во-первых, =Company= использует собственный механизм бэкендов, а во-вторых, он не совместим со =Smartparens=, происходит дублирование закрывающей скобки. Насколько мне известно, это еще [[https://github.com/Fuco1/smartparens/issues/445][не исправлено]].
@@ -1274,15 +1271,14 @@ Vim умеет красиво отображать номер текущей с�
                ("<esc>" . company-abort))
         :hook (after-init . global-company-mode)
         :init
-        (setq company-backends '((company-capf)))
-        :custom
-        (company-selection-wrap-around t)
-        (company-minimum-prefix-length 1)
-        (company-idle-delay nil)
-        (company-tooltip-align-annotations t)
-        (company-transformers '(delete-consecutive-dups
-                                company-sort-by-occurrence
-                                company-sort-prefer-same-case-prefix)))
+        (setq company-backends '((company-capf))
+              company-selection-wrap-around t
+              company-minimum-prefix-length 1
+              company-idle-delay nil
+              company-tooltip-align-annotations t
+              company-transformers '(delete-consecutive-dups
+                                     company-sort-by-occurrence
+                                     company-sort-prefer-same-case-prefix)))
 
     (use-package company-box
         :straight t
@@ -1320,15 +1316,14 @@ Vim умеет красиво отображать номер текущей с�
                                                  #'completion--in-region))))
                (minibuffer-setup . vertico-repeat-save))
         :init
+        (setq vertico-cycle t
+              vertico-mouse-mode t
+              vertico-count 8
+              vertico-count 8)
         (add-to-list 'process-coding-system-alist
                      '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
         (vertico-mode)
-        :bind (("C-c C-r" . vertico-repeat))
-        :custom
-        (vertico-cycle t)
-        (vertico-mouse-mode t)
-        (vertico-count 8)
-        (vertico-count 8))
+        :bind (("M-R" . vertico-repeat)))
 
     (use-package consult
         :straight t
@@ -1342,8 +1337,8 @@ Vim умеет красиво отображать номер текущей с�
         :bind (("C-." . embark-act)
                ("C-;" . embark-dwim)
                ("C-h B" . embark-bindings))
-        :custom
-        (prefix-help-command #'embark-prefix-help-command))
+        :init
+        (setq prefix-help-command #'embark-prefix-help-command))
 
     (use-package embark-consult
         :straight t
@@ -1352,10 +1347,10 @@ Vim умеет красиво отображать номер текущей с�
 
     (use-package orderless
         :straight t
-        :custom
-        (completion-styles '(orderless basic))
-        (completion-category-defaults nil)
-        (completion-category-overrides '((file (styles basic partial-completion))))))
+        :init
+        (setq completion-styles '(orderless basic)
+              completion-category-defaults nil
+              completion-category-overrides '((file (styles basic partial-completion))))))
 #+end_src
 
 [[https://github.com/abo-abo/swiper][Ivy]] является инструментом, альтернативным =Vertico=.
@@ -1395,10 +1390,10 @@ Vim умеет красиво отображать номер текущей с�
                ("<f2> i"  . counsel-info-lookup-symbol)
                ("<f2> u"  . counsel-unicode-char)
                ("<f2> j"  . counsel-set-variable))
-        :custom
-        (ivy-use-virtual-buffers t)
-        (ivy-count-format "(%d/%d) ")
-        (ivy-wrap t))
+        :init
+        (setq ivy-use-virtual-buffers t
+              ivy-count-format "(%d/%d) "
+              ivy-wrap t))
 
     (use-package ivy-rich
         :straight t
@@ -1454,10 +1449,10 @@ Vim умеет красиво отображать номер текущей с�
 (use-package projectile
     :straight t
     :bind-keymap ("C-c p" . projectile-command-map)
+    :init
+    (setq projectile-completion-system 'default)
     :config
-    (projectile-mode t)
-    :custom
-    (projectile-completion-system 'default))
+    (projectile-mode t))
 #+end_src
 
 [[https://github.com/flycheck/flycheck][Flycheck]] служит для провеки синтаксиса "на лету".
@@ -1492,9 +1487,9 @@ Magit --- пакет для работы с git внутри Emacs.
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode))
-    :custom
-    (markdown-fontify-code-blocks-natively t)
-    (markdown-command "multimarkdown"))
+    :init
+    (setq markdown-fontify-code-blocks-natively t
+          markdown-command "multimarkdown"))
 #+end_src
 
 ** Org-mode
@@ -1514,6 +1509,16 @@ Magit --- пакет для работы с git внутри Emacs.
     :straight t
     :hook ((org-mode . org-indent-mode)
            (org-mode . my/angle-brackets-fix))
+    :init
+    (setq org-edit-src-content-indentation 0
+          org-src-preserve-indentation nil
+          org-src-fontify-natively t
+          org-src-tab-acts-natively t
+          org-return-follows-link t
+          org-mouse-1-follows-link t
+          org-descriptive-links t
+          org-hide-emphasis-markers t
+          org-support-shift-select t)
     :config
     (org-babel-do-load-languages
      'org-babel-load-languages '((emacs-lisp . t)
@@ -1521,7 +1526,6 @@ Magit --- пакет для работы с git внутри Emacs.
                                  (lua . t)
                                  (haskell . t)
                                  (shell . t)))
-    :config
     (require 'org-tempo)
     (progn
         (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
@@ -1529,17 +1533,7 @@ Magit --- пакет для работы с git внутри Emacs.
         (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
         (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
         (add-to-list 'org-structure-template-alist '("py" . "src python"))
-        (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
-    :custom
-    (org-edit-src-content-indentation 0)
-    (org-src-preserve-indentation nil)
-    (org-src-fontify-natively t)
-    (org-src-tab-acts-natively t)
-    (org-return-follows-link t)
-    (org-mouse-1-follows-link t)
-    (org-descriptive-links t)
-    (org-hide-emphasis-markers t)
-    (org-support-shift-select t))
+        (add-to-list 'org-structure-template-alist '("tex" . "src tex"))))
 
 (use-package edit-indirect
     :straight t)
@@ -1548,8 +1542,8 @@ Magit --- пакет для работы с git внутри Emacs.
     :straight t
     :after org
     :hook (org-mode . org-bullets-mode)
-    :custom
-    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+    :init
+    (setq org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 (use-package toc-org
     :straight t
@@ -1560,9 +1554,9 @@ Magit --- пакет для работы с git внутри Emacs.
     :straight (org-appear :type git :host github :repo "awth13/org-appear")
     :after org
     :hook (org-mode . org-appear-mode)
-    :custom
-    (org-appear-autolinks t)
-    (org-appear-autosubmarkers t))
+    :init
+    (setq org-appear-autolinks t
+          org-appear-autosubmarkers t))
 #+end_src
 
 ** ESS
@@ -1644,8 +1638,8 @@ npm i -g typescript-language-server; npm i -g typescript
 (use-package lua-mode
     :straight t
     :mode "\\.lua$"
-    :custom
-    (lua-indent-level 4))
+    :init
+    (setq lua-indent-level 4))
 #+end_src
 
 ** LaTeX
@@ -1853,25 +1847,25 @@ to the LaTeX table."
     :hook ((LaTeX-mode . lsp/lsp)
            (LaTeX-mode . auctex/extra-commands)
            (LaTeX-mode . turn-on-reftex))
+    :init
+    (setq preview-pdf-color-adjust-method t
+          preview-auto-cache-preamble t
+          bibtex-dialect 'biblatex
+          reftex-cite-format '((?\C-m . "\\cite[]{%l}")
+                               (?a . "\\autocite[]{%l}")
+                               (?p . "\\parencite[]{%l}")
+                               (?f . "\\footcite[][]{%l}")
+                               (?t . "\\textcite[]{%l}")
+                               (?o . "\\citepr[]{%l}")
+                               (?F . "\\fullcite[]{%l}")
+                               (?n . "\\nocite{%l}"))
+          reftex-cite-prompt-optional-args t
+          LaTeX-reftex-cite-format-auto-activate nil
+          reftex-plug-into-AUCTeX t)
     :config
     (with-eval-after-load 'reftex
         (add-to-list 'reftex-section-levels
                      '("frametitle" . -2))
         (add-to-list 'reftex-section-levels
-                     '("framesubtitle" . -3)))
-    :custom
-    (preview-pdf-color-adjust-method t)
-    (preview-auto-cache-preamble t)
-    (bibtex-dialect 'biblatex)
-    (reftex-cite-format '((?\C-m . "\\cite[]{%l}")
-                          (?a . "\\autocite[]{%l}")
-                          (?p . "\\parencite[]{%l}")
-                          (?f . "\\footcite[][]{%l}")
-                          (?t . "\\textcite[]{%l}")
-                          (?o . "\\citepr[]{%l}")
-                          (?F . "\\fullcite[]{%l}")
-                          (?n . "\\nocite{%l}")))
-    (reftex-cite-prompt-optional-args t)
-    (LaTeX-reftex-cite-format-auto-activate nil)
-    (reftex-plug-into-AUCTeX t))
+                     '("framesubtitle" . -3))))
 #+end_src
