@@ -40,7 +40,7 @@
   - [[#вспомогательные-функции][Вспомогательные функции]]
   - [[#lsp][LSP]]
   - [[#автодополнение-в-буфере-corfu][Автодополнение в буфере: =Corfu=]]
-  - [[#автодополнение-в-минибуфере-vertico-consult-и-embark][Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark=]]
+  - [[#автодополнение-в-минибуфере-vertico-consult-и-embark-или-ivy][Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark= (или =Ivy=)]]
   - [[#сниппеты][Сниппеты]]
 - [[#настройки-для-языков-программирования][Настройки для языков программирования]]
   - [[#markdown][Markdown]]
@@ -684,7 +684,7 @@ Vim умеет красиво отображать номер текущей с�
 (use-package nerd-icons-completion
     :straight t
     :defer 1
-    :after (all-the-icons marginalia)
+    :after (marginalia)
     :config
     (nerd-icons-completion-mode t))
 
@@ -1129,7 +1129,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (defun lsp/lsp ()
     "Using an appropriate LSP-engine."
-    (if init/lsp-engine
+    (if init/lsp-mode
             (lsp)
         (eglot-ensure)))
 #+end_src
@@ -1180,7 +1180,7 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c l d= | eglot-mode-map | xref-find-definitions              | Переход к определению символа                        |
 
 #+begin_src emacs-lisp
-(when init/lsp-engine
+(when init/lsp-mode
     (use-package lsp-mode
         :straight t
         :hook ((lsp-mode . lsp-enable-which-key-integration)
@@ -1200,7 +1200,7 @@ Vim умеет красиво отображать номер текущей с�
     (use-package lsp-ui
         :straight t))
 
-(unless init/lsp-engine
+(unless init/lsp-mode
     (use-package eglot
         :init
         (when (< emacs-major-version 29)
@@ -1231,34 +1231,65 @@ Vim умеет красиво отображать номер текущей с�
 | =S-TAB=   | corfu-map | corfu-previous | Предыдущий вариант |
 
 #+begin_src emacs-lisp
-(use-package corfu
-    :straight (:files (:defaults "extensions/*"))
-    :bind (:map corfu-map
-                ("TAB" . corfu-next)
-                ([tab] . corfu-next)
-                ("S-TAB" . corfu-previous)
-                ([backtab] . corfu-previous))
-    :init
-    (corfu-popupinfo-mode)
-    (global-corfu-mode)
-    :custom
-    (corfu-auto nil)
-    (corfu-cycle t)
-    (corfu-preselect-first nil)
-    (corfu-preview-current 'insert)
-    (tab-always-indent 'complete)
-    (corfu-popupinfo-delay 0.2))
+(when init/corfu
+    (use-package corfu
+        :straight (:files (:defaults "extensions/*"))
+        :bind (:map corfu-map
+                    ("TAB" . corfu-next)
+                    ([tab] . corfu-next)
+                    ("S-TAB" . corfu-previous)
+                    ([backtab] . corfu-previous))
+        :init
+        (corfu-popupinfo-mode)
+        (global-corfu-mode)
+        :custom
+        (corfu-auto nil)
+        (corfu-cycle t)
+        (corfu-preselect-first nil)
+        (corfu-preview-current 'insert)
+        (tab-always-indent 'complete)
+        (corfu-popupinfo-delay 0.2))
 
-(use-package kind-icon
-    :straight t
-    :after (corfu nerd-icons)
-    :config
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-    :custom
-    (kind-icon-default-face 'corfu-default))
+    (use-package kind-icon
+        :straight t
+        :after (corfu nerd-icons)
+        :config
+        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+        :custom
+        (kind-icon-default-face 'corfu-default)))
 #+end_src
 
-** Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark=
+При желании можно использовать [[https://company-mode.github.io/][Company Mode]] в связке с [[https://github.com/sebastiencs/company-box][Company Box]] (для иконок). В целом, все аналогично приведенному выше набору пакетов, однако есть нюансы. Во-первых, =Company= использует собственный механизм бэкендов, а во-вторых, он не совместим со =Smartparens=, происходит дублирование закрывающей скобки. Насколько мне известно, это еще [[https://github.com/Fuco1/smartparens/issues/445][не исправлено]].
+
+#+begin_src emacs-lisp
+(unless init/corfu
+    (use-package company
+        :straight t
+        :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
+               :map company-active-map
+               ("RET". company-complete-selection)
+               ("<return>". company-complete-selection)
+               ("<tab>" . company-complete-common-or-cycle)
+               ("ESC" . company-abort)
+               ("<esc>" . company-abort))
+        :hook (after-init . global-company-mode)
+        :init
+        (setq company-backends '((company-capf)))
+        :custom
+        (company-selection-wrap-around t)
+        (company-minimum-prefix-length 1)
+        (company-idle-delay nil)
+        (company-tooltip-align-annotations t)
+        (company-transformers '(delete-consecutive-dups
+                                company-sort-by-occurrence
+                                company-sort-prefer-same-case-prefix)))
+
+    (use-package company-box
+        :straight t
+        :hook (company-mode . company-box-mode)))
+#+end_src
+
+** Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark= (или =Ivy=)
 
 Если описанный выше пакет =Corfu= и  служат для облегчения автодополнения при работе в основных буферах, то следующие предназначены для минибуфера. [[https://github.com/minad/vertico][Vertico]] является облегченным аналогом =Ivy= или =Helm=, опирающимся на встроенные в =Emacs= возможности.
 
@@ -1279,51 +1310,108 @@ Vim умеет красиво отображать номер текущей с�
 | =M-R=     | global | vertico-repeat  | Повтор предыдущего поиска                    |
 
 #+begin_src emacs-lisp
-(use-package vertico
-    :straight (:files (:defaults "extensions/*"))
-    :hook ((minibuffer-setup . (lambda ()
-                                   (setq completion-in-region-function
-                                         (if vertico-mode
-                                                 #'consult-completion-in-region
-                                             #'completion--in-region))))
-           (minibuffer-setup . vertico-repeat-save))
-    :init
-    (add-to-list 'process-coding-system-alist
-                 '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
-    (vertico-mode)
-    :bind (("C-c C-r" . vertico-repeat))
-    :custom
-    (vertico-cycle t)
-    (vertico-mouse-mode t)
-    (vertico-count 8)
-    (vertico-count 8))
+(when init/vertico
+    (use-package vertico
+        :straight (:files (:defaults "extensions/*"))
+        :hook ((minibuffer-setup . (lambda ()
+                                       (setq completion-in-region-function
+                                             (if vertico-mode
+                                                     #'consult-completion-in-region
+                                                 #'completion--in-region))))
+               (minibuffer-setup . vertico-repeat-save))
+        :init
+        (add-to-list 'process-coding-system-alist
+                     '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
+        (vertico-mode)
+        :bind (("C-c C-r" . vertico-repeat))
+        :custom
+        (vertico-cycle t)
+        (vertico-mouse-mode t)
+        (vertico-count 8)
+        (vertico-count 8))
 
-(use-package consult
-    :straight t
-    :bind (("C-x b" . consult-buffer)
-           ("C-x C-b" . ibuffer)
-           ("C-s" . consult-line)
-           ("C-S-s" . consult-ripgrep)))
+    (use-package consult
+        :straight t
+        :bind (("C-x b" . consult-buffer)
+               ("C-x C-b" . ibuffer)
+               ("C-s" . consult-line)
+               ("C-S-s" . consult-ripgrep)))
 
-(use-package embark
-    :straight t
-    :bind (("C-." . embark-act)
-           ("C-;" . embark-dwim)
-           ("C-h B" . embark-bindings))
-    :custom
-    (prefix-help-command #'embark-prefix-help-command))
+    (use-package embark
+        :straight t
+        :bind (("C-." . embark-act)
+               ("C-;" . embark-dwim)
+               ("C-h B" . embark-bindings))
+        :custom
+        (prefix-help-command #'embark-prefix-help-command))
 
-(use-package embark-consult
-    :straight t
-    :after (embark consult)
-    :hook (embark-collect-mode . consult-preview-at-point-mode))
+    (use-package embark-consult
+        :straight t
+        :after (embark consult)
+        :hook (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package orderless
-    :straight t
-    :custom
-    (completion-styles '(orderless basic))
-    (completion-category-defaults nil)
-    (completion-category-overrides '((file (styles basic partial-completion)))))
+    (use-package orderless
+        :straight t
+        :custom
+        (completion-styles '(orderless basic))
+        (completion-category-defaults nil)
+        (completion-category-overrides '((file (styles basic partial-completion))))))
+#+end_src
+
+[[https://github.com/abo-abo/swiper][Ivy]] является инструментом, альтернативным =Vertico=.
+
+| Клавиша | Карта  | Команда                    | Действие                                |
+|---------+--------+----------------------------+-----------------------------------------|
+| =C-s=     | global | swiper-isearch             | Поиск строк по шаблону                  |
+| =M-x=     | global | counsel-M-x                | Меню интерактивных команд               |
+| =C-x C-f= | global | counsel-find-file          | Меню открытия файлов                    |
+| =M-y=     | global | counsel-yank-pop           | Меню kill-ring                          |
+| =<f1> l=  | global | counsel-find-library       | Переход к исходному коду библиотеки     |
+| =<f2> i=  | global | counsel-info-lookup-symbol | Поиск справки для символа               |
+| =<f2> u=  | global | counsel-unicode-char       | Поиск символа Юникод                    |
+| =<f2> j=  | global | counsel-set-variable       | Изменение значения переменной           |
+| =C-x b=   | global | ivy-switch-buffer          | Переключение буферов при помощи =Ivy=     |
+| =C-x C-b= | global | ibuffer                    | Переключение буферов при помощи =ibuffer= |
+| =C-c v=   | global | ivy-push-view              |                                         |
+| =C-c V=   | global | ivy-pop-view               |                                         |
+| =M-R=     | global | ivy-resume                 | Повтор предыдущего поиска               |
+
+#+begin_src emacs-lisp
+(unless init/vertico
+    (use-package counsel
+        :straight t
+        :config
+        (ivy-mode t)
+        :bind (("C-x b"   . ivy-switch-buffer)
+               ("C-x C-b" . ibuffer)
+               ("C-c v"   . ivy-push-view)
+               ("C-c V"   . ivy-pop-view)
+               ("M-R"     . ivy-resume)
+               ("C-s"     . swiper-isearch)
+               ("M-x"     . counsel-M-x)
+               ("C-x C-f" . counsel-find-file)
+               ("M-y"     . counsel-yank-pop)
+               ("<f1> l"  . counsel-find-library)
+               ("<f2> i"  . counsel-info-lookup-symbol)
+               ("<f2> u"  . counsel-unicode-char)
+               ("<f2> j"  . counsel-set-variable))
+        :custom
+        (ivy-use-virtual-buffers t)
+        (ivy-count-format "(%d/%d) ")
+        (ivy-wrap t))
+
+    (use-package ivy-rich
+        :straight t
+        :after (counsel)
+        :init
+        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+        :config
+        (ivy-rich-mode 1))
+
+    (use-package nerd-icons-ivy-rich
+        :straight t
+        :init
+        (nerd-icons-ivy-rich-mode 1)))
 #+end_src
 
 ** Сниппеты
@@ -1516,7 +1604,7 @@ Magit --- пакет для работы с git внутри Emacs.
 
 ** Python
 
-Функция для модификации списка CAPF при открытии Python-файлов.
+В начале идет определение функции для модификации списка CAPF при открытии Python-файлов. После мы создаем ее псевдоним для работы с =python-ts-mode=.
 
 #+begin_src emacs-lisp
 (defun capf/python-mode ()
@@ -1526,14 +1614,13 @@ Magit --- пакет для работы с git внутри Emacs.
                   (list 'cape-file))))
 
 (defalias 'capf/python-ts-mode 'capf/python-mode)
-#+end_src
 
-#+begin_src emacs-lisp
 (use-package python
     :straight lsp-pyright
     :hook (((python-mode python-ts-mode) . lsp/lsp)
            ((python-mode python-ts-mode) . (lambda ()
                                                (setq-local fill-column 80)
+                                               (setq python-shell-interpreter "python")
                                                (display-fill-column-indicator-mode)))))
 #+end_src
 

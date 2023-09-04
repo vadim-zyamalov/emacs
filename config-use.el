@@ -336,7 +336,7 @@
 (use-package nerd-icons-completion
     :straight t
     :defer 1
-    :after (all-the-icons marginalia)
+    :after (marginalia)
     :config
     (nerd-icons-completion-mode t))
 
@@ -542,7 +542,7 @@
 
 (defun lsp/lsp ()
     "Using an appropriate LSP-engine."
-    (if init/lsp-engine
+    (if init/lsp-mode
             (lsp)
         (eglot-ensure)))
 
@@ -568,7 +568,7 @@
         (unless (null (symbol-function tmp-symbol))
             (funcall (symbol-function tmp-symbol)))))
 
-(when init/lsp-engine
+(when init/lsp-mode
     (use-package lsp-mode
         :straight t
         :hook ((lsp-mode . lsp-enable-which-key-integration)
@@ -588,7 +588,7 @@
     (use-package lsp-ui
         :straight t))
 
-(unless init/lsp-engine
+(unless init/lsp-mode
     (use-package eglot
         :init
         (when (< emacs-major-version 29)
@@ -606,77 +606,141 @@
         (add-to-list 'eglot-server-programs
                      '(latex-mode . ("texlab")))))
 
-(use-package corfu
-    :straight (:files (:defaults "extensions/*"))
-    :bind (:map corfu-map
-                ("TAB" . corfu-next)
-                ([tab] . corfu-next)
-                ("S-TAB" . corfu-previous)
-                ([backtab] . corfu-previous))
-    :init
-    (corfu-popupinfo-mode)
-    (global-corfu-mode)
-    :custom
-    (corfu-auto nil)
-    (corfu-cycle t)
-    (corfu-preselect-first nil)
-    (corfu-preview-current 'insert)
-    (tab-always-indent 'complete)
-    (corfu-popupinfo-delay 0.2))
+(when init/corfu
+    (use-package corfu
+        :straight (:files (:defaults "extensions/*"))
+        :bind (:map corfu-map
+                    ("TAB" . corfu-next)
+                    ([tab] . corfu-next)
+                    ("S-TAB" . corfu-previous)
+                    ([backtab] . corfu-previous))
+        :init
+        (corfu-popupinfo-mode)
+        (global-corfu-mode)
+        :custom
+        (corfu-auto nil)
+        (corfu-cycle t)
+        (corfu-preselect-first nil)
+        (corfu-preview-current 'insert)
+        (tab-always-indent 'complete)
+        (corfu-popupinfo-delay 0.2))
 
-(use-package kind-icon
-    :straight t
-    :after (corfu nerd-icons)
-    :config
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-    :custom
-    (kind-icon-default-face 'corfu-default))
+    (use-package kind-icon
+        :straight t
+        :after (corfu nerd-icons)
+        :config
+        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+        :custom
+        (kind-icon-default-face 'corfu-default)))
 
-(use-package vertico
-    :straight (:files (:defaults "extensions/*"))
-    :hook ((minibuffer-setup . (lambda ()
-                                   (setq completion-in-region-function
-                                         (if vertico-mode
-                                                 #'consult-completion-in-region
-                                             #'completion--in-region))))
-           (minibuffer-setup . vertico-repeat-save))
-    :init
-    (add-to-list 'process-coding-system-alist
-                 '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
-    (vertico-mode)
-    :bind (("C-c C-r" . vertico-repeat))
-    :custom
-    (vertico-cycle t)
-    (vertico-mouse-mode t)
-    (vertico-count 8)
-    (vertico-count 8))
+(unless init/corfu
+    (use-package company
+        :straight t
+        :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
+               :map company-active-map
+               ("RET". company-complete-selection)
+               ("<return>". company-complete-selection)
+               ("<tab>" . company-complete-common-or-cycle)
+               ("ESC" . company-abort)
+               ("<esc>" . company-abort))
+        :hook (after-init . global-company-mode)
+        :init
+        (setq company-backends '((company-capf)))
+        :custom
+        (company-selection-wrap-around t)
+        (company-minimum-prefix-length 1)
+        (company-idle-delay nil)
+        (company-tooltip-align-annotations t)
+        (company-transformers '(delete-consecutive-dups
+                                company-sort-by-occurrence
+                                company-sort-prefer-same-case-prefix)))
 
-(use-package consult
-    :straight t
-    :bind (("C-x b" . consult-buffer)
-           ("C-x C-b" . ibuffer)
-           ("C-s" . consult-line)
-           ("C-S-s" . consult-ripgrep)))
+    (use-package company-box
+        :straight t
+        :hook (company-mode . company-box-mode)))
 
-(use-package embark
-    :straight t
-    :bind (("C-." . embark-act)
-           ("C-;" . embark-dwim)
-           ("C-h B" . embark-bindings))
-    :custom
-    (prefix-help-command #'embark-prefix-help-command))
+(when init/vertico
+    (use-package vertico
+        :straight (:files (:defaults "extensions/*"))
+        :hook ((minibuffer-setup . (lambda ()
+                                       (setq completion-in-region-function
+                                             (if vertico-mode
+                                                     #'consult-completion-in-region
+                                                 #'completion--in-region))))
+               (minibuffer-setup . vertico-repeat-save))
+        :init
+        (add-to-list 'process-coding-system-alist
+                     '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
+        (vertico-mode)
+        :bind (("C-c C-r" . vertico-repeat))
+        :custom
+        (vertico-cycle t)
+        (vertico-mouse-mode t)
+        (vertico-count 8)
+        (vertico-count 8))
 
-(use-package embark-consult
-    :straight t
-    :after (embark consult)
-    :hook (embark-collect-mode . consult-preview-at-point-mode))
+    (use-package consult
+        :straight t
+        :bind (("C-x b" . consult-buffer)
+               ("C-x C-b" . ibuffer)
+               ("C-s" . consult-line)
+               ("C-S-s" . consult-ripgrep)))
 
-(use-package orderless
-    :straight t
-    :custom
-    (completion-styles '(orderless basic))
-    (completion-category-defaults nil)
-    (completion-category-overrides '((file (styles basic partial-completion)))))
+    (use-package embark
+        :straight t
+        :bind (("C-." . embark-act)
+               ("C-;" . embark-dwim)
+               ("C-h B" . embark-bindings))
+        :custom
+        (prefix-help-command #'embark-prefix-help-command))
+
+    (use-package embark-consult
+        :straight t
+        :after (embark consult)
+        :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+    (use-package orderless
+        :straight t
+        :custom
+        (completion-styles '(orderless basic))
+        (completion-category-defaults nil)
+        (completion-category-overrides '((file (styles basic partial-completion))))))
+
+(unless init/vertico
+    (use-package counsel
+        :straight t
+        :config
+        (ivy-mode t)
+        :bind (("C-x b"   . ivy-switch-buffer)
+               ("C-x C-b" . ibuffer)
+               ("C-c v"   . ivy-push-view)
+               ("C-c V"   . ivy-pop-view)
+               ("M-R"     . ivy-resume)
+               ("C-s"     . swiper-isearch)
+               ("M-x"     . counsel-M-x)
+               ("C-x C-f" . counsel-find-file)
+               ("M-y"     . counsel-yank-pop)
+               ("<f1> l"  . counsel-find-library)
+               ("<f2> i"  . counsel-info-lookup-symbol)
+               ("<f2> u"  . counsel-unicode-char)
+               ("<f2> j"  . counsel-set-variable))
+        :custom
+        (ivy-use-virtual-buffers t)
+        (ivy-count-format "(%d/%d) ")
+        (ivy-wrap t))
+
+    (use-package ivy-rich
+        :straight t
+        :after (counsel)
+        :init
+        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+        :config
+        (ivy-rich-mode 1))
+
+    (use-package nerd-icons-ivy-rich
+        :straight t
+        :init
+        (nerd-icons-ivy-rich-mode 1)))
 
 (use-package yasnippet
     :straight t
@@ -827,6 +891,7 @@
     :hook (((python-mode python-ts-mode) . lsp/lsp)
            ((python-mode python-ts-mode) . (lambda ()
                                                (setq-local fill-column 80)
+                                               (setq python-shell-interpreter "python")
                                                (display-fill-column-indicator-mode)))))
 
 (use-package js

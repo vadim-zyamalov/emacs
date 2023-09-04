@@ -7,8 +7,14 @@
 ;; После чего загружаем настройки из org-документа.
 
 ;;; Code:
-(defconst init/lsp-engine t
+(defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
+
+(defconst init/corfu t
+    "Use corfu for buffer completion.")
+
+(defconst init/vertico t
+    "Use vertico for minibuffer completion.")
 
 (defconst init/evil t
     "To be evil or not.")
