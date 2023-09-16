@@ -357,10 +357,10 @@
 
 (use-package nerd-icons-completion
     :straight t
-    :defer 1
-    :after (marginalia)
+    :after marginalia
     :config
-    (nerd-icons-completion-mode t))
+    (nerd-icons-completion-mode)
+    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
 (use-package nerd-icons-dired
     :straight t
