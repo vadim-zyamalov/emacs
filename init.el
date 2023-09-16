@@ -1120,7 +1120,10 @@ to the LaTeX table."
     :after auctex)
 
 (use-package latex
-    :elpaca auctex
+    :elpaca (auctex :host github
+                    :repo "emacs-straight/auctex"
+                    :files (:defaults (:exclude "*.el.in")))
+    :demand t
     :hook ((LaTeX-mode . lsp/lsp)
            (LaTeX-mode . auctex/extra-commands)
            (LaTeX-mode . turn-on-reftex))
