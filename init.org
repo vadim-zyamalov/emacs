@@ -150,50 +150,90 @@ pacman -S mingw-w64-i686-libgccjit
 (defconst init/evil nil
     "To be evil or not.")
 
-(defconst ensure/is64
-    (not (null
-          (string-match "^x86_64-.*" system-configuration)))
-    "Equals t if Emacs works on 64-bit system.")
-
 (defconst ensure/isWindows
     (memq system-type '(cygwin windows-nt ms-dos))
     "Equals t if Emacs works on Windows host system.")
 #+end_src
 
-* Базовые файлы
+* Пакетный менеджер
+
+При помощи данного кода загружается и активируется пакетный менеджер =elpaca=.
 
 #+begin_src emacs-lisp
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-    (unless (file-exists-p bootstrap-file)
-        (with-current-buffer
-                (url-retrieve-synchronously
-                 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-                 'silent 'inhibit-cookies)
-            (goto-char (point-max))
-            (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
+(defvar elpaca-installer-version 0.5)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+    (add-to-list 'load-path (if (file-exists-p build) build repo))
+    (unless (file-exists-p repo)
+        (make-directory repo t)
+        (when (< emacs-major-version 28) (require 'subr-x))
+        (condition-case-unless-debug err
+                (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                         ((zerop (call-process "git" nil buffer t "clone"
+                                               (plist-get order :repo) repo)))
+                         ((zerop (call-process "git" nil buffer t "checkout"
+                                               (or (plist-get order :ref) "--"))))
+                         (emacs (concat invocation-directory invocation-name))
+                         ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                               "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                         ((require 'elpaca))
+                         ((elpaca-generate-autoloads "elpaca" repo)))
+                        (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+                    (error "%s" (with-current-buffer buffer (buffer-string))))
+            ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+    (unless (require 'elpaca-autoloads nil t)
+        (require 'elpaca)
+        (elpaca-generate-autoloads "elpaca" repo)
+        (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca-no-symlink-mode)
+(elpaca `(,@elpaca-order))
+#+end_src
+
+В Windows ограничение на число создаваемых подпроцессов достаточно жесткое, поэтому установим ограничение в 10 подпроцессов.
+
+#+begin_src emacs-lisp
+(when ensure/isWindows
+    (setq elpaca-queue-limit 10))
 #+end_src
 
 * Настройки =use-package=
 
-Установка [[https://github.com/jwiegley/use-package][use-package]] для дальнейшей настройки =Emacs=. В =Emacs 29= =use-package= встроен, так что устанавливать его не нужно.
+Установка [[https://github.com/jwiegley/use-package][use-package]] для дальнейшей настройки Emacs. В Emacs 29 =use-package= встроен, так что устанавливать его не нужно.
+
+[[https://github.com/progfolio/elpaca/blob/master/extensions/elpaca-use-package.el][elpaca-use-package]] добавляет ключевое слово =:elpaca= в =use-package=, подобное стандартному =:ensure=.
+
+[[https://github.com/abo-abo/hydra][Hydra]] позволяет снизить число нажатий клавиш при цепочке последовательных нажатий: достаточно ввести начальную комбинацию, затем ее можно опустить. [[https://gitlab.com/to1ne/use-package-hydra][use-package-hydra]] добавляет ключевое слово =:hydra=.
 
 #+begin_src emacs-lisp
 (when (< emacs-major-version 29)
-    (straight-use-package 'use-package))
+    (elpaca use-package
+        (require 'use-package)))
 
-(require 'use-package)
+(elpaca elpaca-use-package
+    (elpaca-use-package-mode))
+(elpaca-wait)
 
+(use-package hydra
+    :elpaca t)
 (use-package use-package-hydra
-    :straight t)
+    :elpaca t
+    :demand t)
+(elpaca-wait)
 #+end_src
 
 * Общие настройки
 
-Заставляем =Emacs= использовать =utf-8= как стандартную кодовую таблицу.
+Заставляем Emacs использовать =utf-8= как стандартную кодовую таблицу.
 
 #+begin_src emacs-lisp
 (set-language-environment 'utf-8)
@@ -207,7 +247,7 @@ pacman -S mingw-w64-i686-libgccjit
 (prefer-coding-system 'utf-8)
 #+end_src
 
-=Emacs= по умолчанию требует длинные ответы на вопросы (=yes= и =no=). Следующие настройки позволяют ограничиться одной буквой (=y= и =n=).
+Emacs по умолчанию требует длинные ответы на вопросы (=yes= и =no=). Следующие настройки позволяют ограничиться одной буквой (=y= и =n=).
 
 #+begin_src emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -235,7 +275,7 @@ pacman -S mingw-w64-i686-libgccjit
     (save-place-mode 1))
 #+end_src
 
-=savehist= --- другой встроенный пакет, сохраняющий историю введенных команд между сессиями. По умолчанию =Emacs= сохраняет историю *только* в пределах текущей сессии.
+=savehist= --- другой встроенный пакет, сохраняющий историю введенных команд между сессиями. По умолчанию Emacs сохраняет историю *только* в пределах текущей сессии.
 
 #+begin_src emacs-lisp
 (use-package savehist
@@ -250,13 +290,13 @@ pacman -S mingw-w64-i686-libgccjit
     (savehist-mode))
 #+end_src
 
-** Ускорение запуска =Emacs=
+** Ускорение запуска Emacs
 
-Установка пакета для настройки работы сборщика мусора. В Windows он вызывает периодическое подвисание =Emacs=. Судя по всему, =Emacs= в Windows однопоточен, что и приводит к такому эффекту.
+Установка пакета для настройки работы сборщика мусора. В Windows он вызывает периодическое подвисание Emacs. Судя по всему, Emacs в Windows однопоточен, что и приводит к такому эффекту.
 
 #+begin_src emacs-lisp
 (use-package gcmh
-    :straight t
+    :elpaca t
     :init
     (setq gcmh-verbose t
           gcmh-low-cons-threshold (* 8 1024 1024))
@@ -270,7 +310,7 @@ pacman -S mingw-w64-i686-libgccjit
 
 #+begin_src emacs-lisp
 (use-package no-littering
-    :straight t
+    :elpaca t
     :after savehist
     :init
     (setq no-littering-etc-directory
@@ -279,7 +319,7 @@ pacman -S mingw-w64-i686-libgccjit
           (expand-file-name "data/" user-emacs-directory)))
 #+end_src
 
-Запретить =Emacs= создавать блокирующие файлы.
+Запретить Emacs создавать блокирующие файлы.
 
 #+begin_src emacs-lisp
 (setq create-lockfiles nil)
@@ -323,7 +363,7 @@ pacman -S mingw-w64-i686-libgccjit
 
 * Настройки пользовательского интерфейса
 
-=Emacs= настроен на изменение размера фрейма (окна, в традиционной терминологии оконных менеджеров) пропорционально размеру символа. В оконных менеджерах это может быть неудобно и некрасиво. Следующие настройки заставляют =Emacs= изменять размер фрейма произвольно.
+Emacs настроен на изменение размера фрейма (окна, в традиционной терминологии оконных менеджеров) пропорционально размеру символа. В оконных менеджерах это может быть неудобно и некрасиво. Следующие настройки заставляют Emacs изменять размер фрейма произвольно.
 
 Также автоматически разворачиваем окно при запуске.
 
@@ -346,7 +386,7 @@ pacman -S mingw-w64-i686-libgccjit
 
 ** Вкладки
 
-Ранее я использовал сторонние пакеты для отображения вкладок, то потом узнал, что аналогичная функциональность встроена в =Emacs=: [[https://www.emacswiki.org/emacs/TabBarMode][TabBarMode]]. Да, эти вкладки не такие красивые, как сторонние, но мне хватает.
+Ранее я использовал сторонние пакеты для отображения вкладок, то потом узнал, что аналогичная функциональность встроена в Emacs: [[https://www.emacswiki.org/emacs/TabBarMode][TabBarMode]]. Да, эти вкладки не такие красивые, как сторонние, но мне хватает.
 
 | Клавиша   | Карта  | Команда         | Действие                         |
 |-----------+--------+-----------------+----------------------------------|
@@ -368,18 +408,18 @@ pacman -S mingw-w64-i686-libgccjit
 
 #+begin_src emacs-lisp
 (use-package doom-modeline
-    :straight t
+    :elpaca t
     :init
     (setq doom-modeline-height 24
           doom-modeline-minor-modes t)
-    :hook (after-init . doom-modeline-mode))
+    (doom-modeline-mode))
 #+end_src
 
 Также я установил пакет [[https://github.com/tarsius/minions][Minions]], который заменяет довольно неопрятный список второстепенных режимов на аккуратный смайлик (строго говоря на =;-=, но получается смайлик). В Doom Modeline при загрузке этого пакета опциональный список второстепенных режимов заменяется на кнопку с шестеренкой (а не смайликом).
 
 #+begin_src emacs-lisp
 (use-package minions
-    :straight t
+    :elpaca t
     :config
     (minions-mode t))
 #+end_src
@@ -388,18 +428,18 @@ pacman -S mingw-w64-i686-libgccjit
 
 #+begin_src emacs-lisp
 (use-package nyan-mode
-    :straight t
+    :elpaca t
     :config
     (nyan-mode))
 #+end_src
 
 ** Стартовый экран
 
-Красивый [[https://github.com/emacs-dashboard/emacs-dashboard][стартовый экран]]. Очень удобный, к слову. Показывает ссылки на последние файлы и проекты, плюс я вывел ссылки на файлы и репозиторий настроек =Emacs=.
+Красивый [[https://github.com/emacs-dashboard/emacs-dashboard][стартовый экран]]. Очень удобный, к слову. Показывает ссылки на последние файлы и проекты, плюс я вывел ссылки на файлы и репозиторий настроек Emacs.
 
 #+begin_src emacs-lisp
 (use-package dashboard
-    :straight t
+    :elpaca t
     :after (nerd-icons)
     :init
     (setq dashboard-display-icons-p t
@@ -434,7 +474,7 @@ pacman -S mingw-w64-i686-libgccjit
 
 ** Отображение строк
 
-Vim умеет красиво отображать номер текущей строки и относительные номера соседних строк. =Emacs= тоже так умеет. Это имеет смысл для поклонников =Evil Mode=, так как облегчает перемещение между строками, но и просто так тоже красиво.
+Vim умеет красиво отображать номер текущей строки и относительные номера соседних строк. Emacs тоже так умеет. Это имеет смысл для поклонников =Evil Mode=, так как облегчает перемещение между строками, но и просто так тоже красиво.
 
 #+begin_src emacs-lisp
 (setq display-line-numbers-type 'relative)
@@ -452,7 +492,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package pulsar
-    :straight t
+    :elpaca t
     :init
     (setq pulsar-pulse t
           pulsar-delay 0.055
@@ -500,11 +540,11 @@ Vim умеет красиво отображать номер текущей с�
 
 ** Отображение окон
 
-Иногда во фрейма =Emacs= мы имеем несколько окон. Пакет [[https://github.com/cyrus-and/zoom][zoom]] автоматически изменяет размеры окон так, чтобы активное имело нужный размер.
+Иногда во фрейма Emacs мы имеем несколько окон. Пакет [[https://github.com/cyrus-and/zoom][zoom]] автоматически изменяет размеры окон так, чтобы активное имело нужный размер.
 
 #+begin_src emacs-lisp :tangle no
 (use-package zoom
-    :straight t
+    :elpaca t
     :init
     (setq zoom-size '(0.618 . 0.618)
           zoom-ignored-major-modes '(ess-r-mode
@@ -521,7 +561,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package dimmer
-    :straight t
+    :elpaca t
     :init
     (setq dimmer-fraction 0.6
           dimmer-watch-frame-focus-events nil)
@@ -544,7 +584,6 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package framemove
-    :straight t
     :after (hydra)
     :bind ("<f6>" . hydra-wind/body)
     :hydra (hydra-wind ()
@@ -567,7 +606,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package ace-window
-    :straight t
+    :elpaca t
     :bind (("M-o" . ace-window)))
 #+end_src
 
@@ -581,7 +620,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp :tangle no
 (use-package neotree
-    :straight t
+    :elpaca t
     :bind (("C-x t t" . neotree-toggle))
     :init
     (setq neo-smart-open t
@@ -602,7 +641,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+Begin_src emacs-lisp
 (use-package treemacs
-    :straight t
+    :elpaca t
     :defer t
     :bind (("M-0"       . treemacs-select-window)
            ("C-x t 1"   . treemacs-delete-other-windows)
@@ -624,11 +663,11 @@ Vim умеет красиво отображать номер текущей с�
          (treemacs-git-mode 'simple))))
 
 (use-package treemacs-magit
-    :straight t
+    :elpaca t
     :after (treemacs magit))
 
 (use-package treemacs-nerd-icons
-    :straight t
+    :elpaca t
     :after (treemacs nerd-icons)
     :config
     (treemacs-load-theme "nerd-icons"))
@@ -642,7 +681,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp :tangle no
 (use-package doom-themes
-    :straight t
+    :elpaca t
     :init
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
@@ -653,7 +692,7 @@ Vim умеет красиво отображать номер текущей с�
     (load-theme 'doom-palenight t))
 
 (use-package solaire-mode
-    :straight t
+    :elpaca t
     :config
     (solaire-global-mode t))
 #+end_src
@@ -662,7 +701,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp :tangle no
 (use-package modus-themes
-    :straight t
+    :elpaca t
     :init
     (setq modus-themes-bold-constructs t
           modus-themes-italic-constructs t
@@ -676,7 +715,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package ef-themes
-    :straight t
+    :elpaca t
     :init
     (mapc #'disable-theme custom-enabled-themes)
     :config
@@ -705,12 +744,12 @@ Vim умеет красиво отображать номер текущей с�
                            :height 120)))
 #+end_src
 
-А вот вледующий пакет не будет работать в версиях =Emacs= старше 28.1 из-за ошибки, фатальной для работы пакета. Он добавляет поддержку [[https://github.com/mickeynp/ligature.el][лигатур]], разумеется, если шрифт их поддерживает. Ранее этот пакет отсутствовал в основных репозиториях, поэтому я устанавливаю его из репозитория напрямую.
+А вот вледующий пакет не будет работать в версиях Emacs старше 28.1 из-за ошибки, фатальной для работы пакета. Он добавляет поддержку [[https://github.com/mickeynp/ligature.el][лигатур]], разумеется, если шрифт их поддерживает. Ранее этот пакет отсутствовал в основных репозиториях, поэтому я устанавливаю его из репозитория напрямую.
 
 #+begin_src emacs-lisp :noweb no
 (unless (version< emacs-version "28.1")
     (use-package ligature
-        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+        :elpaca (ligature :type git :host github :repo "mickeynp/ligature.el")
         :config
         (ligature-set-ligatures
          'prog-mode
@@ -757,11 +796,11 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp :tangle no
 (use-package all-the-icons
-    :straight t
+    :elpaca t
     :if (display-graphic-p))
 
 (use-package all-the-icons-completion
-    :straight t
+    :elpaca t
     :if (display-graphic-p)
     :after (all-the-icons marginalia)
     :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
@@ -775,17 +814,17 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package nerd-icons
-    :straight t)
+    :elpaca t)
 
 (use-package nerd-icons-completion
-    :straight t
+    :elpaca t
     :defer 1
     :after (marginalia)
     :config
     (nerd-icons-completion-mode t))
 
 (use-package nerd-icons-dired
-    :straight t
+    :elpaca t
     :hook
     (dired-mode . nerd-icons-dired-mode))
 #+end_src
@@ -796,16 +835,16 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package marginalia
-    :straight t
+    :elpaca t
     :init
     (marginalia-mode))
 #+end_src
 
-[[https://github.com/justbur/emacs-which-key][Which Key]] помогает пользователю с комбинациями клавиш, коих в =Emacs= вагон и маленькая телега. Например, через 1 секунду после нажатия =C-x= появится минибуфер со списком возможных продолжений.
+[[https://github.com/justbur/emacs-which-key][Which Key]] помогает пользователю с комбинациями клавиш, коих в Emacs вагон и маленькая телега. Например, через 1 секунду после нажатия =C-x= появится минибуфер со списком возможных продолжений.
 
 #+begin_src emacs-lisp
 (use-package which-key
-    :straight t
+    :elpaca t
     :init
     (setq which-key-idle-delay 1)
     :config
@@ -825,7 +864,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package helpful
-    :straight t
+    :elpaca t
     :bind (([remap describe-function] . helpful-callable)
            ("<f1> f" . helpful-callable)
            ([remap describe-variable] . helpful-variable)
@@ -856,13 +895,6 @@ Vim умеет красиво отображать номер текущей с�
 
 (when (>= emacs-major-version 29)
     (pixel-scroll-precision-mode))
-#+end_src
-
-[[https://github.com/abo-abo/hydra][Hydra]] позволяет снизить число нажатий клавиш при цепочке последовательных нажатий: достаточно ввести начальную комбинацию, затем ее можно опустить.
-
-#+begin_src emacs-lisp
-(use-package hydra
-    :straight t)
 #+end_src
 
 ** Клавиатура
@@ -903,7 +935,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package reverse-im
-    :straight t
+    :elpaca t
     :init
     (setq reverse-im-input-methods '("russian-computer"))
     :config
@@ -924,7 +956,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (when init/evil
     (use-package evil
-        :straight t
+        :elpaca t
         :init
         (setq evil-want-integration t
               evil-want-keybinding nil
@@ -942,7 +974,7 @@ Vim умеет красиво отображать номер текущей с�
         (evil-set-initial-state 'dashboard-mode 'normal))
 
     (use-package evil-collection
-        :straight t
+        :elpaca t
         :after evil
         :config
         (evil-collection-init)))
@@ -990,7 +1022,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp :tangle no
 (use-package aggressive-indent
-    :straight t
+    :elpaca t
     :hook (((prog-mode LaTeX) . aggressive-indent-mode)))
 #+end_src
 
@@ -1004,7 +1036,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package highlight-indent-guides
-    :straight t
+    :elpaca t
     :if ensure/isWindows
     :hook (prog-mode . highlight-indent-guides-mode)
     :init
@@ -1014,7 +1046,7 @@ Vim умеет красиво отображать номер текущей с�
 
 ** Настройки отмены и повтора
 
-Пакет [[https://gitlab.com/tsc25/undo-tree][Undo Tree]] заменяет стандартный механизм отмены и повтора. Главное отличие: история отмены и повторов отображается в виде дерева, вместо стандартного линейного представления =Emacs=, что делает отмену более удобной при более предсказуемом поведении.
+Пакет [[https://gitlab.com/tsc25/undo-tree][Undo Tree]] заменяет стандартный механизм отмены и повтора. Главное отличие: история отмены и повторов отображается в виде дерева, вместо стандартного линейного представления Emacs, что делает отмену более удобной при более предсказуемом поведении.
 
 | Клавиша | Карта  | Команда        | Действие        |
 |---------+--------+----------------+-----------------|
@@ -1023,7 +1055,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package undo-tree
-    :straight t
+    :elpaca t
     :bind (("C-z" . undo-tree-undo)
            ("C-S-z" . undo-tree-redo)
            :map cua--cua-keys-keymap
@@ -1050,7 +1082,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
-    :straight t
+    :elpaca t
     :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
 #+end_src
 
@@ -1064,7 +1096,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp :noweb :tangle no
 (unless init/evil
     (use-package smartparens
-        :straight t
+        :elpaca t
         :demand t
         :bind (:map smartparens-mode-map
 	                ("C-c b r" . sp-rewrap-sexp)
@@ -1080,7 +1112,7 @@ Vim умеет красиво отображать номер текущей с�
 
 (when init/evil
     (use-package evil-surround
-        :straight t
+        :elpaca t
         :after evil
         :config
         (global-evil-surround-mode 1)))
@@ -1110,7 +1142,7 @@ Vim умеет красиво отображать номер текущей с�
 
 (when init/evil
     (use-package evil-nerd-commenter
-        :straight t
+        :elpaca t
         :after evil
         :config
         (evilnc-default-hotkeys)))
@@ -1147,7 +1179,7 @@ Vim умеет красиво отображать номер текущей с�
                 (call-interactively #'vr/query-replace))))
 
     (use-package visual-regexp
-        :straight t
+        :elpaca t
         :bind (("M-%" . my/vr/replace)
                ("C-M-%" . my/vr/query-replace)
                ("C-c v m" . vr/mc-mark))))
@@ -1165,7 +1197,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp :tangle no
 (unless init/evil
     (use-package multiple-cursors
-        :straight t
+        :elpaca t
         :bind (("C-c m l" . mc/edit-lines)
                ("C->" . mc/mark-next-like-this)
                ("C-<" . mc/mark-previous-like-this)
@@ -1175,7 +1207,7 @@ Vim умеет красиво отображать номер текущей с�
 
 (when init/evil
     (use-package evil-mc
-        :straight t
+        :elpaca t
         :after evil
         :config
         (evil-define-key 'visual evil-mc-key-map
@@ -1198,7 +1230,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package crux
-    :straight t
+    :elpaca t
     :bind (("C-c I" . crux-find-user-init-file)
            ("C-c d" . crux-duplicate-current-line-or-region)
            ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
@@ -1214,7 +1246,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package cape
-    :straight t
+    :elpaca t
     :config
     (add-to-list 'completion-at-point-functions #'cape-file t))
 #+end_src
@@ -1277,7 +1309,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (when init/lsp-mode
     (use-package lsp-mode
-        :straight t
+        :elpaca t
         :init
         (setq lsp-headerline-breadcrumb-icons-enable nil
               lsp-enable-file-watchers nil
@@ -1293,11 +1325,11 @@ Vim умеет красиво отображать номер текущей с�
             (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)))
 
     (use-package lsp-ui
-        :straight t))
+        :elpaca t))
 
 (unless init/lsp-mode
     (when (< emacs-major-version 29)
-        (straight-use-package 'eglot))
+        (elpaca eglot))
     (use-package eglot
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
@@ -1315,7 +1347,7 @@ Vim умеет красиво отображать номер текущей с�
 
 ** Автодополнение в буфере: =Corfu=
 
-[[https://github.com/minad/corfu][Corfu]] --- минималистичное всплывающее окно для автодополнения. Не требует дополнительных `бэкендов` для работы, использует встроенную в =Emacs= функциональность. Также устанавливается пакет [[https://github.com/galeo/corfu-doc][Corfu-doc]], добавляющий всплявающее окно со справкой. Для визуальных красот устанавливается пакет [[https://github.com/jdtsmith/kind-icon][Kind-icon]], добавляющий красивые иконки. Пакет [[https://github.com/minad/cape][Cape]] содержит набор инструментов для модификации CAPF, при помощи которых, собственно, и модифицировались выше CAPF для LSP.
+[[https://github.com/minad/corfu][Corfu]] --- минималистичное всплывающее окно для автодополнения. Не требует дополнительных `бэкендов` для работы, использует встроенную в Emacs функциональность. Также устанавливается пакет [[https://github.com/galeo/corfu-doc][Corfu-doc]], добавляющий всплявающее окно со справкой. Для визуальных красот устанавливается пакет [[https://github.com/jdtsmith/kind-icon][Kind-icon]], добавляющий красивые иконки. Пакет [[https://github.com/minad/cape][Cape]] содержит набор инструментов для модификации CAPF, при помощи которых, собственно, и модифицировались выше CAPF для LSP.
 
 В силу архитектурных особенностей =Corfu= и =Corfu-doc= не умеют работать в терминальном режиме, поэтому параллельно устанавливаются пакеты [[https://codeberg.org/akib/emacs-corfu-terminal][Corfu-terminal]] и [[https://codeberg.org/akib/emacs-corfu-doc-terminal][Corfu-doc-terminal]]. Также устанавливаются необходимый пакет [[https://codeberg.org/akib/emacs-popon][Emacs-popon]] (так как последние три пакета теперь есть в NonGNU ELPA, то, возможно, что ручная установка более не требуется).
 
@@ -1327,7 +1359,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (when init/corfu
     (use-package corfu
-        :straight (:files (:defaults "extensions/*"))
+        :elpaca (:files (:defaults "extensions/*"))
         :bind (:map corfu-map
                     ("TAB" . corfu-next)
                     ([tab] . corfu-next)
@@ -1344,7 +1376,7 @@ Vim умеет красиво отображать номер текущей с�
         (global-corfu-mode))
 
     (use-package kind-icon
-        :straight t
+        :elpaca t
         :after (corfu nerd-icons)
         :init
         (setq kind-icon-default-face 'corfu-default)
@@ -1357,7 +1389,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (unless init/corfu
     (use-package company
-        :straight t
+        :elpaca t
         :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
                :map company-active-map
                ("RET". company-complete-selection)
@@ -1365,7 +1397,6 @@ Vim умеет красиво отображать номер текущей с�
                ("<tab>" . company-complete-common-or-cycle)
                ("ESC" . company-abort)
                ("<esc>" . company-abort))
-        :hook (after-init . global-company-mode)
         :init
         (setq company-backends '((company-capf))
               company-selection-wrap-around t
@@ -1374,18 +1405,19 @@ Vim умеет красиво отображать номер текущей с�
               company-tooltip-align-annotations t
               company-transformers '(delete-consecutive-dups
                                      company-sort-by-occurrence
-                                     company-sort-prefer-same-case-prefix)))
+                                     company-sort-prefer-same-case-prefix))
+        (global-company-mode 1))
 
     (use-package company-box
-        :straight t
+        :elpaca t
         :hook (company-mode . company-box-mode)))
 #+end_src
 
 ** Автодополнение в минибуфере: =Vertico=, =Consult= и =Embark= (или =Ivy=)
 
-Если описанный выше пакет =Corfu= и  служат для облегчения автодополнения при работе в основных буферах, то следующие предназначены для минибуфера. [[https://github.com/minad/vertico][Vertico]] является облегченным аналогом =Ivy= или =Helm=, опирающимся на встроенные в =Emacs= возможности.
+Если описанный выше пакет =Corfu= и  служат для облегчения автодополнения при работе в основных буферах, то следующие предназначены для минибуфера. [[https://github.com/minad/vertico][Vertico]] является облегченным аналогом =Ivy= или =Helm=, опирающимся на встроенные в Emacs возможности.
 
-[[https://github.com/minad/consult][Consult]] представляет собой набор функций, расширяющих встроенные в =Emacs= аналоги.
+[[https://github.com/minad/consult][Consult]] представляет собой набор функций, расширяющих встроенные в Emacs аналоги.
 
 [[https://github.com/oantolin/embark][Embark]] позволяет выполнить некоторое стандартное действие в зависимости от того, что находится под курсором.
 
@@ -1404,7 +1436,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (when init/vertico
     (use-package vertico
-        :straight (:files (:defaults "extensions/*"))
+        :elpaca (:files (:defaults "extensions/*"))
         :hook ((minibuffer-setup . (lambda ()
                                        (setq completion-in-region-function
                                              (if vertico-mode
@@ -1422,14 +1454,14 @@ Vim умеет красиво отображать номер текущей с�
         :bind (("M-R" . vertico-repeat)))
 
     (use-package consult
-        :straight t
+        :elpaca t
         :bind (("C-x b" . consult-buffer)
                ("C-x C-b" . ibuffer)
                ("C-s" . consult-line)
                ("C-S-s" . consult-ripgrep)))
 
     (use-package embark
-        :straight t
+        :elpaca t
         :bind (("C-." . embark-act)
                ("C-;" . embark-dwim)
                ("C-h B" . embark-bindings))
@@ -1437,12 +1469,12 @@ Vim умеет красиво отображать номер текущей с�
         (setq prefix-help-command #'embark-prefix-help-command))
 
     (use-package embark-consult
-        :straight t
+        :elpaca t
         :after (embark consult)
         :hook (embark-collect-mode . consult-preview-at-point-mode))
 
     (use-package orderless
-        :straight t
+        :elpaca t
         :init
         (setq completion-styles '(orderless basic)
               completion-category-defaults nil
@@ -1470,7 +1502,7 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (unless init/vertico
     (use-package counsel
-        :straight t
+        :elpaca t
         :config
         (ivy-mode t)
         :bind (("C-x b"   . ivy-switch-buffer)
@@ -1492,7 +1524,7 @@ Vim умеет красиво отображать номер текущей с�
               ivy-wrap t))
 
     (use-package ivy-rich
-        :straight t
+        :elpaca t
         :after (counsel)
         :init
         (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
@@ -1500,7 +1532,7 @@ Vim умеет красиво отображать номер текущей с�
         (ivy-rich-mode 1))
 
     (use-package nerd-icons-ivy-rich
-        :straight t
+        :elpaca t
         :init
         (nerd-icons-ivy-rich-mode 1)))
 #+end_src
@@ -1517,7 +1549,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package yasnippet
-    :straight t
+    :elpaca t
     :bind (:map yas-minor-mode-map
                 ([(tab)] . nil)
                 ("TAB" . nil))
@@ -1525,10 +1557,10 @@ Vim умеет красиво отображать номер текущей с�
     (yas-global-mode 1))
 
 (use-package yasnippet-snippets
-    :straight t)
+    :elpaca t)
 
 (use-package consult-yasnippet
-    :straight t
+    :elpaca t
     :after (vertico)
     :bind ("<f7>" . consult-yasnippet))
 #+end_src
@@ -1543,7 +1575,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package projectile
-    :straight t
+    :elpaca t
     :bind-keymap ("C-c p" . projectile-command-map)
     :init
     (setq projectile-completion-system 'default)
@@ -1555,7 +1587,7 @@ Vim умеет красиво отображать номер текущей с�
 
 #+begin_src emacs-lisp
 (use-package flycheck
-    :straight t
+    :elpaca t
     :config
     (global-flycheck-mode))
 #+end_src
@@ -1564,7 +1596,7 @@ Magit --- пакет для работы с git внутри Emacs.
 
 #+begin_src emacs-lisp
 (use-package magit
-    :straight t)
+    :elpaca t)
 #+end_src
 
 Переназначение главных режимов для языков программирования для использования =Tree-Sitter=, работает только в Emacs 29 и новее.
@@ -1579,7 +1611,7 @@ Magit --- пакет для работы с git внутри Emacs.
 
 #+begin_src emacs-lisp
 (use-package markdown-mode
-    :straight t
+    :elpaca t
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode))
@@ -1602,7 +1634,7 @@ Magit --- пакет для работы с git внутри Emacs.
 
 #+begin_src emacs-lisp
 (use-package org
-    :straight t
+    :elpaca t
     :hook ((org-mode . org-indent-mode)
            (org-mode . my/angle-brackets-fix))
     :init
@@ -1632,22 +1664,22 @@ Magit --- пакет для работы с git внутри Emacs.
         (add-to-list 'org-structure-template-alist '("tex" . "src tex"))))
 
 (use-package edit-indirect
-    :straight t)
+    :elpaca t)
 
 (use-package org-bullets
-    :straight t
+    :elpaca t
     :after org
     :hook (org-mode . org-bullets-mode)
     :init
     (setq org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 (use-package toc-org
-    :straight t
+    :elpaca t
     :after org
     :hook (org-mode . toc-org-mode))
 
 (use-package org-appear
-    :straight (org-appear :type git :host github :repo "awth13/org-appear")
+    :elpaca (org-appear :type git :host github :repo "awth13/org-appear")
     :after org
     :hook (org-mode . org-appear-mode)
     :init
@@ -1655,7 +1687,7 @@ Magit --- пакет для работы с git внутри Emacs.
           org-appear-autosubmarkers t))
 
 (use-package org-auto-tangle
-    :straight t
+    :elpaca t
     :hook (org-mode . org-auto-tangle-mode))
 #+end_src
 
@@ -1663,7 +1695,7 @@ Magit --- пакет для работы с git внутри Emacs.
 
 #+begin_src emacs-lisp
 (use-package ess
-    :straight t
+    :elpaca t
     :mode (("\\.R$" . ess-r-mode)
            ("\\.do$" . ess-stata-mode))
     :hook ((ess-r-mode . lsp/lsp)
@@ -1710,7 +1742,7 @@ Magit --- пакет для работы с git внутри Emacs.
 (defalias 'capf/python-ts-mode 'capf/python-mode)
 
 (use-package python
-    :straight lsp-pyright
+    :elpaca lsp-pyright
     :hook (((python-mode python-ts-mode) . lsp/lsp)
            ((python-mode python-ts-mode) . (lambda ()
                                                (setq-local fill-column 80)
@@ -1736,7 +1768,7 @@ npm i -g typescript-language-server; npm i -g typescript
 
 #+begin_src emacs-lisp
 (use-package lua-mode
-    :straight t
+    :elpaca t
     :mode "\\.lua$"
     :init
     (setq lua-indent-level 4))
@@ -1936,14 +1968,17 @@ to the LaTeX table."
 
 #+begin_src emacs-lisp
 (use-package company-reftex
-    :straight t)
+    :elpaca t
+    :after auctex)
 (use-package company-auctex
-    :straight t)
+    :elpaca t
+    :after auctex)
 (use-package company-math
-    :straight t)
+    :elpaca t
+    :after auctex)
 
-(use-package LaTeX
-    :straight auctex
+(use-package latex
+    :elpaca auctex
     :hook ((LaTeX-mode . lsp/lsp)
            (LaTeX-mode . auctex/extra-commands)
            (LaTeX-mode . turn-on-reftex))

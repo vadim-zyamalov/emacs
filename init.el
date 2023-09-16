@@ -1,3 +1,5 @@
+;; init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
+
 (defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
 
@@ -10,35 +12,65 @@
 (defconst init/evil nil
     "To be evil or not.")
 
-(defconst ensure/is64
-    (not (null
-          (string-match "^x86_64-.*" system-configuration)))
-    "Equals t if Emacs works on 64-bit system.")
-
 (defconst ensure/isWindows
     (memq system-type '(cygwin windows-nt ms-dos))
     "Equals t if Emacs works on Windows host system.")
 
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-    (unless (file-exists-p bootstrap-file)
-        (with-current-buffer
-                (url-retrieve-synchronously
-                 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-                 'silent 'inhibit-cookies)
-            (goto-char (point-max))
-            (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
+(defvar elpaca-installer-version 0.5)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+    (add-to-list 'load-path (if (file-exists-p build) build repo))
+    (unless (file-exists-p repo)
+        (make-directory repo t)
+        (when (< emacs-major-version 28) (require 'subr-x))
+        (condition-case-unless-debug err
+                (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                         ((zerop (call-process "git" nil buffer t "clone"
+                                               (plist-get order :repo) repo)))
+                         ((zerop (call-process "git" nil buffer t "checkout"
+                                               (or (plist-get order :ref) "--"))))
+                         (emacs (concat invocation-directory invocation-name))
+                         ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                               "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                         ((require 'elpaca))
+                         ((elpaca-generate-autoloads "elpaca" repo)))
+                        (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+                    (error "%s" (with-current-buffer buffer (buffer-string))))
+            ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+    (unless (require 'elpaca-autoloads nil t)
+        (require 'elpaca)
+        (elpaca-generate-autoloads "elpaca" repo)
+        (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca-no-symlink-mode)
+(elpaca `(,@elpaca-order))
+
+(when ensure/isWindows
+    (setq elpaca-queue-limit 10))
 
 (when (< emacs-major-version 29)
-    (straight-use-package 'use-package))
+    (elpaca use-package
+        (require 'use-package)))
 
-(require 'use-package)
+(elpaca elpaca-use-package
+    (elpaca-use-package-mode))
+(elpaca-wait)
 
+(use-package hydra
+    :elpaca t)
 (use-package use-package-hydra
-    :straight t)
+    :elpaca t
+    :demand t)
+(elpaca-wait)
 
 (set-language-environment 'utf-8)
 (setq locale-coding-system 'utf-8)
@@ -76,7 +108,7 @@
     (savehist-mode))
 
 (use-package gcmh
-    :straight t
+    :elpaca t
     :init
     (setq gcmh-verbose t
           gcmh-low-cons-threshold (* 8 1024 1024))
@@ -84,7 +116,7 @@
     (gcmh-mode t))
 
 (use-package no-littering
-    :straight t
+    :elpaca t
     :after savehist
     :init
     (setq no-littering-etc-directory
@@ -127,24 +159,24 @@
     (global-tab-line-mode t))
 
 (use-package doom-modeline
-    :straight t
+    :elpaca t
     :init
     (setq doom-modeline-height 24
           doom-modeline-minor-modes t)
-    :hook (after-init . doom-modeline-mode))
+    (doom-modeline-mode))
 
 (use-package minions
-    :straight t
+    :elpaca t
     :config
     (minions-mode t))
 
 (use-package nyan-mode
-    :straight t
+    :elpaca t
     :config
     (nyan-mode))
 
 (use-package dashboard
-    :straight t
+    :elpaca t
     :after (nerd-icons)
     :init
     (setq dashboard-display-icons-p t
@@ -183,7 +215,7 @@
 (global-visual-line-mode t)
 
 (use-package pulsar
-    :straight t
+    :elpaca t
     :init
     (setq pulsar-pulse t
           pulsar-delay 0.055
@@ -229,7 +261,7 @@
     (pulsar-global-mode t))
 
 (use-package dimmer
-    :straight t
+    :elpaca t
     :init
     (setq dimmer-fraction 0.6
           dimmer-watch-frame-focus-events nil)
@@ -240,7 +272,6 @@
     (dimmer-mode t))
 
 (use-package framemove
-    :straight t
     :after (hydra)
     :bind ("<f6>" . hydra-wind/body)
     :hydra (hydra-wind ()
@@ -253,11 +284,11 @@
     (setq framemove-hook-into-windmove t))
 
 (use-package ace-window
-    :straight t
+    :elpaca t
     :bind (("M-o" . ace-window)))
 
 (use-package treemacs
-    :straight t
+    :elpaca t
     :defer t
     :bind (("M-0"       . treemacs-select-window)
            ("C-x t 1"   . treemacs-delete-other-windows)
@@ -279,17 +310,17 @@
          (treemacs-git-mode 'simple))))
 
 (use-package treemacs-magit
-    :straight t
+    :elpaca t
     :after (treemacs magit))
 
 (use-package treemacs-nerd-icons
-    :straight t
+    :elpaca t
     :after (treemacs nerd-icons)
     :config
     (treemacs-load-theme "nerd-icons"))
 
 (use-package ef-themes
-    :straight t
+    :elpaca t
     :init
     (mapc #'disable-theme custom-enabled-themes)
     :config
@@ -313,7 +344,7 @@
 
 (unless (version< emacs-version "28.1")
     (use-package ligature
-        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+        :elpaca (ligature :type git :host github :repo "mickeynp/ligature.el")
         :config
         (ligature-set-ligatures
          'prog-mode
@@ -356,34 +387,34 @@
         (global-ligature-mode t)))
 
 (use-package nerd-icons
-    :straight t)
+    :elpaca t)
 
 (use-package nerd-icons-completion
-    :straight t
+    :elpaca t
     :defer 1
     :after (marginalia)
     :config
     (nerd-icons-completion-mode t))
 
 (use-package nerd-icons-dired
-    :straight t
+    :elpaca t
     :hook
     (dired-mode . nerd-icons-dired-mode))
 
 (use-package marginalia
-    :straight t
+    :elpaca t
     :init
     (marginalia-mode))
 
 (use-package which-key
-    :straight t
+    :elpaca t
     :init
     (setq which-key-idle-delay 1)
     :config
     (which-key-mode))
 
 (use-package helpful
-    :straight t
+    :elpaca t
     :bind (([remap describe-function] . helpful-callable)
            ("<f1> f" . helpful-callable)
            ([remap describe-variable] . helpful-variable)
@@ -407,9 +438,6 @@
 (when (>= emacs-major-version 29)
     (pixel-scroll-precision-mode))
 
-(use-package hydra
-    :straight t)
-
 (define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
 
 (define-key global-map (kbd "C-=") #'(lambda ()
@@ -425,7 +453,7 @@
 (define-key global-map (kbd "C-_") nil)
 
 (use-package reverse-im
-    :straight t
+    :elpaca t
     :init
     (setq reverse-im-input-methods '("russian-computer"))
     :config
@@ -438,7 +466,7 @@
 
 (when init/evil
     (use-package evil
-        :straight t
+        :elpaca t
         :init
         (setq evil-want-integration t
               evil-want-keybinding nil
@@ -456,7 +484,7 @@
         (evil-set-initial-state 'dashboard-mode 'normal))
 
     (use-package evil-collection
-        :straight t
+        :elpaca t
         :after evil
         :config
         (evil-collection-init)))
@@ -478,7 +506,7 @@
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
 (use-package highlight-indent-guides
-    :straight t
+    :elpaca t
     :if ensure/isWindows
     :hook (prog-mode . highlight-indent-guides-mode)
     :init
@@ -486,7 +514,7 @@
           highlight-indent-guides-responsive 'top))
 
 (use-package undo-tree
-    :straight t
+    :elpaca t
     :bind (("C-z" . undo-tree-undo)
            ("C-S-z" . undo-tree-redo)
            :map cua--cua-keys-keymap
@@ -503,7 +531,7 @@
 (show-paren-mode t)
 
 (use-package rainbow-delimiters
-    :straight t
+    :elpaca t
     :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
 
 (unless init/evil
@@ -521,7 +549,7 @@
 
 (when init/evil
     (use-package evil-nerd-commenter
-        :straight t
+        :elpaca t
         :after evil
         :config
         (evilnc-default-hotkeys)))
@@ -546,13 +574,13 @@
                 (call-interactively #'vr/query-replace))))
 
     (use-package visual-regexp
-        :straight t
+        :elpaca t
         :bind (("M-%" . my/vr/replace)
                ("C-M-%" . my/vr/query-replace)
                ("C-c v m" . vr/mc-mark))))
 
 (use-package crux
-    :straight t
+    :elpaca t
     :bind (("C-c I" . crux-find-user-init-file)
            ("C-c d" . crux-duplicate-current-line-or-region)
            ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
@@ -560,7 +588,7 @@
            ("C-S-<return>" . crux-smart-open-line-above)))
 
 (use-package cape
-    :straight t
+    :elpaca t
     :config
     (add-to-list 'completion-at-point-functions #'cape-file t))
 
@@ -594,7 +622,7 @@
 
 (when init/lsp-mode
     (use-package lsp-mode
-        :straight t
+        :elpaca t
         :init
         (setq lsp-headerline-breadcrumb-icons-enable nil
               lsp-enable-file-watchers nil
@@ -610,11 +638,11 @@
             (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)))
 
     (use-package lsp-ui
-        :straight t))
+        :elpaca t))
 
 (unless init/lsp-mode
     (when (< emacs-major-version 29)
-        (straight-use-package 'eglot))
+        (elpaca eglot))
     (use-package eglot
         :hook (eglot-managed-mode . (lambda ()
                                         (progn
@@ -631,7 +659,7 @@
 
 (when init/corfu
     (use-package corfu
-        :straight (:files (:defaults "extensions/*"))
+        :elpaca (:files (:defaults "extensions/*"))
         :bind (:map corfu-map
                     ("TAB" . corfu-next)
                     ([tab] . corfu-next)
@@ -648,7 +676,7 @@
         (global-corfu-mode))
 
     (use-package kind-icon
-        :straight t
+        :elpaca t
         :after (corfu nerd-icons)
         :init
         (setq kind-icon-default-face 'corfu-default)
@@ -657,7 +685,7 @@
 
 (unless init/corfu
     (use-package company
-        :straight t
+        :elpaca t
         :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
                :map company-active-map
                ("RET". company-complete-selection)
@@ -665,7 +693,6 @@
                ("<tab>" . company-complete-common-or-cycle)
                ("ESC" . company-abort)
                ("<esc>" . company-abort))
-        :hook (after-init . global-company-mode)
         :init
         (setq company-backends '((company-capf))
               company-selection-wrap-around t
@@ -674,15 +701,16 @@
               company-tooltip-align-annotations t
               company-transformers '(delete-consecutive-dups
                                      company-sort-by-occurrence
-                                     company-sort-prefer-same-case-prefix)))
+                                     company-sort-prefer-same-case-prefix))
+        (global-company-mode 1))
 
     (use-package company-box
-        :straight t
+        :elpaca t
         :hook (company-mode . company-box-mode)))
 
 (when init/vertico
     (use-package vertico
-        :straight (:files (:defaults "extensions/*"))
+        :elpaca (:files (:defaults "extensions/*"))
         :hook ((minibuffer-setup . (lambda ()
                                        (setq completion-in-region-function
                                              (if vertico-mode
@@ -700,14 +728,14 @@
         :bind (("M-R" . vertico-repeat)))
 
     (use-package consult
-        :straight t
+        :elpaca t
         :bind (("C-x b" . consult-buffer)
                ("C-x C-b" . ibuffer)
                ("C-s" . consult-line)
                ("C-S-s" . consult-ripgrep)))
 
     (use-package embark
-        :straight t
+        :elpaca t
         :bind (("C-." . embark-act)
                ("C-;" . embark-dwim)
                ("C-h B" . embark-bindings))
@@ -715,12 +743,12 @@
         (setq prefix-help-command #'embark-prefix-help-command))
 
     (use-package embark-consult
-        :straight t
+        :elpaca t
         :after (embark consult)
         :hook (embark-collect-mode . consult-preview-at-point-mode))
 
     (use-package orderless
-        :straight t
+        :elpaca t
         :init
         (setq completion-styles '(orderless basic)
               completion-category-defaults nil
@@ -728,7 +756,7 @@
 
 (unless init/vertico
     (use-package counsel
-        :straight t
+        :elpaca t
         :config
         (ivy-mode t)
         :bind (("C-x b"   . ivy-switch-buffer)
@@ -750,7 +778,7 @@
               ivy-wrap t))
 
     (use-package ivy-rich
-        :straight t
+        :elpaca t
         :after (counsel)
         :init
         (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
@@ -758,12 +786,12 @@
         (ivy-rich-mode 1))
 
     (use-package nerd-icons-ivy-rich
-        :straight t
+        :elpaca t
         :init
         (nerd-icons-ivy-rich-mode 1)))
 
 (use-package yasnippet
-    :straight t
+    :elpaca t
     :bind (:map yas-minor-mode-map
                 ([(tab)] . nil)
                 ("TAB" . nil))
@@ -771,15 +799,15 @@
     (yas-global-mode 1))
 
 (use-package yasnippet-snippets
-    :straight t)
+    :elpaca t)
 
 (use-package consult-yasnippet
-    :straight t
+    :elpaca t
     :after (vertico)
     :bind ("<f7>" . consult-yasnippet))
 
 (use-package projectile
-    :straight t
+    :elpaca t
     :bind-keymap ("C-c p" . projectile-command-map)
     :init
     (setq projectile-completion-system 'default)
@@ -787,19 +815,19 @@
     (projectile-mode t))
 
 (use-package flycheck
-    :straight t
+    :elpaca t
     :config
     (global-flycheck-mode))
 
 (use-package magit
-    :straight t)
+    :elpaca t)
 
 (when (>= emacs-major-version 29)
     (setq major-mode-remap-alist
           '((python-mode . python-ts-mode))))
 
 (use-package markdown-mode
-    :straight t
+    :elpaca t
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode))
@@ -812,7 +840,7 @@
     (modify-syntax-entry ?> "." org-mode-syntax-table))
 
 (use-package org
-    :straight t
+    :elpaca t
     :hook ((org-mode . org-indent-mode)
            (org-mode . my/angle-brackets-fix))
     :init
@@ -842,22 +870,22 @@
         (add-to-list 'org-structure-template-alist '("tex" . "src tex"))))
 
 (use-package edit-indirect
-    :straight t)
+    :elpaca t)
 
 (use-package org-bullets
-    :straight t
+    :elpaca t
     :after org
     :hook (org-mode . org-bullets-mode)
     :init
     (setq org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 (use-package toc-org
-    :straight t
+    :elpaca t
     :after org
     :hook (org-mode . toc-org-mode))
 
 (use-package org-appear
-    :straight (org-appear :type git :host github :repo "awth13/org-appear")
+    :elpaca (org-appear :type git :host github :repo "awth13/org-appear")
     :after org
     :hook (org-mode . org-appear-mode)
     :init
@@ -865,11 +893,11 @@
           org-appear-autosubmarkers t))
 
 (use-package org-auto-tangle
-    :straight t
+    :elpaca t
     :hook (org-mode . org-auto-tangle-mode))
 
 (use-package ess
-    :straight t
+    :elpaca t
     :mode (("\\.R$" . ess-r-mode)
            ("\\.do$" . ess-stata-mode))
     :hook ((ess-r-mode . lsp/lsp)
@@ -910,7 +938,7 @@
 (defalias 'capf/python-ts-mode 'capf/python-mode)
 
 (use-package python
-    :straight lsp-pyright
+    :elpaca lsp-pyright
     :hook (((python-mode python-ts-mode) . lsp/lsp)
            ((python-mode python-ts-mode) . (lambda ()
                                                (setq-local fill-column 80)
@@ -922,7 +950,7 @@
     :hook (js-mode . lsp/lsp))
 
 (use-package lua-mode
-    :straight t
+    :elpaca t
     :mode "\\.lua$"
     :init
     (setq lua-indent-level 4))
@@ -1082,14 +1110,17 @@ to the LaTeX table."
             (my/unprotect-inner-amps))))
 
 (use-package company-reftex
-    :straight t)
+    :elpaca t
+    :after auctex)
 (use-package company-auctex
-    :straight t)
+    :elpaca t
+    :after auctex)
 (use-package company-math
-    :straight t)
+    :elpaca t
+    :after auctex)
 
-(use-package LaTeX
-    :straight auctex
+(use-package latex
+    :elpaca auctex
     :hook ((LaTeX-mode . lsp/lsp)
            (LaTeX-mode . auctex/extra-commands)
            (LaTeX-mode . turn-on-reftex))
