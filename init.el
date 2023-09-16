@@ -1,3 +1,5 @@
+;; init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
+
 (defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
 
@@ -9,11 +11,6 @@
 
 (defconst init/evil nil
     "To be evil or not.")
-
-(defconst ensure/is64
-    (not (null
-          (string-match "^x86_64-.*" system-configuration)))
-    "Equals t if Emacs works on 64-bit system.")
 
 (defconst ensure/isWindows
     (memq system-type '(cygwin windows-nt ms-dos))

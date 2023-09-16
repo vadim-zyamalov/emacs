@@ -10,8 +10,9 @@
 
 * Содержание :toc:github:
 - [[#важно][Важно!]]
+- [[#файл-раннего-запуска][Файл раннего запуска]]
 - [[#константы][Константы]]
-- [[#базовые-файлы][Базовые файлы]]
+- [[#пакетный-менеджер][Пакетный менеджер]]
 - [[#настройки-use-package][Настройки =use-package=]]
 - [[#общие-настройки][Общие настройки]]
   - [[#сохранение-истории-команд-и-позиций][Сохранение истории команд и позиций]]
@@ -62,9 +63,79 @@
 pacman -S mingw-w64-i686-libgccjit
 #+end_src
 
+* Файл раннего запуска
+
+Данный файл загружается *до* основной инициализации Emacs.
+
+#+begin_src emacs-lisp :tangle early-init.el
+;; early-init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
+#+end_src
+
+#+begin_src emacs-lisp
+;; init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
+#+end_src
+
+Расширяем горизонты возможного... Увеличиваем порог срабатывания сборщика мусора для ускорения запуска Emacs.
+
+#+begin_src emacs-lisp :tangle early-init.el
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
+#+end_src
+
+Также для ускорения запуска советуют очищать =file-name-handler-alist= --- список регулярных выражений, предназначенных для определения и специальной обработки некоторых типов файлов.
+
+#+begin_src emacs-lisp :tangle early-init.el
+(defvar file-name-handler-alist-original file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook (lambda ()
+                                  (setq gc-cons-threshold (* 8 1024 1024))
+                                  (setq file-name-handler-alist file-name-handler-alist-original)
+                                  (makunbound 'file-name-handler-alist-original)))
+#+end_src
+
+Переопределение некоторых стандартных папок.
+
+#+begin_src emacs-lisp :tangle early-init.el
+(setq user-emacs-directory
+      (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/")))
+
+(setq native-comp-eln-load-path
+      `(,(expand-file-name "eln-cache/" (or (getenv "XDG_CACHE_HOME") "~/.cache/"))))
+
+(push (expand-file-name "modules/" (file-name-directory user-init-file))
+      load-path)
+
+(setq custom-file
+      (expand-file-name "custom.el" user-emacs-directory))
+#+end_src
+
+Отключение не нужных элементов интерфейса. Чем раньше это сделать --- тем лучше, не будет тратиься время на их загрузку.
+
+#+begin_src emacs-lisp :tangle early-init.el
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+
+(setq visible-bell t
+      ring-bell-function 'ignore
+      inhibit-splash-screen t
+      inhibit-startup-message t
+      use-dialog-box nil)
+#+end_src
+
+Отключение встроенного менеджера пакетов =package.el=.
+
+#+begin_src emacs-lisp :tangle early-init.el
+(setq package-enable-at-startup nil
+      package-quickstart nil)
+
+(setq native-comp-speed -1)
+(setq straight-check-for-modifications '(check-on-save find-when-checking))
+#+end_src
+
 * Константы
 
-Организуем вспомогательные константы, показывающие факт запуска =Emacs= в Windows или в 64-битной системе. Они нужны будут в дальнейшем для условной установки пакетов.
+Организуем вспомогательные константы, показывающие факт запуска Emacs в Windows или в 64-битной системе. Они нужны будут в дальнейшем для условной установки пакетов.
 
 #+begin_src emacs-lisp
 (defconst init/lsp-mode t
@@ -79,17 +150,14 @@ pacman -S mingw-w64-i686-libgccjit
 (defconst init/evil nil
     "To be evil or not.")
 
-(defconst ensure/is64
-    (not (null
-          (string-match "^x86_64-.*" system-configuration)))
-    "Equals t if Emacs works on 64-bit system.")
-
 (defconst ensure/isWindows
     (memq system-type '(cygwin windows-nt ms-dos))
     "Equals t if Emacs works on Windows host system.")
 #+end_src
 
-* Базовые файлы
+* Пакетный менеджер
+
+При помощи данного кода загружается и активируется пакетный менеджер [[https://github.com/radian-software/straight.el][straight.el]].
 
 #+begin_src emacs-lisp
 (defvar bootstrap-version)
