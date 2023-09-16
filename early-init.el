@@ -1,9 +1,5 @@
 ;; early-init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
 
-;;; Commentary:
-;; Файл с настройками, применяемыми на раннем этапе, т. е. до основной инициализации.
-
-;;; Code:
 (setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 0.6)
 
@@ -26,8 +22,6 @@
 (setq custom-file
       (expand-file-name "custom.el" user-emacs-directory))
 
-
-;; Настройки UI
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
@@ -38,12 +32,8 @@
       inhibit-startup-message t
       use-dialog-box nil)
 
-
-;; Управление пакетами
 (setq package-enable-at-startup nil
       package-quickstart nil)
 
 (setq native-comp-speed -1)
 (setq straight-check-for-modifications '(check-on-save find-when-checking))
-
-;;; early-init.el ends here
