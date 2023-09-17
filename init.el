@@ -3,10 +3,10 @@
 (defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
 
-(defconst init/corfu t
+(defconst init/corfu nil
     "Use corfu for buffer completion.")
 
-(defconst init/vertico t
+(defconst init/vertico nil
     "Use vertico for minibuffer completion.")
 
 (defconst init/evil nil
@@ -138,9 +138,15 @@ See `advice-add' for more details."
 
 (setq-default cursor-type 'bar)
 
-(setup (:straight ef-themes)
-    (mapc #'disable-theme custom-enabled-themes)
-    (load-theme 'ef-autumn :no-confirm))
+(setup (:straight doom-themes
+                  solaire-mode)
+    (:option doom-themes-enable-bold t
+             doom-themes-enable-italic t)
+    (doom-themes-visual-bell-config)
+    (doom-themes-neotree-config)
+    (doom-themes-org-config)
+    (load-theme 'doom-palenight t)
+    (solaire-global-mode t))
 
 (cond ((find-font (font-spec :name "JetBrains Mono"))
        (set-face-attribute 'default
@@ -442,12 +448,11 @@ See `advice-add' for more details."
 
 (setup (:straight highlight-indent-guides)
     (:option highlight-indent-guides-method 'character
-             highlight-indent-guides-responsive 'top
-             highlight-indent-guides-auto-enabled nil)
+             highlight-indent-guides-responsive 'top)
     (:require highlight-indent-guides)
-    (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-    (set-face-background 'highlight-indent-guides-even-face "darkgray")
-    (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+    ;; (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+    ;; (set-face-background 'highlight-indent-guides-even-face "darkgray")
+    ;; (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
     (:hook-into prog-mode))
 
 (setup (:straight undo-tree)
@@ -581,7 +586,7 @@ See `advice-add' for more details."
                            (lsp/non-greedy-lsp-mode)
                            (lsp/extra-capf)))))))
 
-(unless init/corfu
+(unless init/lsp-mode
     (setup (:straight eglot)
         (:bind "C-c l r" eglot-rename
                "C-c l o" eglot-code-action-organize-imports
@@ -672,6 +677,8 @@ See `advice-add' for more details."
 
 (unless init/vertico
     (setup (:straight ivy
+                      ivy-rich
+                      nerd-icons-ivy-rich
                       swiper
                       counsel
                       smex)
@@ -691,19 +698,23 @@ See `advice-add' for more details."
                  "C-c v" ivy-push-view
                  "C-c V" ivy-pop-view
                  "M-R" ivy-resume)
-        (ivy-mode t)))
+        (ivy-mode t)
 
-(setup (:straight yasnippet)
+        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+        (ivy-rich-mode 1)
+
+        (nerd-icons-ivy-rich-mode 1)))
+
+(setup (:straight yasnippet
+                  yasnippet-snippets
+                  consult-yasnippet)
     (:option yas-snippet-dirs (append yas-snippet-dirs
                                       '("~/.emacs.d/snippets")))
     (:bind-into yas-minor-mode-map
         "<tab>" nil
         "TAB" nil)
-    (yas-global-mode 1))
+    (yas-global-mode 1)
 
-(setup (:straight yasnippet-snippets))
-
-(setup (:straight consult-yasnippet)
     (:global "<f7>" consult-yasnippet))
 
 (setup (:straight projectile)
@@ -773,8 +784,7 @@ See `advice-add' for more details."
            org-appear-mode
            org-auto-tangle-mode))
 
-(setup (:straight ess
-                  poly-R)
+(setup (:straight ess)
     (:option polymode-lsp-integration nil)
     (setq display-buffer-alist
           (append `(("^\\*R Dired"
@@ -828,7 +838,12 @@ See `advice-add' for more details."
     (:hook lsp/lsp
            (lambda ()
                (setq-local fill-column 80)
-               (display-fill-column-indicator-mode))))
+               (display-fill-column-indicator-mode)))
+    (:with-mode python-ts-mode
+        (:hook lsp/lsp
+               (lambda ()
+                   (setq-local fill-column 80)
+                   (display-fill-column-indicator-mode)))))
 
 (setup js
     (:file-match "\\.js.R$")

@@ -141,10 +141,10 @@ pacman -S mingw-w64-i686-libgccjit
 (defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
 
-(defconst init/corfu t
+(defconst init/corfu nil
     "Use corfu for buffer completion.")
 
-(defconst init/vertico t
+(defconst init/vertico nil
     "Use vertico for minibuffer completion.")
 
 (defconst init/evil nil
@@ -397,9 +397,9 @@ Emacs настроен на изменение размера фрейма (ок
 
 *** Темы
 
-До этого я пользовался Doom Palenight из [[https://github.com/doomemacs/themes][набора тем]] для DoomEmacs.
+Один из наборов тем, которыми я пользуюсь, является Doom Palenight из [[https://github.com/doomemacs/themes][набора тем]] для DoomEmacs.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (setup (:straight doom-themes
                   solaire-mode)
     (:option doom-themes-enable-bold t
@@ -424,7 +424,7 @@ Emacs настроен на изменение размера фрейма (ок
 
 И еще тестирую [[https://protesilaos.com/emacs/ef-themes][Ef-themes]] от автора тем [[https://protesilaos.com/emacs/modus-themes][Modus]].
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (setup (:straight ef-themes)
     (mapc #'disable-theme custom-enabled-themes)
     (load-theme 'ef-autumn :no-confirm))
@@ -988,12 +988,11 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (setup (:straight highlight-indent-guides)
     (:option highlight-indent-guides-method 'character
-             highlight-indent-guides-responsive 'top
-             highlight-indent-guides-auto-enabled nil)
+             highlight-indent-guides-responsive 'top)
     (:require highlight-indent-guides)
-    (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-    (set-face-background 'highlight-indent-guides-even-face "darkgray")
-    (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+    ;; (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+    ;; (set-face-background 'highlight-indent-guides-even-face "darkgray")
+    ;; (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
     (:hook-into prog-mode))
 #+end_src
 
@@ -1241,7 +1240,7 @@ Vim умеет красиво отображать номер текущей с�
                            (lsp/non-greedy-lsp-mode)
                            (lsp/extra-capf)))))))
 
-(unless init/corfu
+(unless init/lsp-mode
     (setup (:straight eglot)
         (:bind "C-c l r" eglot-rename
                "C-c l o" eglot-code-action-organize-imports
@@ -1391,6 +1390,8 @@ Vim умеет красиво отображать номер текущей с�
 #+begin_src emacs-lisp
 (unless init/vertico
     (setup (:straight ivy
+                      ivy-rich
+                      nerd-icons-ivy-rich
                       swiper
                       counsel
                       smex)
@@ -1410,7 +1411,12 @@ Vim умеет красиво отображать номер текущей с�
                  "C-c v" ivy-push-view
                  "C-c V" ivy-pop-view
                  "M-R" ivy-resume)
-        (ivy-mode t)))
+        (ivy-mode t)
+
+        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+        (ivy-rich-mode 1)
+
+        (nerd-icons-ivy-rich-mode 1)))
 #+end_src
 
 ** Сниппеты
@@ -1424,17 +1430,16 @@ Vim умеет красиво отображать номер текущей с�
 | =<f7>=  | global | consult-yasnippet | Меню шаблонов |
 
 #+begin_src emacs-lisp
-(setup (:straight yasnippet)
+(setup (:straight yasnippet
+                  yasnippet-snippets
+                  consult-yasnippet)
     (:option yas-snippet-dirs (append yas-snippet-dirs
                                       '("~/.emacs.d/snippets")))
     (:bind-into yas-minor-mode-map
         "<tab>" nil
         "TAB" nil)
-    (yas-global-mode 1))
+    (yas-global-mode 1)
 
-(setup (:straight yasnippet-snippets))
-
-(setup (:straight consult-yasnippet)
     (:global "<f7>" consult-yasnippet))
 #+end_src
 
@@ -1544,8 +1549,7 @@ Magit --- пакет для работы с git внутри Emacs.
 ** ESS
 
 #+begin_src emacs-lisp
-(setup (:straight ess
-                  poly-R)
+(setup (:straight ess)
     (:option polymode-lsp-integration nil)
     (setq display-buffer-alist
           (append `(("^\\*R Dired"
@@ -1611,7 +1615,12 @@ Magit --- пакет для работы с git внутри Emacs.
     (:hook lsp/lsp
            (lambda ()
                (setq-local fill-column 80)
-               (display-fill-column-indicator-mode))))
+               (display-fill-column-indicator-mode)))
+    (:with-mode python-ts-mode
+        (:hook lsp/lsp
+               (lambda ()
+                   (setq-local fill-column 80)
+                   (display-fill-column-indicator-mode)))))
 #+end_src
 
 ** JS
