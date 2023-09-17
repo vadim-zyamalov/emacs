@@ -29,13 +29,54 @@
             (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
 
-(when (< emacs-major-version 29)
-    (straight-use-package 'use-package))
+(straight-use-package '(setup :type git :host nil :repo "https://git.sr.ht/~pkal/setup"))
+(require 'setup)
 
-(require 'use-package)
+(setup-define :straight
+    (lambda (recipe)
+        `(unless (straight-use-package ',recipe)
+             ,(setup-quit)))
+    :documentation "Install RECIPE with `straight-use-package'.
+This macro can be used as HEAD, and will replace itself with the
+first RECIPE's package."
+    :repeatable t
+    :shorthand (lambda (sexp)
+                   (let ((recipe (cadr sexp)))
+                       (if (consp recipe)
+                               (car recipe)
+                           recipe))))
 
-(use-package use-package-hydra
-    :straight t)
+(setup-define :eval-after
+    (lambda (features &rest body)
+        (let ((body `(progn ,@body))
+              (features (if (listp features)
+                                features
+                            (list features))))
+            (dolist (feature (nreverse features))
+                (setq body `(with-eval-after-load ',feature ,body)))
+            body))
+    :documentation "Evaluate BODY after FEATURES are loaded."
+    :indent 1)
+
+(setup-define :advice
+    (lambda (symbol where function)
+        `(advice-add ',symbol ,where ,(setup-ensure-function function)))
+    :documentation "Add a piece of advice on a function.
+See `advice-add' for more details."
+    :after-loaded t
+    :debug '(sexp sexp function-form)
+    :repeatable t)
+
+(setup-define :with-local-quit
+    (lambda (&rest body)
+        `(catch ',(setup-get 'quit)
+             ,@body))
+    :documentation "Prevent any reason to abort from leaving beyond BODY."
+    :debug '(setup))
+
+(setup-define :quit
+    #'setup-quit
+    :documentation "Unconditionally abort the evaluation of the current body.")
 
 (set-language-environment 'utf-8)
 (setq locale-coding-system 'utf-8)
@@ -52,42 +93,24 @@
 
 (setq vc-follow-symlinks t)
 
-(use-package saveplace
-    :init
-    (setq save-place-file (expand-file-name
-                           (format "%s/var/%s"
-                                   user-emacs-directory
-                                   "save-place.el")))
-    :config
-    (save-place-mode 1))
+(setup saveplace
+    (:option save-place-file (expand-file-name
+                              (format "%s/var/%s"
+                                      user-emacs-directory
+                                      "save-place.el")))
+    (save-place-mode t))
 
-(use-package savehist
-    :init
-    (setq savehist-file (expand-file-name
-                    (format "%s/data/%s"
-                            user-emacs-directory
-                            "savehist.el")))
-    :config
-    (setq history-delete-duplicates t
-          history-length 25)
-    (savehist-mode))
+(setup savehist
+    (:option history-delete-duplicates t
+             savehist-file (expand-file-name
+                            (format "%s/var/%s"
+                                    user-emacs-directory
+                                    "savehist.el")))
+    (savehist-mode t))
 
-(use-package gcmh
-    :straight t
-    :init
-    (setq gcmh-verbose t
-          gcmh-low-cons-threshold (* 8 1024 1024))
-    :config
-    (gcmh-mode t))
-
-(use-package no-littering
-    :straight t
-    :after savehist
-    :init
-    (setq no-littering-etc-directory
-          (expand-file-name "config/" user-emacs-directory))
-    (setq no-littering-var-directory
-          (expand-file-name "data/" user-emacs-directory)))
+(setup (:straight no-littering)
+    (setq auto-save-file-name-transforms
+          `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (setq create-lockfiles nil)
 
@@ -105,9 +128,8 @@
 (unless ensure/isWindows
     (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p))
 
-(use-package dired
-    :init
-    (setq dired-recursive-deletes 'top))
+(setup dired
+    (:option dired-recursive-deletes 'top))
 
 (setq frame-resize-pixelwise t)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -116,180 +138,8 @@
 
 (setq-default cursor-type 'bar)
 
-(use-package tab-line
-    :demand t
-    :bind (("M-<left>" . previous-buffer)
-           ("M-<right>" . next-buffer))
-    :config
-    (global-tab-line-mode t))
-
-(use-package doom-modeline
-    :straight t
-    :init
-    (setq doom-modeline-height 24
-          doom-modeline-minor-modes t)
-    :hook (after-init . doom-modeline-mode))
-
-(use-package minions
-    :straight t
-    :config
-    (minions-mode t))
-
-(use-package nyan-mode
-    :straight t
-    :config
-    (nyan-mode))
-
-(use-package dashboard
-    :straight t
-    :after (nerd-icons)
-    :init
-    (setq dashboard-display-icons-p t
-          dashboard-icon-type 'nerd-icons
-          dashboard-set-heading-icons t
-          dashboard-set-file-icons t
-          dashboard-items '((recents . 15)
-                            (projects . 5))
-          dashboard-startup-banner (expand-file-name
-                                    "emacs.png"
-                                    (file-name-directory user-init-file))
-          dashboard-set-navigator t
-          dashboard-navigator-buttons
-          `((
-             (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
-              "Настройки"
-              "Открыть файл с настройками (init.el)"
-              (lambda (&rest _)
-                  (find-file (concat (file-name-directory user-init-file) "init.org"))))
-             (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
-              "dotfiles"
-              "Github с конфигурационными файлами"
-              (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
-             (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
-              "emacs"
-              "Github с настройками Emacs"
-              (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
-             )))
-    :config
-    (dashboard-setup-startup-hook))
-
-(setq display-line-numbers-type 'relative)
-(global-display-line-numbers-mode)
-
-(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
-(global-visual-line-mode t)
-
-(use-package pulsar
-    :straight t
-    :init
-    (setq pulsar-pulse t
-          pulsar-delay 0.055
-          pulsar-pulse-functions '(recenter-top-bottom
-                                   move-to-window-line-top-bottom
-                                   reposition-window
-                                   bookmark-jump
-                                   other-window
-                                   delete-window
-                                   delete-other-windows
-                                   forward-page
-                                   backward-page
-                                   scroll-up-command
-                                   scroll-down-command
-                                   windmove-right
-                                   windmove-left
-                                   windmove-up
-                                   windmove-down
-                                   windmove-swap-states-right
-                                   windmove-swap-states-left
-                                   windmove-swap-states-up
-                                   windmove-swap-states-down
-                                   tab-new
-                                   tab-close
-                                   tab-next
-                                   org-next-visible-heading
-                                   org-previous-visible-heading
-                                   org-forward-heading-same-level
-                                   org-backward-heading-same-level
-                                   outline-backward-same-level
-                                   outline-forward-same-level
-                                   outline-next-visible-heading
-                                   outline-previous-visible-heading
-                                   outline-up-heading
-                                   ctrlf-forward-default
-                                   ctrlf-backward-default
-                                   ctrlf-forward-alternate
-                                   ctrlf-backward-alternate
-                                   ctrlf-forward-symbol
-                                   ctrlf-forward-symbol-at-point
-                                   consult-line))
-    :config
-    (pulsar-global-mode t))
-
-(use-package dimmer
-    :straight t
-    :init
-    (setq dimmer-fraction 0.6
-          dimmer-watch-frame-focus-events nil)
-    :config
-    (dimmer-configure-which-key)
-    (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
-    (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu-popupinfo\\*.*$")
-    (dimmer-mode t))
-
-(use-package framemove
-    :straight t
-    :after (hydra)
-    :bind ("<f6>" . hydra-wind/body)
-    :hydra (hydra-wind ()
-                       "Moving between windows."
-                       ("<left>"  windmove-left  "left")
-                       ("<right>" windmove-right "right")
-                       ("<up>"    windmove-up    "up")
-                       ("<down>"  windmove-down  "down"))
-    :init
-    (setq framemove-hook-into-windmove t))
-
-(use-package ace-window
-    :straight t
-    :bind (("M-o" . ace-window)))
-
-(use-package treemacs
-    :straight t
-    :defer t
-    :bind (("M-0"       . treemacs-select-window)
-           ("C-x t 1"   . treemacs-delete-other-windows)
-           ("C-x t t"   . treemacs)
-           ("C-x t d"   . treemacs-select-directory)
-           ("C-x t B"   . treemacs-bookmark)
-           ("C-x t C-t" . treemacs-find-file)
-           ("C-x t M-t" . treemacs-find-tag))
-    :config
-    (treemacs-fringe-indicator-mode 'always)
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-project-follow-mode t)
-    (pcase (cons (not (null (executable-find "git")))
-                 (not (null treemacs-python-executable)))
-        (`(t . t)
-         (treemacs-git-mode 'deferred))
-        (`(t . _)
-         (treemacs-git-mode 'simple))))
-
-(use-package treemacs-magit
-    :straight t
-    :after (treemacs magit))
-
-(use-package treemacs-nerd-icons
-    :straight t
-    :after (treemacs nerd-icons)
-    :config
-    (treemacs-load-theme "nerd-icons"))
-
-(use-package ef-themes
-    :straight t
-    :init
+(setup (:straight ef-themes)
     (mapc #'disable-theme custom-enabled-themes)
-    :config
     (load-theme 'ef-autumn :no-confirm))
 
 (cond ((find-font (font-spec :name "JetBrains Mono"))
@@ -309,85 +159,200 @@
                            :height 120)))
 
 (unless (version< emacs-version "28.1")
-    (use-package ligature
-        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
-        :config
-        (ligature-set-ligatures
-         'prog-mode
-         (pcase (face-attribute 'default :family)
-             ("JetBrains Mono"
-              '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-                "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-                "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-                "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-                "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-                "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-                ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-                "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-                "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-                "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-                "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-             ((or "Fira Code" "Cascadia Code")
-              '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
-                ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
-                "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
-                "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
-                "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
-                "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
-                "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
-                "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
-                ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
-                "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
-                "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
-                "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
-                "\\\\" "://"))
-             ("Iosevka"
-              '("<---" "<--"  "<<-" "<-" "->" "-->" "--->"
-                "<->" "<-->" "<--->" "<---->" "<!--" "<==" "<==="
-                "<=" "=>" "=>>" "==>" "===>" ">=" "<=>"
-                "<==>" "<===>" "<====>" "<!---" "<~~" "<~" "~>"
-                "~~>" "::" ":::" "==" "!=" "===" "!=="
-                ":=" ":-" ":+" "<*" "<*>" "*>" "<|"
-                "<|>" "|>" "+:" "-:" "=:" "<******>" "++"
-                "+++"))))
+    (setup (:straight ligature)
+        (ligature-set-ligatures 'prog-mode (pcase (face-attribute 'default :family)
+                                               ("JetBrains Mono" '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+                                                                   "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                                                                   "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                                                                   "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                                                                   "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                                                                   "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                                                                   ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                                                                   "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                                                                   "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                                                                   "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                                                                   "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+                                               ((or "Fira Code" "Cascadia Code") '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+                                                                                   ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                                                                                   "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                                                                                   "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                                                                                   "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                                                                                   "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                                                                                   "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                                                                                   "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                                                                                   ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                                                                                   "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                                                                                   "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                                                                                   "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                                                                                   "\\\\" "://"))
+                                               ("Iosevka" '("<---" "<--"  "<<-" "<-" "->" "-->" "--->"
+                                                            "<->" "<-->" "<--->" "<---->" "<!--" "<==" "<==="
+                                                            "<=" "=>" "=>>" "==>" "===>" ">=" "<=>"
+                                                            "<==>" "<===>" "<====>" "<!---" "<~~" "<~" "~>"
+                                                            "~~>" "::" ":::" "==" "!=" "===" "!=="
+                                                            ":=" ":-" ":+" "<*" "<*>" "*>" "<|"
+                                                            "<|>" "|>" "+:" "-:" "=:" "<******>" "++"
+                                                            "+++"))))
         (global-ligature-mode t)))
 
-(use-package nerd-icons
-    :straight t)
+(setup (:straight nerd-icons
+                  nerd-icons-completion
+                  nerd-icons-dired)
+    (:with-mode dired-mode
+        (:hook nerd-icons-dired-mode))
+    (nerd-icons-completion-mode))
 
-(use-package nerd-icons-completion
-    :straight t
-    :after marginalia
-    :config
-    (nerd-icons-completion-mode)
-    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+(setup tab-line
+    (:global "M-<left>" previous-buffer
+             "M-<right>" next-buffer)
+    (global-tab-line-mode t))
 
-(use-package nerd-icons-dired
-    :straight t
-    :hook
-    (dired-mode . nerd-icons-dired-mode))
+(setup (:straight doom-modeline)
+    (:option doom-modeline-height 24
+             doom-modeline-minor-modes t)
+    (:with-hook after-init-hook
+        (:hook doom-modeline-mode)))
 
-(use-package marginalia
-    :straight t
-    :init
+(setup (:straight minions)
+    (minions-mode t))
+
+(setup (:straight nyan-mode)
+    (nyan-mode))
+
+(setup (:straight dashboard)
+    (:also-load nerd-icons)
+    (:option dashboard-display-icons-p t
+             dashboard-icon-type 'nerd-icons
+             dashboard-set-heading-icons t
+             dashboard-set-file-icons t
+             dashboard-items '((recents . 15)
+                               (projects . 5))
+             dashboard-startup-banner (expand-file-name
+                                       "emacs.png"
+                                       (file-name-directory user-init-file))
+             dashboard-set-navigator t
+             dashboard-navigator-buttons
+             `((
+                (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
+                 "Настройки"
+                 "Открыть файл с настройками (init.el)"
+                 (lambda (&rest _)
+                     (find-file (concat (file-name-directory user-init-file) "init.org"))))
+                (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
+                 "dotfiles"
+                 "Github с конфигурационными файлами"
+                 (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/dotfiles")))
+                (,(nerd-icons-faicon "nf-fa-github" :height 1.0 :v-adjust 0.0)
+                 "emacs"
+                 "Github с настройками Emacs"
+                 (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
+                )))
+    (dashboard-setup-startup-hook))
+
+(setq display-line-numbers-type 'relative)
+(global-display-line-numbers-mode)
+
+(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
+(global-visual-line-mode t)
+
+(setup (:straight pulsar)
+    (:option pulsar-pulse t
+             pulsar-delay 0.055
+             pulsar-pulse-functions '(recenter-top-bottom
+                                      move-to-window-line-top-bottom
+                                      reposition-window
+                                      bookmark-jump
+                                      other-window
+                                      delete-window
+                                      delete-other-windows
+                                      forward-page
+                                      backward-page
+                                      scroll-up-command
+                                      scroll-down-command
+                                      windmove-right
+                                      windmove-left
+                                      windmove-up
+                                      windmove-down
+                                      windmove-swap-states-right
+                                      windmove-swap-states-left
+                                      windmove-swap-states-up
+                                      windmove-swap-states-down
+                                      tab-new
+                                      tab-close
+                                      tab-next
+                                      org-next-visible-heading
+                                      org-previous-visible-heading
+                                      org-forward-heading-same-level
+                                      org-backward-heading-same-level
+                                      outline-backward-same-level
+                                      outline-forward-same-level
+                                      outline-next-visible-heading
+                                      outline-previous-visible-heading
+                                      outline-up-heading
+                                      ctrlf-forward-default
+                                      ctrlf-backward-default
+                                      ctrlf-forward-alternate
+                                      ctrlf-backward-alternate
+                                      ctrlf-forward-symbol
+                                      ctrlf-forward-symbol-at-point
+                                      consult-line))
+    (pulsar-global-mode t))
+
+(setup (:straight dimmer)
+    (:option dimmer-fraction 0.6
+             dimmer-watch-frame-focus-events nil)
+    (dimmer-configure-which-key)
+    (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu\\*.*$")
+    (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu-popupinfo\\*.*$")
+    (dimmer-mode t))
+
+(setup (:straight ace-window)
+    (:global "M-o" ace-window))
+
+(setup (:straight treemacs
+                  treemacs-magit
+                  treemacs-nerd-icons)
+    (:option treemacs-python-executable "python")
+    (:require treemacs
+              treemacs-magit
+              treemacs-nerd-icons)
+    (treemacs-fringe-indicator-mode 'always)
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-project-follow-mode t)
+    (treemacs-load-theme "nerd-icons")
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+        (`(t . t)
+         (treemacs-git-mode 'deferred))
+        (`(t . _)
+         (treemacs-git-mode 'simple)))
+    (:global "M-0"       treemacs-select-window
+             "C-x t 1"   treemacs-delete-other-windows
+             "C-x t t"   treemacs
+             "C-x t d"   treemacs-select-directory
+             "C-x t B"   treemacs-bookmark
+             "C-x t C-t" treemacs-find-file
+             "C-x t M-t" treemacs-find-tag))
+
+(setup (:straight marginalia)
+    (:eval-after all-the-icons-completion
+        (:hook all-the-icons-completion-marginalia-setup))
+    (:eval-after nerd-icons-completion
+        (:hook nerd-icons-completion-marginalia-setup))
     (marginalia-mode))
 
-(use-package which-key
-    :straight t
-    :init
-    (setq which-key-idle-delay 1)
-    :config
+(setup (:straight which-key)
+    (:option which-key-idle-delay 1)
     (which-key-mode))
 
-(use-package helpful
-    :straight t
-    :bind (([remap describe-function] . helpful-callable)
-           ("<f1> f" . helpful-callable)
-           ([remap describe-variable] . helpful-variable)
-           ("<f1> v" . helpful-variable)
-           ([remap describe-key] . helpful-key)
-           ("C-h F" . helpful-function)
-           ("C-h C" . helpful-command)))
+(setup (:straight helpful)
+    (:global [remap describe-function] helpful-callable
+             "<f1> f" helpful-callable
+             [remap describe-variable] helpful-variable
+             "<f1> v" helpful-variable
+             [remap describe-key] helpful-key
+             "C-h C" helpful-command))
 
 (setq mouse-wheel-scroll-amount '(1
                                   ((shift) . 5)
@@ -404,8 +369,8 @@
 (when (>= emacs-major-version 29)
     (pixel-scroll-precision-mode))
 
-(use-package hydra
-    :straight t)
+(setup (:straight hydra)
+       (require 'hydra))
 
 (define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
 
@@ -421,42 +386,43 @@
 
 (define-key global-map (kbd "C-_") nil)
 
-(use-package reverse-im
-    :straight t
-    :init
-    (setq reverse-im-input-methods '("russian-computer"))
-    :config
+(setup (:straight reverse-im)
+    (:option reverse-im-input-methods '("russian-computer"))
     (reverse-im-mode t))
 
 (unless init/evil
-    (setq cua-keep-region-after-copy t)
-    (cua-mode t)
-    (transient-mark-mode t))
+    (setup cua
+        (:option cua-keep-region-after-copy t)
+        (cua-mode t)
+        (transient-mark-mode t)))
 
 (when init/evil
-    (use-package evil
-        :straight t
-        :init
-        (setq evil-want-integration t
-              evil-want-keybinding nil
-              evil-want-C-u-scroll t
-              evil-want-C-i-jump nil
-              evil-undo-system 'undo-redo
-              evil-respect-visual-line-mode t)
-        :config
+    (setup (:straight evil
+                      evil-collection
+                      evil-surround
+                      evil-nerd-commenter
+                      evil-mc)
+        (:option evil-want-integration t
+                 evil-want-keybinding nil
+                 evil-want-C-u-scroll t
+                 evil-want-C-i-jump nil
+                 evil-undo-system 'undo-redo
+                 evil-respect-visual-line-mode t)
         (evil-mode 1)
-
         (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
         (evil-global-set-key 'motion "j" 'evil-next-visual-line)
         (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
         (evil-set-initial-state 'messages-buffer-mode 'normal)
-        (evil-set-initial-state 'dashboard-mode 'normal))
+        (evil-set-initial-state 'dashboard-mode 'normal)
 
-    (use-package evil-collection
-        :straight t
-        :after evil
-        :config
-        (evil-collection-init)))
+        (global-evil-surround-mode 1)
+        (evil-collection-init)
+        (evilnc-default-hotkeys)
+
+        (evil-define-key 'visual evil-mc-key-map
+                         "A" #'evil-mc-make-cursor-in-visual-selection-end
+                         "I" #'evil-mc-make-cursor-in-visual-selection-beg)
+        (global-evil-mc-mode 1)))
 
 (delete-selection-mode t)
 
@@ -474,34 +440,46 @@
 
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
-(use-package highlight-indent-guides
-    :straight t
-    :if ensure/isWindows
-    :hook (prog-mode . highlight-indent-guides-mode)
-    :init
-    (setq highlight-indent-guides-method 'character
-          highlight-indent-guides-responsive 'top))
+(setup (:straight highlight-indent-guides)
+    (:option highlight-indent-guides-method 'character
+             highlight-indent-guides-responsive 'top
+             highlight-indent-guides-auto-enabled nil)
+    (:require highlight-indent-guides)
+    (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+    (set-face-background 'highlight-indent-guides-even-face "darkgray")
+    (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+    (:hook-into prog-mode))
 
-(use-package undo-tree
-    :straight t
-    :bind (("C-z" . undo-tree-undo)
-           ("C-S-z" . undo-tree-redo)
-           :map cua--cua-keys-keymap
-           ("C-z" . undo-tree-undo))
-    :init
-    (unbind-key "C-z" global-map)
-    (unbind-key "C-_" global-map)
-    (unbind-key "C-M-_" global-map)
-    (setq undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
-                                                              user-emacs-directory))))
-    :config
-    (global-undo-tree-mode))
+(setup (:straight undo-tree)
+    (global-undo-tree-mode)
+    (:with-map global-map
+        (:unbind "C-z"
+                 "C-_"
+                 "C-M-_"))
+    (:global "C-z" undo-tree-undo
+             "C-S-z" undo-tree-redo)
+    (:bind-into cua--cua-keys-keymap
+        "C-z" undo-tree-undo))
 
 (show-paren-mode t)
 
-(use-package rainbow-delimiters
-    :straight t
-    :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
+(setup (:straight rainbow-delimiters)
+    (:hook-into prog-mode org-mode))
+
+(unless init/evil
+    (setup (:straight smartparens)
+        (:require smartparens-config)
+        (:bind "C-c b r" sp-rewrap-sexp
+               "C-c b d" sp-splice-sexp)
+        (smartparens-global-mode t)
+        (sp-with-modes '(tex-mode
+                         latex-mode
+                         LaTeX-mode)
+                       (sp-local-pair "<<" ">>"
+                                      :unless '(sp-in-math-p)))))
+
+(when init/evil
+    (electric-pair-mode t))
 
 (unless init/evil
     (defun comment-or-uncomment-region-or-line ()
@@ -515,13 +493,6 @@
             (forward-line)))
 
     (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
-
-(when init/evil
-    (use-package evil-nerd-commenter
-        :straight t
-        :after evil
-        :config
-        (evilnc-default-hotkeys)))
 
 (unless init/evil
     (defun my/vr/replace ()
@@ -542,24 +513,30 @@
                 (goto-char (point-min))
                 (call-interactively #'vr/query-replace))))
 
-    (use-package visual-regexp
-        :straight t
-        :bind (("M-%" . my/vr/replace)
-               ("C-M-%" . my/vr/query-replace)
-               ("C-c v m" . vr/mc-mark))))
+    (setup (:straight visual-regexp)
+        (:require visual-regexp)
+        (:global "M-%" my/vr/replace
+                 "C-M-%" my/vr/query-replace
+                 "C-c v m" vr/mc-mark)))
 
-(use-package crux
-    :straight t
-    :bind (("C-c I" . crux-find-user-init-file)
-           ("C-c d" . crux-duplicate-current-line-or-region)
-           ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
-           ("S-<return>" . crux-smart-open-line)
-           ("C-S-<return>" . crux-smart-open-line-above)))
+(unless init/evil
+    (setup (:straight multiple-cursors)
+        (:option mc/match-cursor-style nil)
+        (:global "C-c m l" mc/edit-lines
+                 "C->" mc/mark-next-like-this
+                 "C-<" mc/mark-previous-like-this
+                 "C-c m a" mc/mark-all-like-this)))
 
-(use-package cape
-    :straight t
-    :config
-    (add-to-list 'completion-at-point-functions #'cape-file t))
+(setup (:straight crux)
+    (:require crux)
+    (:bind-into global-map
+        "C-c I" crux-find-user-init-file
+        "C-c d" crux-duplicate-current-line-or-region
+        "C-c M-d" crux-duplicate-and-comment-current-line-or-region
+        "S-<return>" crux-smart-open-line
+        "C-S-<return>" crux-smart-open-line-above))
+
+(setup (:straight cape))
 
 (defun lsp/lsp ()
     "Using an appropriate LSP-engine."
@@ -590,293 +567,215 @@
             (funcall (symbol-function tmp-symbol)))))
 
 (when init/lsp-mode
-    (use-package lsp-mode
-        :straight t
-        :init
-        (setq lsp-headerline-breadcrumb-icons-enable nil
-              lsp-enable-file-watchers nil
-              lsp-keymap-prefix "C-c l"
-              lsp-completion-provider :none)
-        :hook ((lsp-mode . lsp-enable-which-key-integration)
-               (lsp-completion-mode . (lambda ()
-                                          (progn
-                                              (lsp/non-greedy-lsp-mode)
-                                              (lsp/extra-capf)))))
-        :config
+    (setup (:straight lsp-mode)
+        (:option lsp-enable-file-watchers nil
+                 lsp-keymap-prefix "C-c l")
+        (unless init/corfu
+            (:option lsp-completion-provider :none))
         (with-eval-after-load 'lsp-mode
-            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)))
-
-    (use-package lsp-ui
-        :straight t))
-
-(unless init/lsp-mode
-    (when (< emacs-major-version 29)
-        (straight-use-package 'eglot))
-    (use-package eglot
-        :hook (eglot-managed-mode . (lambda ()
-                                        (progn
-                                            (lsp/non-greedy-eglot)
-                                            (lsp/extra-capf))))
-        :bind (:map eglot-mode-map
-                    ("C-c l r" . eglot-rename)
-                    ("C-c l o" . eglot-code-action-organize-imports)
-                    ("C-c l h" . eldoc)
-                    ("C-c l d" . xref-find-definitions))
-        :config
-        (add-to-list 'eglot-server-programs
-                     '(latex-mode . ("texlab")))))
-
-(when init/corfu
-    (use-package corfu
-        :straight (:files (:defaults "extensions/*"))
-        :bind (:map corfu-map
-                    ("TAB" . corfu-next)
-                    ([tab] . corfu-next)
-                    ("S-TAB" . corfu-previous)
-                    ([backtab] . corfu-previous))
-        :init
-        (setq corfu-auto nil
-              corfu-cycle t
-              corfu-preselect-first nil
-              corfu-preview-current 'insert
-              tab-always-indent 'complete
-              corfu-popupinfo-delay 0.2)
-        (corfu-popupinfo-mode)
-        (global-corfu-mode))
-
-    (use-package kind-icon
-        :straight t
-        :after (corfu nerd-icons)
-        :init
-        (setq kind-icon-default-face 'corfu-default)
-        :config
-        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
+            (define-key lsp-mode-map (kbd "C-c l") lsp-command-map))
+        (:hook lsp-enable-which-key-integration)
+        (:with-mode lsp-completion-mode
+            (:hook (lambda ()
+                       (progn
+                           (lsp/non-greedy-lsp-mode)
+                           (lsp/extra-capf)))))))
 
 (unless init/corfu
-    (use-package company
-        :straight t
-        :bind (([remap indent-for-tab-command] . company-indent-or-complete-common)
-               :map company-active-map
-               ("RET". company-complete-selection)
-               ("<return>". company-complete-selection)
-               ("<tab>" . company-complete-common-or-cycle)
-               ("ESC" . company-abort)
-               ("<esc>" . company-abort))
-        :hook (after-init . global-company-mode)
-        :init
-        (setq company-backends '((company-capf))
-              company-selection-wrap-around t
-              company-minimum-prefix-length 1
-              company-idle-delay nil
-              company-tooltip-align-annotations t
-              company-transformers '(delete-consecutive-dups
-                                     company-sort-by-occurrence
-                                     company-sort-prefer-same-case-prefix)))
+    (setup (:straight eglot)
+        (:bind "C-c l r" eglot-rename
+               "C-c l o" eglot-code-action-organize-imports
+               "C-c l h" eldoc
+               "C-c l d" xref-find-definitions)
+        (:eval-after eglot
+            (add-to-list 'eglot-server-programs
+                         '(latex-mode . ("texlab"))))
+        (:with-mode eglot-managed-mode
+            (:hook (lambda ()
+                       (progn
+                           (lsp/non-greedy-eglot)
+                           (lsp/extra-capf)))))))
 
-    (use-package company-box
-        :straight t
-        :hook (company-mode . company-box-mode)))
+(when init/corfu
+    (setup (:straight (corfu :files (:defaults "extensions/*")
+                             :includes (corfu-popupinfo))
+                      kind-icon)
+        (:option corfu-auto nil
+                 corfu-cycle t
+                 corfu-preselect-first nil
+                 corfu-preview-current 'insert
+                 tab-always-indent 'complete
+                 kind-icon-default-face 'corfu-default
+                 corfu-popupinfo-delay 0.2)
+        (:bind-into corfu-map
+            "TAB" corfu-next
+            [tab] corfu-next
+            "S-TAB" corfu-previous
+            [backtab] corfu-previous)
+        (corfu-popupinfo-mode)
+        (global-corfu-mode)
+        (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+        (add-to-list 'completion-at-point-functions #'cape-file t)))
+
+(unless init/corfu
+    (setup (:straight company
+                      company-box)
+        (:option tab-always-indent 'complete
+                 company-backends '((company-capf))
+                 company-selection-wrap-around t
+                 company-minimum-prefix-length 1
+                 company-idle-delay nil
+                 company-tooltip-align-annotations t
+                 company-transformers '(delete-consecutive-dups
+                                        company-sort-by-occurrence
+                                        company-sort-prefer-same-case-prefix))
+        (:global [remap indent-for-tab-command] company-indent-or-complete-common)
+        (:bind-into company-active-map
+            "<tab>" company-complete-common-or-cycle)
+        (:hook company-box-mode)
+        (global-company-mode)))
 
 (when init/vertico
-    (use-package vertico
-        :straight (:files (:defaults "extensions/*"))
-        :hook ((minibuffer-setup . (lambda ()
-                                       (setq completion-in-region-function
-                                             (if vertico-mode
-                                                     #'consult-completion-in-region
-                                                 #'completion--in-region))))
-               (minibuffer-setup . vertico-repeat-save))
-        :init
-        (setq vertico-cycle t
-              vertico-mouse-mode t
-              vertico-count 8
-              vertico-count 8)
+    (setup (:straight (vertico :files (:defaults "extensions/*"))
+                      consult
+                      embark
+                      orderless)
         (add-to-list 'process-coding-system-alist
                      '("[rR][gG]" . (utf-8-dos . windows-1251-dos)))
+        (:option vertico-cycle t
+                 vertico-mouse-mode t
+                 vertico-count 8
+                 vertico-resize t
+                 prefix-help-command #'embark-prefix-help-command
+                 completion-styles '(orderless basic)
+                 completion-category-defaults nil
+                 completion-category-overrides '((file (styles basic partial-completion)))
+                 affe-regexp-compiler #'affe-orderless-regexp-compiler)
+        (:global "C-x b" consult-buffer
+                 "C-x C-b" ibuffer
+                 "C-." embark-act
+                 "C-;" embark-dwim
+                 "C-h B" embark-bindings
+                 "C-s" consult-line
+                 "C-S-s" consult-ripgrep
+                 "M-R" vertico-repeat)
+        (:with-hook minibuffer-setup-hook
+            (:hook (lambda ()
+                       (setq completion-in-region-function
+                             (if vertico-mode
+                                     #'consult-completion-in-region
+                                 #'completion--in-region)))
+                   vertico-repeat-save))
         (vertico-mode)
-        :bind (("M-R" . vertico-repeat)))
-
-    (use-package consult
-        :straight t
-        :bind (("C-x b" . consult-buffer)
-               ("C-x C-b" . ibuffer)
-               ("C-s" . consult-line)
-               ("C-S-s" . consult-ripgrep)))
-
-    (use-package embark
-        :straight t
-        :bind (("C-." . embark-act)
-               ("C-;" . embark-dwim)
-               ("C-h B" . embark-bindings))
-        :init
-        (setq prefix-help-command #'embark-prefix-help-command))
-
-    (use-package embark-consult
-        :straight t
-        :after (embark consult)
-        :hook (embark-collect-mode . consult-preview-at-point-mode))
-
-    (use-package orderless
-        :straight t
-        :init
-        (setq completion-styles '(orderless basic)
-              completion-category-defaults nil
-              completion-category-overrides '((file (styles basic partial-completion))))))
+        (:with-mode embark-collect-mode
+            (:hook consult-preview-at-point-mode))))
 
 (unless init/vertico
-    (use-package counsel
-        :straight t
-        :config
-        (ivy-mode t)
-        :bind (("C-x b"   . ivy-switch-buffer)
-               ("C-x C-b" . ibuffer)
-               ("C-c v"   . ivy-push-view)
-               ("C-c V"   . ivy-pop-view)
-               ("M-R"     . ivy-resume)
-               ("C-s"     . swiper-isearch)
-               ("M-x"     . counsel-M-x)
-               ("C-x C-f" . counsel-find-file)
-               ("M-y"     . counsel-yank-pop)
-               ("<f1> l"  . counsel-find-library)
-               ("<f2> i"  . counsel-info-lookup-symbol)
-               ("<f2> u"  . counsel-unicode-char)
-               ("<f2> j"  . counsel-set-variable))
-        :init
-        (setq ivy-use-virtual-buffers t
-              ivy-count-format "(%d/%d) "
-              ivy-wrap t))
+    (setup (:straight ivy
+                      swiper
+                      counsel
+                      smex)
+        (:option ivy-use-virtual-buffers t
+                 ivy-count-format "(%d/%d) "
+                 ivy-wrap t)
+        (:global "C-s" swiper-isearch
+                 "M-x" counsel-M-x
+                 "C-x C-f" counsel-find-file
+                 "M-y" counsel-yank-pop
+                 "<f1> l" counsel-find-library
+                 "<f2> i" counsel-info-lookup-symbol
+                 "<f2> u" counsel-unicode-char
+                 "<f2> j" counsel-set-variable
+                 "C-x b" ivy-switch-buffer
+                 "C-x C-b" ibuffer
+                 "C-c v" ivy-push-view
+                 "C-c V" ivy-pop-view
+                 "M-R" ivy-resume)
+        (ivy-mode t)))
 
-    (use-package ivy-rich
-        :straight t
-        :after (counsel)
-        :init
-        (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-        :config
-        (ivy-rich-mode 1))
-
-    (use-package nerd-icons-ivy-rich
-        :straight t
-        :init
-        (nerd-icons-ivy-rich-mode 1)))
-
-(use-package yasnippet
-    :straight t
-    :bind (:map yas-minor-mode-map
-                ([(tab)] . nil)
-                ("TAB" . nil))
-    :config
+(setup (:straight yasnippet)
+    (:option yas-snippet-dirs (append yas-snippet-dirs
+                                      '("~/.emacs.d/snippets")))
+    (:bind-into yas-minor-mode-map
+        "<tab>" nil
+        "TAB" nil)
     (yas-global-mode 1))
 
-(use-package yasnippet-snippets
-    :straight t)
+(setup (:straight yasnippet-snippets))
 
-(use-package consult-yasnippet
-    :straight t
-    :after (vertico)
-    :bind ("<f7>" . consult-yasnippet))
+(setup (:straight consult-yasnippet)
+    (:global "<f7>" consult-yasnippet))
 
-(use-package projectile
-    :straight t
-    :bind-keymap ("C-c p" . projectile-command-map)
-    :init
-    (setq projectile-completion-system 'default)
-    :config
+(setup (:straight projectile)
+    (:option projectile-completion-system 'default)
+    (:bind "C-c p" projectile-command-map)
     (projectile-mode t))
 
-(use-package flycheck
-    :straight t
-    :config
+(setup (:straight flycheck)
     (global-flycheck-mode))
 
-(use-package magit
-    :straight t)
+(setup (:straight magit)
+    (:require magit))
 
 (when (>= emacs-major-version 29)
     (setq major-mode-remap-alist
           '((python-mode . python-ts-mode))))
 
-(use-package markdown-mode
-    :straight t
-    :mode (("README\\.md\\'" . gfm-mode)
-           ("\\.md\\'" . markdown-mode)
-           ("\\.markdown\\'" . markdown-mode))
-    :init
-    (setq markdown-fontify-code-blocks-natively t
-          markdown-command "multimarkdown"))
+(setup (:straight markdown-mode)
+    (:with-mode gfm-mode
+        (:file-match "README\\.md\\'"))
+    (:with-mode markdown-mode
+        (:file-match "\\.md\\'"
+                     "\\.markdown\\'"))
+    (:option markdown-fontify-code-blocks-natively t
+             markdown-command "multimarkdown"))
 
 (defun my/angle-brackets-fix ()
     (modify-syntax-entry ?< "." org-mode-syntax-table)
     (modify-syntax-entry ?> "." org-mode-syntax-table))
 
-(use-package org
-    :straight t
-    :hook ((org-mode . org-indent-mode)
-           (org-mode . my/angle-brackets-fix))
-    :init
-    (setq org-edit-src-content-indentation 0
-          org-src-preserve-indentation nil
-          org-src-fontify-natively t
-          org-src-tab-acts-natively t
-          org-return-follows-link t
-          org-mouse-1-follows-link t
-          org-descriptive-links t
-          org-hide-emphasis-markers t
-          org-support-shift-select t)
-    :config
+(setup org
+    (:straight edit-indirect
+               org-bullets
+               toc-org
+               org-appear
+               org-auto-tangle)
+    (:option org-edit-src-content-indentation 0
+             org-src-preserve-indentation nil
+             org-src-fontify-natively t
+             org-src-tab-acts-natively t
+             org-return-follows-link t
+             org-mouse-1-follows-link t
+             org-descriptive-links t
+             org-hide-emphasis-markers t
+             org-support-shift-select t
+             org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")
+             org-appear-autolinks t
+             org-appear-autosubmarkers t)
+    (require 'org-tempo)
     (org-babel-do-load-languages
      'org-babel-load-languages '((emacs-lisp . t)
                                  (python . t)
                                  (lua . t)
                                  (haskell . t)
                                  (shell . t)))
-    (require 'org-tempo)
     (progn
         (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
         (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
         (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
         (add-to-list 'org-structure-template-alist '("lua" . "src lua"))
         (add-to-list 'org-structure-template-alist '("py" . "src python"))
-        (add-to-list 'org-structure-template-alist '("tex" . "src tex"))))
+        (add-to-list 'org-structure-template-alist '("tex" . "src tex")))
+    (:hook org-indent-mode
+           my/angle-brackets-fix
+           org-bullets-mode
+           toc-org-mode
+           org-appear-mode
+           org-auto-tangle-mode))
 
-(use-package edit-indirect
-    :straight t)
-
-(use-package org-bullets
-    :straight t
-    :after org
-    :hook (org-mode . org-bullets-mode)
-    :init
-    (setq org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
-
-(use-package toc-org
-    :straight t
-    :after org
-    :hook (org-mode . toc-org-mode))
-
-(use-package org-appear
-    :straight (org-appear :type git :host github :repo "awth13/org-appear")
-    :after org
-    :hook (org-mode . org-appear-mode)
-    :init
-    (setq org-appear-autolinks t
-          org-appear-autosubmarkers t))
-
-(use-package org-auto-tangle
-    :straight t
-    :hook (org-mode . org-auto-tangle-mode))
-
-(use-package ess
-    :straight t
-    :mode (("\\.R$" . ess-r-mode)
-           ("\\.do$" . ess-stata-mode))
-    :hook ((ess-r-mode . lsp/lsp)
-           (ess-r-post-run . ess-rdired)
-           ((ess-r-mode ess-stata-mode) . (lambda ()
-                                              (setq-local fill-column 80)
-                                              (display-fill-column-indicator-mode))))
-    :init
-    (unless (getenv "LC_ALL")
-        (setenv "LC_ALL" "ru_RU.UTF-8"))
+(setup (:straight ess
+                  poly-R)
+    (:option polymode-lsp-integration nil)
     (setq display-buffer-alist
           (append `(("^\\*R Dired"
                      (display-buffer-reuse-window display-buffer-in-side-window)
@@ -896,7 +795,23 @@
                      (slot . 1)
                      (window-width . 0.33)
                      (reusable-frames . nil)))
-                  display-buffer-alist)))
+                  display-buffer-alist))
+    (:with-mode ess-r-mode
+        (setq-local fill-column 80)
+        (:file-match "\\.R$")
+        (:hook lsp/lsp
+               (lambda ()
+                   (setq-local fill-column 80)
+                   (display-fill-column-indicator-mode)))
+        (:with-hook ess-r-post-run-hook
+            (:hook ess-rdired)))
+    (:with-mode ess-stata-mode
+        (:file-match "\\.do$")
+        (:hook (lambda ()
+                   (setq-local fill-column 80)
+                   (display-fill-column-indicator-mode)))))
+
+(setq python-python-command "python")
 
 (defun capf/python-mode ()
     "Extra CAPF for `python-mode'."
@@ -906,23 +821,22 @@
 
 (defalias 'capf/python-ts-mode 'capf/python-mode)
 
-(use-package python
-    :straight lsp-pyright
-    :hook (((python-mode python-ts-mode) . lsp/lsp)
-           ((python-mode python-ts-mode) . (lambda ()
-                                               (setq-local fill-column 80)
-                                               (setq python-shell-interpreter "python")
-                                               (display-fill-column-indicator-mode)))))
+(setup python
+    (:straight lsp-pyright)
+    (:option python-shell-interpreter "python"
+             eglot-ignored-server-capabilites '(:documentHighlightProvider :hoverProvider))
+    (:hook lsp/lsp
+           (lambda ()
+               (setq-local fill-column 80)
+               (display-fill-column-indicator-mode))))
 
-(use-package js
-    :mode "\\.js.R$"
-    :hook (js-mode . lsp/lsp))
+(setup js
+    (:file-match "\\.js.R$")
+    (:hook lsp/lsp))
 
-(use-package lua-mode
-    :straight t
-    :mode "\\.lua$"
-    :init
-    (setq lua-indent-level 4))
+(setup (:straight lua-mode)
+    (:file-match "\\.lua$")
+    (:option lua-indent-level 4))
 
 (defun capf/latex-mode ()
     "Extra CAPF for `LaTeX-mode'."
@@ -990,8 +904,7 @@
                                (line-end-position))
                        (region-end))))
             (set-mark beg)
-            (goto-char end)
-            (setq deactivate-mark nil))))
+            (goto-char end))))
 
 (defun my/region-expand-one-char ()
     "Add extra char to the end of region if possible."
@@ -1078,36 +991,32 @@ to the LaTeX table."
             (goto-char (point-min))
             (my/unprotect-inner-amps))))
 
-(use-package company-reftex
-    :straight t)
-(use-package company-auctex
-    :straight t)
-(use-package company-math
-    :straight t)
-
-(use-package LaTeX
-    :straight auctex
-    :hook ((LaTeX-mode . lsp/lsp)
-           (LaTeX-mode . auctex/extra-commands)
-           (LaTeX-mode . turn-on-reftex))
-    :init
-    (setq preview-pdf-color-adjust-method t
-          preview-auto-cache-preamble t
-          bibtex-dialect 'biblatex
-          reftex-cite-format '((?\C-m . "\\cite[]{%l}")
-                               (?a . "\\autocite[]{%l}")
-                               (?p . "\\parencite[]{%l}")
-                               (?f . "\\footcite[][]{%l}")
-                               (?t . "\\textcite[]{%l}")
-                               (?o . "\\citepr[]{%l}")
-                               (?F . "\\fullcite[]{%l}")
-                               (?n . "\\nocite{%l}"))
-          reftex-cite-prompt-optional-args t
-          LaTeX-reftex-cite-format-auto-activate nil
-          reftex-plug-into-AUCTeX t)
-    :config
-    (with-eval-after-load 'reftex
+(setup LaTeX
+    (:straight auctex
+               company-reftex
+               company-auctex
+               company-math)
+    (:option LaTeX-electric-left-right-brace t
+             preview-pdf-color-adjust-method t
+             preview-auto-cache-preamble t
+             bibtex-dialect 'biblatex
+             reftex-cite-format '((?\C-m . "\\cite[]{%l}")
+                                  (?a . "\\autocite[]{%l}")
+                                  (?p . "\\parencite[]{%l}")
+                                  (?f . "\\footcite[][]{%l}")
+                                  (?t . "\\textcite[]{%l}")
+                                  (?o . "\\citepr[]{%l}")
+                                  (?F . "\\fullcite[]{%l}")
+                                  (?n . "\\nocite{%l}"))
+             reftex-cite-prompt-optional-args t
+             LaTeX-reftex-cite-format-auto-activate nil
+             reftex-plug-into-AUCTeX t)
+    (:eval-after reftex
         (add-to-list 'reftex-section-levels
                      '("frametitle" . -2))
         (add-to-list 'reftex-section-levels
-                     '("framesubtitle" . -3))))
+                     '("framesubtitle" . -3)))
+    (:with-mode LaTeX-mode
+        (:hook lsp/lsp
+               auctex/extra-commands
+               turn-on-reftex)))
