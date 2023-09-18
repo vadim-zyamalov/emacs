@@ -640,10 +640,14 @@ See `advice-add' for more details."
                                         company-sort-by-occurrence
                                         company-sort-prefer-same-case-prefix))
         (:global [remap indent-for-tab-command] company-indent-or-complete-common)
-        (:bind-into company-active-map
-            "<tab>" company-complete-common-or-cycle)
+        (:with-map company-active-map
+            (:bind "RET"      company-complete-selection
+                   "<return>" company-complete-selection
+                   "<tab>"    company-complete-common-or-cycle
+                   "<escape>" company-abort))
         (:hook company-box-mode)
-        (global-company-mode)))
+        (:with-hook after-init-hook
+            (:hook global-company-mode))))
 
 (when init/vertico
     (setup (:straight (vertico :files (:defaults "extensions/*"))
