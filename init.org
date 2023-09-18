@@ -1059,7 +1059,7 @@ Vim умеет красиво отображать номер текущей с�
 | =C-c b d= | global | sp-splice-sexp | Удаление окружающих скобок |
 
 #+begin_src emacs-lisp :noweb
-(unless init/evil
+(unless (or init/evil (not init/corfu))
     (setup (:straight smartparens)
         (:require smartparens-config)
         (:bind "C-c b r" sp-rewrap-sexp
@@ -1071,7 +1071,7 @@ Vim умеет красиво отображать номер текущей с�
                        (sp-local-pair "<<" ">>"
                                       :unless '(sp-in-math-p)))))
 
-(when init/evil
+(when (or init/evil (not init/corfu))
     (electric-pair-mode t))
 #+end_src
 

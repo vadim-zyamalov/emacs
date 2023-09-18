@@ -476,7 +476,7 @@ See `advice-add' for more details."
 (setup (:straight rainbow-delimiters)
     (:hook-into prog-mode org-mode))
 
-(unless init/evil
+(unless (or init/evil (not init/corfu))
     (setup (:straight smartparens)
         (:require smartparens-config)
         (:bind "C-c b r" sp-rewrap-sexp
@@ -488,7 +488,7 @@ See `advice-add' for more details."
                        (sp-local-pair "<<" ">>"
                                       :unless '(sp-in-math-p)))))
 
-(when init/evil
+(when (or init/evil (not init/corfu))
     (electric-pair-mode t))
 
 (unless init/evil
