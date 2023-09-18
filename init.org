@@ -560,6 +560,8 @@ Emacs настроен на изменение размера фрейма (ок
 
 Красивый [[https://github.com/emacs-dashboard/emacs-dashboard][стартовый экран]]. Очень удобный, к слову. Показывает ссылки на последние файлы и проекты, плюс я вывел ссылки на файлы и репозиторий настроек Emacs.
 
+В качестве картинки использовал стикер с одной из IT-конференций, который был взят [[https://www.behance.net/gallery/35173039/Stickers-for-another-one-IT-conference-(DUMP2016)][тутъ]].
+
 #+begin_src emacs-lisp
 (setup (:straight dashboard)
     (:also-load nerd-icons)
@@ -570,7 +572,7 @@ Emacs настроен на изменение размера фрейма (ок
              dashboard-items '((recents . 15)
                                (projects . 5))
              dashboard-startup-banner (expand-file-name
-                                       "emacs.png"
+                                       "it-people.png"
                                        (file-name-directory user-init-file))
              dashboard-set-navigator t
              dashboard-navigator-buttons

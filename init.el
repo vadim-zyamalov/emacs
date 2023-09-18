@@ -234,7 +234,7 @@ See `advice-add' for more details."
              dashboard-items '((recents . 15)
                                (projects . 5))
              dashboard-startup-banner (expand-file-name
-                                       "emacs.png"
+                                       "it-people.png"
                                        (file-name-directory user-init-file))
              dashboard-set-navigator t
              dashboard-navigator-buttons
