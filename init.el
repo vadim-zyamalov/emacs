@@ -85,6 +85,82 @@ first RECIPE's package."
 (setq backup-directory-alist `(("." . "~/.saves"))
       backup-by-copying-when-linked t)
 
+(setq mouse-wheel-scroll-amount '(1
+                                  ((shift) . 5)
+                                  ((meta))
+                                  ((control) . text-scale))
+      mouse-wheel-progressive-speed nil)
+
+(setq auto-window-vscroll nil
+      fast-but-imprecise-scrolling t
+      scroll-conservatively 101
+      scroll-margin 0
+      scroll-preserve-screen-position t)
+
+(when (>= emacs-major-version 29)
+    (pixel-scroll-precision-mode))
+
+(setup (:straight hydra)
+    (:require hydra))
+
+(define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
+
+(define-key global-map (kbd "C-=") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-set 0)))
+(define-key global-map (kbd "C-+") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-increase 1.1)))
+(define-key global-map (kbd "C--") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-decrease 1.1)))
+
+(define-key global-map (kbd "C-_") nil)
+
+(setup (:straight reverse-im)
+    (:option reverse-im-input-methods '("russian-computer"))
+    (reverse-im-mode t))
+
+(unless init/evil
+    (setup cua
+        (:option cua-keep-region-after-copy t)
+        (cua-mode t)
+        (transient-mark-mode t)))
+
+(when init/evil
+    (setup (:straight evil
+                      evil-collection
+                      evil-surround
+                      evil-nerd-commenter
+                      evil-mc)
+        (:option evil-want-integration t
+                 evil-want-keybinding nil
+                 evil-want-C-u-scroll t
+                 evil-want-C-i-jump nil
+                 evil-undo-system 'undo-redo
+                 evil-respect-visual-line-mode t)
+        (evil-mode 1)
+        (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+        (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+        (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+        (evil-set-initial-state 'messages-buffer-mode 'normal)
+        (evil-set-initial-state 'dashboard-mode 'normal)
+
+        (global-evil-surround-mode 1)
+        (evil-collection-init)
+        (evilnc-default-hotkeys)
+
+        (evil-define-key 'visual evil-mc-key-map
+                         "A" #'evil-mc-make-cursor-in-visual-selection-end
+                         "I" #'evil-mc-make-cursor-in-visual-selection-beg)
+        (global-evil-mc-mode 1)))
+
+(delete-selection-mode t)
+
+(setq require-final-newline t)
+
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
 (add-hook 'before-save-hook
           (lambda ()
               (when buffer-file-name
@@ -98,6 +174,116 @@ first RECIPE's package."
 
 (setup dired
     (:option dired-recursive-deletes 'top))
+
+(setq-default indent-tabs-mode nil
+              tab-width 4
+              c-basic-offset 4
+              standart-indent 4
+              lisp-body-indent 4)
+
+(electric-indent-mode t)
+
+(define-key global-map (kbd "RET") 'newline-and-indent)
+
+(setup (:straight (indent-bars
+                   :type git
+                   :host github
+                   :repo "jdtsmith/indent-bars"))
+    (:option indent-bars-prefer-character t
+             indent-bars-treesit-support t
+             indent-bars-no-descend-string t
+             indent-bars-treesit-ignore-blank-lines-types '("module")
+             indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
+                                                list list_comprehension
+                                                dictionary dictionary_comprehension
+                                                parenthesized_expression subscript)))
+    (:hook-into prog-mode))
+
+(setup (:straight undo-tree)
+    (global-undo-tree-mode)
+    (:with-map global-map
+        (:unbind "C-z"
+                 "C-_"
+                 "C-M-_"))
+    (:global "C-z" undo-tree-undo
+             "C-S-z" undo-tree-redo)
+    (:bind-into cua--cua-keys-keymap
+        "C-z" undo-tree-undo))
+
+(show-paren-mode t)
+
+(setup (:straight rainbow-delimiters)
+    (:hook-into prog-mode org-mode))
+
+(unless (or init/evil (not init/corfu))
+    (setup (:straight smartparens)
+        (:require smartparens-config)
+        (:bind "C-c b r" sp-rewrap-sexp
+               "C-c b d" sp-splice-sexp)
+        (smartparens-global-mode t)
+        (sp-with-modes '(tex-mode
+                         latex-mode
+                         LaTeX-mode)
+                       (sp-local-pair "<<" ">>"
+                                      :unless '(sp-in-math-p)))))
+
+(when (or init/evil (not init/corfu))
+    (electric-pair-mode t))
+
+(unless init/evil
+    (defun comment-or-uncomment-region-or-line ()
+        "Comments or uncomments the region or the current line."
+        (interactive)
+        (let (beg end)
+            (if (region-active-p)
+                    (setq beg (region-beginning) end (region-end))
+                (setq beg (line-beginning-position) end (line-end-position)))
+            (comment-or-uncomment-region beg end)
+            (forward-line)))
+
+    (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
+
+(unless init/evil
+    (defun my/vr/replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/replace))))
+
+    (defun my/vr/query-replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/query-replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/query-replace))))
+
+    (setup (:straight visual-regexp)
+        (:require visual-regexp)
+        (:global "M-%" my/vr/replace
+                 "C-M-%" my/vr/query-replace
+                 "C-c v m" vr/mc-mark)))
+
+(unless init/evil
+    (setup (:straight multiple-cursors)
+        (:option mc/match-cursor-style nil)
+        (:global "C-c m l" mc/edit-lines
+                 "C->" mc/mark-next-like-this
+                 "C-<" mc/mark-previous-like-this
+                 "C-c m a" mc/mark-all-like-this)))
+
+(setup (:straight crux)
+    (:require crux)
+    (:bind-into global-map
+        "C-c I" crux-find-user-init-file
+        "C-c d" crux-duplicate-current-line-or-region
+        "C-c M-d" crux-duplicate-and-comment-current-line-or-region
+        "S-<return>" crux-smart-open-line
+        "C-S-<return>" crux-smart-open-line-above))
 
 (setq frame-resize-pixelwise t)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -280,6 +466,15 @@ first RECIPE's package."
     (add-to-list 'dimmer-buffer-exclusion-regexps "^.*\\*corfu-popupinfo\\*.*$")
     (dimmer-mode t))
 
+(setup (:straight framemove)
+    (:option framemove-hook-into-windmove t)
+    (defhydra hydra-wind (global-map "<f6>")
+        "Moving between windows"
+        ("<left>"  windmove-left  "left")
+        ("<right>" windmove-right "right")
+        ("<up>"    windmove-up    "up")
+        ("<down>"  windmove-down  "down")))
+
 (setup (:straight ace-window)
     (:global "M-o" ace-window))
 
@@ -310,9 +505,9 @@ first RECIPE's package."
              "C-x t M-t" treemacs-find-tag))
 
 (setup (:straight marginalia)
-    (:eval-after all-the-icons-completion
+    (with-eval-after-load 'all-the-icons-completion
         (:hook all-the-icons-completion-marginalia-setup))
-    (:eval-after nerd-icons-completion
+    (with-eval-after-load 'nerd-icons-completion
         (:hook nerd-icons-completion-marginalia-setup))
     (marginalia-mode))
 
@@ -327,192 +522,6 @@ first RECIPE's package."
              "<f1> v" helpful-variable
              [remap describe-key] helpful-key
              "C-h C" helpful-command))
-
-(setq mouse-wheel-scroll-amount '(1
-                                  ((shift) . 5)
-                                  ((meta))
-                                  ((control) . text-scale))
-      mouse-wheel-progressive-speed nil)
-
-(setq auto-window-vscroll nil
-      fast-but-imprecise-scrolling t
-      scroll-conservatively 101
-      scroll-margin 0
-      scroll-preserve-screen-position t)
-
-(when (>= emacs-major-version 29)
-    (pixel-scroll-precision-mode))
-
-(setup (:straight hydra)
-       (require 'hydra))
-
-(define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
-
-(define-key global-map (kbd "C-=") #'(lambda ()
-                                         (interactive)
-                                         (text-scale-set 0)))
-(define-key global-map (kbd "C-+") #'(lambda ()
-                                         (interactive)
-                                         (text-scale-increase 1.1)))
-(define-key global-map (kbd "C--") #'(lambda ()
-                                         (interactive)
-                                         (text-scale-decrease 1.1)))
-
-(define-key global-map (kbd "C-_") nil)
-
-(setup (:straight reverse-im)
-    (:option reverse-im-input-methods '("russian-computer"))
-    (reverse-im-mode t))
-
-(unless init/evil
-    (setup cua
-        (:option cua-keep-region-after-copy t)
-        (cua-mode t)
-        (transient-mark-mode t)))
-
-(when init/evil
-    (setup (:straight evil
-                      evil-collection
-                      evil-surround
-                      evil-nerd-commenter
-                      evil-mc)
-        (:option evil-want-integration t
-                 evil-want-keybinding nil
-                 evil-want-C-u-scroll t
-                 evil-want-C-i-jump nil
-                 evil-undo-system 'undo-redo
-                 evil-respect-visual-line-mode t)
-        (evil-mode 1)
-        (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-        (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-        (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-        (evil-set-initial-state 'messages-buffer-mode 'normal)
-        (evil-set-initial-state 'dashboard-mode 'normal)
-
-        (global-evil-surround-mode 1)
-        (evil-collection-init)
-        (evilnc-default-hotkeys)
-
-        (evil-define-key 'visual evil-mc-key-map
-                         "A" #'evil-mc-make-cursor-in-visual-selection-end
-                         "I" #'evil-mc-make-cursor-in-visual-selection-beg)
-        (global-evil-mc-mode 1)))
-
-(delete-selection-mode t)
-
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-(setq require-final-newline t)
-
-(setq-default indent-tabs-mode nil
-              tab-width 4
-              c-basic-offset 4
-              standart-indent 4
-              lisp-body-indent 4)
-
-(electric-indent-mode t)
-
-(define-key global-map (kbd "RET") 'newline-and-indent)
-
-(setup (:straight (indent-bars
-                   :type git
-                   :host github
-                   :repo "jdtsmith/indent-bars"))
-    (:option indent-bars-prefer-character t
-             indent-bars-treesit-support t
-             indent-bars-no-descend-string t
-             indent-bars-treesit-ignore-blank-lines-types '("module")
-             indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
-                                                list list_comprehension
-                                                dictionary dictionary_comprehension
-                                                parenthesized_expression subscript)))
-    (:hook-into prog-mode))
-
-(setup (:straight undo-tree)
-    (global-undo-tree-mode)
-    (:with-map global-map
-        (:unbind "C-z"
-                 "C-_"
-                 "C-M-_"))
-    (:global "C-z" undo-tree-undo
-             "C-S-z" undo-tree-redo)
-    (:bind-into cua--cua-keys-keymap
-        "C-z" undo-tree-undo))
-
-(show-paren-mode t)
-
-(setup (:straight rainbow-delimiters)
-    (:hook-into prog-mode org-mode))
-
-(unless (or init/evil (not init/corfu))
-    (setup (:straight smartparens)
-        (:require smartparens-config)
-        (:bind "C-c b r" sp-rewrap-sexp
-               "C-c b d" sp-splice-sexp)
-        (smartparens-global-mode t)
-        (sp-with-modes '(tex-mode
-                         latex-mode
-                         LaTeX-mode)
-                       (sp-local-pair "<<" ">>"
-                                      :unless '(sp-in-math-p)))))
-
-(when (or init/evil (not init/corfu))
-    (electric-pair-mode t))
-
-(unless init/evil
-    (defun comment-or-uncomment-region-or-line ()
-        "Comments or uncomments the region or the current line."
-        (interactive)
-        (let (beg end)
-            (if (region-active-p)
-                    (setq beg (region-beginning) end (region-end))
-                (setq beg (line-beginning-position) end (line-end-position)))
-            (comment-or-uncomment-region beg end)
-            (forward-line)))
-
-    (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
-
-(unless init/evil
-    (defun my/vr/replace ()
-        "Replace in whole buffer."
-        (interactive)
-        (if (region-active-p)
-                (call-interactively #'vr/replace)
-            (save-excursion
-                (goto-char (point-min))
-                (call-interactively #'vr/replace))))
-
-    (defun my/vr/query-replace ()
-        "Replace in whole buffer."
-        (interactive)
-        (if (region-active-p)
-                (call-interactively #'vr/query-replace)
-            (save-excursion
-                (goto-char (point-min))
-                (call-interactively #'vr/query-replace))))
-
-    (setup (:straight visual-regexp)
-        (:require visual-regexp)
-        (:global "M-%" my/vr/replace
-                 "C-M-%" my/vr/query-replace
-                 "C-c v m" vr/mc-mark)))
-
-(unless init/evil
-    (setup (:straight multiple-cursors)
-        (:option mc/match-cursor-style nil)
-        (:global "C-c m l" mc/edit-lines
-                 "C->" mc/mark-next-like-this
-                 "C-<" mc/mark-previous-like-this
-                 "C-c m a" mc/mark-all-like-this)))
-
-(setup (:straight crux)
-    (:require crux)
-    (:bind-into global-map
-        "C-c I" crux-find-user-init-file
-        "C-c d" crux-duplicate-current-line-or-region
-        "C-c M-d" crux-duplicate-and-comment-current-line-or-region
-        "S-<return>" crux-smart-open-line
-        "C-S-<return>" crux-smart-open-line-above))
 
 (setup (:straight cape))
 
@@ -565,7 +574,7 @@ first RECIPE's package."
                "C-c l o" eglot-code-action-organize-imports
                "C-c l h" eldoc
                "C-c l d" xref-find-definitions)
-        (:eval-after eglot
+        (with-eval-after-load 'eglot
             (add-to-list 'eglot-server-programs
                          '(latex-mode . ("texlab"))))
         (:with-mode eglot-managed-mode
@@ -1003,7 +1012,7 @@ to the LaTeX table."
              reftex-cite-prompt-optional-args t
              LaTeX-reftex-cite-format-auto-activate nil
              reftex-plug-into-AUCTeX t)
-    (:eval-after reftex
+    (with-eval-after-load 'reftex
         (add-to-list 'reftex-section-levels
                      '("frametitle" . -2))
         (add-to-list 'reftex-section-levels
