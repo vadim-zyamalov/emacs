@@ -446,13 +446,18 @@ See `advice-add' for more details."
 
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
-(setup (:straight highlight-indent-guides)
-    (:option highlight-indent-guides-method 'character
-             highlight-indent-guides-responsive 'top)
-    (:require highlight-indent-guides)
-    ;; (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-    ;; (set-face-background 'highlight-indent-guides-even-face "darkgray")
-    ;; (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+(setup (:straight (indent-bars
+                   :type git
+                   :host github
+                   :repo "jdtsmith/indent-bars"))
+    (:option indent-bars-prefer-character t
+             indent-bars-treesit-support t
+             indent-bars-no-descend-string t
+             indent-bars-treesit-ignore-blank-lines-types '("module")
+             indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
+                                                list list_comprehension
+                                                dictionary dictionary_comprehension
+                                                parenthesized_expression subscript)))
     (:hook-into prog-mode))
 
 (setup (:straight undo-tree)

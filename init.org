@@ -985,7 +985,7 @@ Vim умеет красиво отображать номер текущей с�
 
 Визуально показываем уровни отступа при помощи [[https://github.com/DarthFennec/highlight-indent-guides][highlight-indent-guides]].
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (setup (:straight highlight-indent-guides)
     (:option highlight-indent-guides-method 'character
              highlight-indent-guides-responsive 'top)
@@ -993,6 +993,24 @@ Vim умеет красиво отображать номер текущей с�
     ;; (set-face-background 'highlight-indent-guides-odd-face "darkgray")
     ;; (set-face-background 'highlight-indent-guides-even-face "darkgray")
     ;; (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+    (:hook-into prog-mode))
+#+end_src
+
+Либо при помощи [[https://github.com/jdtsmith/indent-bars][indent-bars]].
+
+#+begin_src emacs-lisp
+(setup (:straight (indent-bars
+                   :type git
+                   :host github
+                   :repo "jdtsmith/indent-bars"))
+    (:option indent-bars-prefer-character t
+             indent-bars-treesit-support t
+             indent-bars-no-descend-string t
+             indent-bars-treesit-ignore-blank-lines-types '("module")
+             indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
+                                                list list_comprehension
+                                                dictionary dictionary_comprehension
+                                                parenthesized_expression subscript)))
     (:hook-into prog-mode))
 #+end_src
 
