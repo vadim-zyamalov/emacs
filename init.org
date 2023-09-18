@@ -205,54 +205,6 @@ first RECIPE's package."
                            recipe))))
 #+end_src
 
-Следующий суб-макрос --- это мое творение, правда, основанное на нескольких других суб-макросах. Он делает так, чтобы некоторый код исполнялся строго после загрузки указанных пакетов.
-
-#+begin_src emacs-lisp
-(setup-define :eval-after
-    (lambda (features &rest body)
-        (let ((body `(progn ,@body))
-              (features (if (listp features)
-                                features
-                            (list features))))
-            (dolist (feature (nreverse features))
-                (setq body `(with-eval-after-load ',feature ,body)))
-            body))
-    :documentation "Evaluate BODY after FEATURES are loaded."
-    :indent 1)
-#+end_src
-
-Суб-макрос для модификации функций пр помощи =advice=.
-
-#+begin_src emacs-lisp
-(setup-define :advice
-    (lambda (symbol where function)
-        `(advice-add ',symbol ,where ,(setup-ensure-function function)))
-    :documentation "Add a piece of advice on a function.
-See `advice-add' for more details."
-    :after-loaded t
-    :debug '(sexp sexp function-form)
-    :repeatable t)
-#+end_src
-
-Следующий суб-макрос имеет крайне странное описание, из которого что-либо понять весьма затруднительно. На самом деле он ограничивает блок кода, в котором может быть инициирован выход из макроса. Обычно, такое событие приводит к завершению исполнения тела макроса. Суб-макрос же позволяет прекратить исполнение ограниченного кода, не прерывая исполнение всего тела макроса.
-
-#+begin_src emacs-lisp
-(setup-define :with-local-quit
-    (lambda (&rest body)
-        `(catch ',(setup-get 'quit)
-             ,@body))
-    :documentation "Prevent any reason to abort from leaving beyond BODY."
-    :debug '(setup))
-#+end_src
-
-И, наконец, суб-макрос, вызывающий безусловный выход из тела макроса (ну или из ограниченного блока кода).
-
-#+begin_src emacs-lisp
-(setup-define :quit
-    #'setup-quit
-    :documentation "Unconditionally abort the evaluation of the current body.")
-#+end_src
-
 * Общие настройки
 
 Заставляем Emacs использовать =utf-8= как стандартную кодовую таблицу.

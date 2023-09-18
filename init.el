@@ -46,38 +46,6 @@ first RECIPE's package."
                                (car recipe)
                            recipe))))
 
-(setup-define :eval-after
-    (lambda (features &rest body)
-        (let ((body `(progn ,@body))
-              (features (if (listp features)
-                                features
-                            (list features))))
-            (dolist (feature (nreverse features))
-                (setq body `(with-eval-after-load ',feature ,body)))
-            body))
-    :documentation "Evaluate BODY after FEATURES are loaded."
-    :indent 1)
-
-(setup-define :advice
-    (lambda (symbol where function)
-        `(advice-add ',symbol ,where ,(setup-ensure-function function)))
-    :documentation "Add a piece of advice on a function.
-See `advice-add' for more details."
-    :after-loaded t
-    :debug '(sexp sexp function-form)
-    :repeatable t)
-
-(setup-define :with-local-quit
-    (lambda (&rest body)
-        `(catch ',(setup-get 'quit)
-             ,@body))
-    :documentation "Prevent any reason to abort from leaving beyond BODY."
-    :debug '(setup))
-
-(setup-define :quit
-    #'setup-quit
-    :documentation "Unconditionally abort the evaluation of the current body.")
-
 (set-language-environment 'utf-8)
 (setq locale-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
