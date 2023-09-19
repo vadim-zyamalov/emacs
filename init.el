@@ -100,9 +100,6 @@ first RECIPE's package."
 (when (>= emacs-major-version 29)
     (pixel-scroll-precision-mode))
 
-(setup (:straight hydra)
-    (:require hydra))
-
 (define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
 
 (define-key global-map (kbd "C-=") #'(lambda ()
@@ -126,6 +123,9 @@ first RECIPE's package."
         (:option cua-keep-region-after-copy t)
         (cua-mode t)
         (transient-mark-mode t)))
+
+(setup (:straight hydra)
+    (:require hydra))
 
 (when init/evil
     (setup (:straight evil

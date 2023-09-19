@@ -309,13 +309,6 @@ Emacs по умолчанию требует длинные ответы на в
     (pixel-scroll-precision-mode))
 #+end_src
 
-[[https://github.com/abo-abo/hydra][Hydra]] позволяет снизить число нажатий клавиш при цепочке последовательных нажатий: достаточно ввести начальную комбинацию, затем ее можно опустить.
-
-#+begin_src emacs-lisp
-(setup (:straight hydra)
-    (:require hydra))
-#+end_src
-
 *** Клавиатура
 
 Используем клавишу =ESC= для прерывания всего и вся. Работает не так хорошо, как =C-g=, но тем не менее.
@@ -366,6 +359,13 @@ Emacs по умолчанию требует длинные ответы на в
         (:option cua-keep-region-after-copy t)
         (cua-mode t)
         (transient-mark-mode t)))
+#+end_src
+
+[[https://github.com/abo-abo/hydra][Hydra]] позволяет снизить число нажатий клавиш при цепочке последовательных нажатий: достаточно ввести начальную комбинацию, затем ее можно опустить.
+
+#+begin_src emacs-lisp
+(setup (:straight hydra)
+    (:require hydra))
 #+end_src
 
 *** Зло и коварство: Evil mode
