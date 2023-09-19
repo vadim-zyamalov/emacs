@@ -3,10 +3,10 @@
 (defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
 
-(defconst init/corfu t
+(defconst init/corfu nil
     "Use corfu for buffer completion.")
 
-(defconst init/vertico t
+(defconst init/vertico nil
     "Use vertico for minibuffer completion.")
 
 (defconst init/evil nil
@@ -72,14 +72,6 @@
           history-length 25)
     (savehist-mode))
 
-(use-package gcmh
-    :straight t
-    :init
-    (setq gcmh-verbose t
-          gcmh-low-cons-threshold (* 8 1024 1024))
-    :config
-    (gcmh-mode t))
-
 (use-package no-littering
     :straight t
     :after savehist
@@ -93,6 +85,81 @@
 
 (setq backup-directory-alist `(("." . "~/.saves"))
       backup-by-copying-when-linked t)
+
+(setq mouse-wheel-scroll-amount '(1
+                                  ((shift) . 5)
+                                  ((meta))
+                                  ((control) . text-scale))
+      mouse-wheel-progressive-speed nil)
+
+(setq auto-window-vscroll nil
+      fast-but-imprecise-scrolling t
+      scroll-conservatively 101
+      scroll-margin 0
+      scroll-preserve-screen-position t)
+
+(when (>= emacs-major-version 29)
+    (pixel-scroll-precision-mode))
+
+(define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
+
+(define-key global-map (kbd "C-=") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-set 0)))
+(define-key global-map (kbd "C-+") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-increase 1.1)))
+(define-key global-map (kbd "C--") #'(lambda ()
+                                         (interactive)
+                                         (text-scale-decrease 1.1)))
+
+(define-key global-map (kbd "C-_") nil)
+
+(use-package reverse-im
+    :straight t
+    :init
+    (setq reverse-im-input-methods '("russian-computer"))
+    :config
+    (reverse-im-mode t))
+
+(unless init/evil
+    (setq cua-keep-region-after-copy t)
+    (cua-mode t)
+    (transient-mark-mode t))
+
+(use-package hydra
+    :straight t)
+
+(when init/evil
+    (use-package evil
+        :straight t
+        :init
+        (setq evil-want-integration t
+              evil-want-keybinding nil
+              evil-want-C-u-scroll t
+              evil-want-C-i-jump nil
+              evil-undo-system 'undo-redo
+              evil-respect-visual-line-mode t)
+        :config
+        (evil-mode 1)
+
+        (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+        (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+        (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+        (evil-set-initial-state 'messages-buffer-mode 'normal)
+        (evil-set-initial-state 'dashboard-mode 'normal))
+
+    (use-package evil-collection
+        :straight t
+        :after evil
+        :config
+        (evil-collection-init)))
+
+(delete-selection-mode t)
+
+(setq require-final-newline t)
+
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 (add-hook 'before-save-hook
           (lambda ()
@@ -109,12 +176,203 @@
     :init
     (setq dired-recursive-deletes 'top))
 
+(setq-default indent-tabs-mode nil
+              tab-width 4
+              c-basic-offset 4
+              standart-indent 4
+              lisp-body-indent 4)
+
+(electric-indent-mode t)
+
+(define-key global-map (kbd "RET") 'newline-and-indent)
+
+(use-package indent-bars
+    :straight (indent-bars
+               :type git
+               :host github
+               :repo "jdtsmith/indent-bars")
+    :init
+    (setq indent-bars-prefer-character t
+          indent-bars-treesit-support t
+          indent-bars-no-descend-string t
+          indent-bars-treesit-ignore-blank-lines-types '("module")
+          indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
+                                             list list_comprehension
+                                             dictionary dictionary_comprehension
+                                             parenthesized_expression subscript)))
+    :hook (prog-mode . indent-bars-mode))
+
+(use-package undo-tree
+    :straight t
+    :bind (("C-z" . undo-tree-undo)
+           ("C-S-z" . undo-tree-redo)
+           :map cua--cua-keys-keymap
+           ("C-z" . undo-tree-undo))
+    :init
+    (unbind-key "C-z" global-map)
+    (unbind-key "C-_" global-map)
+    (unbind-key "C-M-_" global-map)
+    (setq undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
+                                                              user-emacs-directory))))
+    :config
+    (global-undo-tree-mode))
+
+(show-paren-mode t)
+
+(use-package rainbow-delimiters
+    :straight t
+    :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
+
+(unless init/evil
+    (defun comment-or-uncomment-region-or-line ()
+        "Comments or uncomments the region or the current line."
+        (interactive)
+        (let (beg end)
+            (if (region-active-p)
+                    (setq beg (region-beginning) end (region-end))
+                (setq beg (line-beginning-position) end (line-end-position)))
+            (comment-or-uncomment-region beg end)
+            (forward-line)))
+
+    (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
+
+(when init/evil
+    (use-package evil-nerd-commenter
+        :straight t
+        :after evil
+        :config
+        (evilnc-default-hotkeys)))
+
+(unless init/evil
+    (defun my/vr/replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/replace))))
+
+    (defun my/vr/query-replace ()
+        "Replace in whole buffer."
+        (interactive)
+        (if (region-active-p)
+                (call-interactively #'vr/query-replace)
+            (save-excursion
+                (goto-char (point-min))
+                (call-interactively #'vr/query-replace))))
+
+    (use-package visual-regexp
+        :straight t
+        :bind (("M-%" . my/vr/replace)
+               ("C-M-%" . my/vr/query-replace)
+               ("C-c v m" . vr/mc-mark))))
+
+(use-package crux
+    :straight t
+    :bind (("C-c I" . crux-find-user-init-file)
+           ("C-c d" . crux-duplicate-current-line-or-region)
+           ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
+           ("S-<return>" . crux-smart-open-line)
+           ("C-S-<return>" . crux-smart-open-line-above)))
+
 (setq frame-resize-pixelwise t)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (setq split-width-threshold 80)
 
 (setq-default cursor-type 'bar)
+
+(use-package doom-themes
+    :straight t
+    :init
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
+    :config
+    (doom-themes-visual-bell-config)
+    (doom-themes-neotree-config)
+    (doom-themes-org-config)
+    (load-theme 'doom-palenight t))
+
+(use-package solaire-mode
+    :straight t
+    :config
+    (solaire-global-mode t))
+
+(cond ((find-font (font-spec :name "JetBrains Mono"))
+       (set-face-attribute 'default
+                           nil
+                           :font "JetBrains Mono"
+                           :height 120))
+      ((find-font (font-spec :name "Iosevka"))
+       (set-face-attribute 'default
+                           nil
+                           :font "Iosevka"
+                           :height 120))
+      ((find-font (font-spec :name "Fira Code"))
+       (set-face-attribute 'default
+                           nil
+                           :font "Fira Code"
+                           :height 120)))
+
+(unless (version< emacs-version "28.1")
+    (use-package ligature
+        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+        :config
+        (ligature-set-ligatures
+         'prog-mode
+         (pcase (face-attribute 'default :family)
+             ("JetBrains Mono"
+              '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+                "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+             ((or "Fira Code" "Cascadia Code")
+              '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+                ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                "\\\\" "://"))
+             ("Iosevka"
+              '("<---" "<--"  "<<-" "<-" "->" "-->" "--->"
+                "<->" "<-->" "<--->" "<---->" "<!--" "<==" "<==="
+                "<=" "=>" "=>>" "==>" "===>" ">=" "<=>"
+                "<==>" "<===>" "<====>" "<!---" "<~~" "<~" "~>"
+                "~~>" "::" ":::" "==" "!=" "===" "!=="
+                ":=" ":-" ":+" "<*" "<*>" "*>" "<|"
+                "<|>" "|>" "+:" "-:" "=:" "<******>" "++"
+                "+++"))))
+        (global-ligature-mode t)))
+
+(use-package nerd-icons
+    :straight t)
+
+(use-package nerd-icons-completion
+    :straight t
+    :after marginalia
+    :config
+    (nerd-icons-completion-mode)
+    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+(use-package nerd-icons-dired
+    :straight t
+    :hook
+    (dired-mode . nerd-icons-dired-mode))
 
 (use-package tab-line
     :demand t
@@ -151,7 +409,7 @@
           dashboard-items '((recents . 15)
                             (projects . 5))
           dashboard-startup-banner (expand-file-name
-                                    "emacs.png"
+                                    "it-people.png"
                                     (file-name-directory user-init-file))
           dashboard-set-navigator t
           dashboard-navigator-buttons
@@ -285,88 +543,6 @@
     :config
     (treemacs-load-theme "nerd-icons"))
 
-(use-package ef-themes
-    :straight t
-    :init
-    (mapc #'disable-theme custom-enabled-themes)
-    :config
-    (load-theme 'ef-autumn :no-confirm))
-
-(cond ((find-font (font-spec :name "JetBrains Mono"))
-       (set-face-attribute 'default
-                           nil
-                           :font "JetBrains Mono"
-                           :height 120))
-      ((find-font (font-spec :name "Iosevka"))
-       (set-face-attribute 'default
-                           nil
-                           :font "Iosevka"
-                           :height 120))
-      ((find-font (font-spec :name "Fira Code"))
-       (set-face-attribute 'default
-                           nil
-                           :font "Fira Code"
-                           :height 120)))
-
-(unless (version< emacs-version "28.1")
-    (use-package ligature
-        :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
-        :config
-        (ligature-set-ligatures
-         'prog-mode
-         (pcase (face-attribute 'default :family)
-             ("JetBrains Mono"
-              '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-                "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-                "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-                "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-                "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-                "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-                ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-                "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-                "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-                "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-                "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-             ((or "Fira Code" "Cascadia Code")
-              '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
-                ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
-                "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
-                "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
-                "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
-                "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
-                "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
-                "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
-                ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
-                "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
-                "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
-                "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
-                "\\\\" "://"))
-             ("Iosevka"
-              '("<---" "<--"  "<<-" "<-" "->" "-->" "--->"
-                "<->" "<-->" "<--->" "<---->" "<!--" "<==" "<==="
-                "<=" "=>" "=>>" "==>" "===>" ">=" "<=>"
-                "<==>" "<===>" "<====>" "<!---" "<~~" "<~" "~>"
-                "~~>" "::" ":::" "==" "!=" "===" "!=="
-                ":=" ":-" ":+" "<*" "<*>" "*>" "<|"
-                "<|>" "|>" "+:" "-:" "=:" "<******>" "++"
-                "+++"))))
-        (global-ligature-mode t)))
-
-(use-package nerd-icons
-    :straight t)
-
-(use-package nerd-icons-completion
-    :straight t
-    :after marginalia
-    :config
-    (nerd-icons-completion-mode)
-    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
-
-(use-package nerd-icons-dired
-    :straight t
-    :hook
-    (dired-mode . nerd-icons-dired-mode))
-
 (use-package marginalia
     :straight t
     :init
@@ -388,173 +564,6 @@
            ([remap describe-key] . helpful-key)
            ("C-h F" . helpful-function)
            ("C-h C" . helpful-command)))
-
-(setq mouse-wheel-scroll-amount '(1
-                                  ((shift) . 5)
-                                  ((meta))
-                                  ((control) . text-scale))
-      mouse-wheel-progressive-speed nil)
-
-(setq auto-window-vscroll nil
-      fast-but-imprecise-scrolling t
-      scroll-conservatively 101
-      scroll-margin 0
-      scroll-preserve-screen-position t)
-
-(when (>= emacs-major-version 29)
-    (pixel-scroll-precision-mode))
-
-(use-package hydra
-    :straight t)
-
-(define-key global-map (kbd "<escape>") 'keyboard-escape-quit)
-
-(define-key global-map (kbd "C-=") #'(lambda ()
-                                         (interactive)
-                                         (text-scale-set 0)))
-(define-key global-map (kbd "C-+") #'(lambda ()
-                                         (interactive)
-                                         (text-scale-increase 1.1)))
-(define-key global-map (kbd "C--") #'(lambda ()
-                                         (interactive)
-                                         (text-scale-decrease 1.1)))
-
-(define-key global-map (kbd "C-_") nil)
-
-(use-package reverse-im
-    :straight t
-    :init
-    (setq reverse-im-input-methods '("russian-computer"))
-    :config
-    (reverse-im-mode t))
-
-(unless init/evil
-    (setq cua-keep-region-after-copy t)
-    (cua-mode t)
-    (transient-mark-mode t))
-
-(when init/evil
-    (use-package evil
-        :straight t
-        :init
-        (setq evil-want-integration t
-              evil-want-keybinding nil
-              evil-want-C-u-scroll t
-              evil-want-C-i-jump nil
-              evil-undo-system 'undo-redo
-              evil-respect-visual-line-mode t)
-        :config
-        (evil-mode 1)
-
-        (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-        (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-        (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-        (evil-set-initial-state 'messages-buffer-mode 'normal)
-        (evil-set-initial-state 'dashboard-mode 'normal))
-
-    (use-package evil-collection
-        :straight t
-        :after evil
-        :config
-        (evil-collection-init)))
-
-(delete-selection-mode t)
-
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-(setq require-final-newline t)
-
-(setq-default indent-tabs-mode nil
-              tab-width 4
-              c-basic-offset 4
-              standart-indent 4
-              lisp-body-indent 4)
-
-(electric-indent-mode t)
-
-(define-key global-map (kbd "RET") 'newline-and-indent)
-
-(use-package highlight-indent-guides
-    :straight t
-    :if ensure/isWindows
-    :hook (prog-mode . highlight-indent-guides-mode)
-    :init
-    (setq highlight-indent-guides-method 'character
-          highlight-indent-guides-responsive 'top))
-
-(use-package undo-tree
-    :straight t
-    :bind (("C-z" . undo-tree-undo)
-           ("C-S-z" . undo-tree-redo)
-           :map cua--cua-keys-keymap
-           ("C-z" . undo-tree-undo))
-    :init
-    (unbind-key "C-z" global-map)
-    (unbind-key "C-_" global-map)
-    (unbind-key "C-M-_" global-map)
-    (setq undo-tree-history-directory-alist `(("." . ,(format "%s/undo"
-                                                              user-emacs-directory))))
-    :config
-    (global-undo-tree-mode))
-
-(show-paren-mode t)
-
-(use-package rainbow-delimiters
-    :straight t
-    :hook ((prog-mode org-mode) . rainbow-delimiters-mode))
-
-(unless init/evil
-    (defun comment-or-uncomment-region-or-line ()
-        "Comments or uncomments the region or the current line."
-        (interactive)
-        (let (beg end)
-            (if (region-active-p)
-                    (setq beg (region-beginning) end (region-end))
-                (setq beg (line-beginning-position) end (line-end-position)))
-            (comment-or-uncomment-region beg end)
-            (forward-line)))
-
-    (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line))
-
-(when init/evil
-    (use-package evil-nerd-commenter
-        :straight t
-        :after evil
-        :config
-        (evilnc-default-hotkeys)))
-
-(unless init/evil
-    (defun my/vr/replace ()
-        "Replace in whole buffer."
-        (interactive)
-        (if (region-active-p)
-                (call-interactively #'vr/replace)
-            (save-excursion
-                (goto-char (point-min))
-                (call-interactively #'vr/replace))))
-
-    (defun my/vr/query-replace ()
-        "Replace in whole buffer."
-        (interactive)
-        (if (region-active-p)
-                (call-interactively #'vr/query-replace)
-            (save-excursion
-                (goto-char (point-min))
-                (call-interactively #'vr/query-replace))))
-
-    (use-package visual-regexp
-        :straight t
-        :bind (("M-%" . my/vr/replace)
-               ("C-M-%" . my/vr/query-replace)
-               ("C-c v m" . vr/mc-mark))))
-
-(use-package crux
-    :straight t
-    :bind (("C-c I" . crux-find-user-init-file)
-           ("C-c d" . crux-duplicate-current-line-or-region)
-           ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region)
-           ("S-<return>" . crux-smart-open-line)
-           ("C-S-<return>" . crux-smart-open-line-above)))
 
 (use-package cape
     :straight t
