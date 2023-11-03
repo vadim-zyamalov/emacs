@@ -5,10 +5,11 @@
 
 (defvar file-name-handler-alist-original file-name-handler-alist)
 (setq file-name-handler-alist nil)
-(add-hook 'emacs-startup-hook (lambda ()
-                                  (setq gc-cons-threshold (* 8 1024 1024))
-                                  (setq file-name-handler-alist file-name-handler-alist-original)
-                                  (makunbound 'file-name-handler-alist-original)))
+
+(add-hook 'after-init-hook #'(lambda ()
+                                 (setq gc-cons-threshold (* 8 1024 1024))
+                                 (setq file-name-handler-alist file-name-handler-alist-original)
+                                 (makunbound 'file-name-handler-alist-original)))
 
 (setq user-emacs-directory
       (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/")))

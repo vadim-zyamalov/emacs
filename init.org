@@ -61,10 +61,6 @@ pacman -S mingw-w64-i686-libgccjit
 ;; early-init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
 #+end_src
 
-#+begin_src emacs-lisp
-;; init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
-#+end_src
-
 Расширяем горизонты возможного... Увеличиваем порог срабатывания сборщика мусора для ускорения запуска Emacs.
 
 #+begin_src emacs-lisp :tangle early-init.el
@@ -77,10 +73,11 @@ pacman -S mingw-w64-i686-libgccjit
 #+begin_src emacs-lisp :tangle early-init.el
 (defvar file-name-handler-alist-original file-name-handler-alist)
 (setq file-name-handler-alist nil)
-(add-hook 'emacs-startup-hook (lambda ()
-                                  (setq gc-cons-threshold (* 8 1024 1024))
-                                  (setq file-name-handler-alist file-name-handler-alist-original)
-                                  (makunbound 'file-name-handler-alist-original)))
+
+(add-hook 'after-init-hook #'(lambda ()
+                                 (setq gc-cons-threshold (* 8 1024 1024))
+                                 (setq file-name-handler-alist file-name-handler-alist-original)
+                                 (makunbound 'file-name-handler-alist-original)))
 #+end_src
 
 Переопределение некоторых стандартных папок.
@@ -124,6 +121,10 @@ pacman -S mingw-w64-i686-libgccjit
 #+end_src
 
 * Константы
+
+#+begin_src emacs-lisp
+;; init.el --- Emacs config -*- lexical-binding: t; no-byte-compile: t; -*-
+#+end_src
 
 Организуем вспомогательные константы, показывающие факт запуска Emacs в Windows или в 64-битной системе. Они нужны будут в дальнейшем для условной установки пакетов.
 
