@@ -3,10 +3,10 @@
 (defconst init/lsp-mode t
     "Use LSP-mode or Eglot otherwise.")
 
-(defconst init/corfu nil
+(defconst init/corfu t
     "Use corfu for buffer completion.")
 
-(defconst init/vertico nil
+(defconst init/vertico t
     "Use vertico for minibuffer completion.")
 
 (defconst init/evil nil
@@ -194,7 +194,7 @@
     :init
     (setq indent-bars-prefer-character t
           indent-bars-treesit-support t
-          indent-bars-no-descend-string t
+          indent-bars-no-descend-string nil
           indent-bars-treesit-ignore-blank-lines-types '("module")
           indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
                                              list list_comprehension
@@ -283,21 +283,12 @@
 
 (setq-default cursor-type 'bar)
 
-(use-package doom-themes
+(use-package catppuccin-theme
     :straight t
     :init
-    (setq doom-themes-enable-bold t
-          doom-themes-enable-italic t)
+    (setq catppuccin-flavor 'mocha)
     :config
-    (doom-themes-visual-bell-config)
-    (doom-themes-neotree-config)
-    (doom-themes-org-config)
-    (load-theme 'doom-palenight t))
-
-(use-package solaire-mode
-    :straight t
-    :config
-    (solaire-global-mode t))
+    (load-theme 'catppuccin :no-confirm))
 
 (cond ((find-font (font-spec :name "JetBrains Mono"))
        (set-face-attribute 'default
@@ -792,17 +783,19 @@
     :config
     (projectile-mode t))
 
-(use-package flycheck
-    :straight t
-    :config
-    (global-flycheck-mode))
-
 (use-package magit
     :straight t)
 
 (when (>= emacs-major-version 29)
     (setq major-mode-remap-alist
           '((python-mode . python-ts-mode))))
+
+(use-package eshell-prompt-extras
+    :straight t
+    :init
+    (autoload 'epe-theme-lambda "eshell-prompt-extras")
+    (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda))
 
 (use-package markdown-mode
     :straight t

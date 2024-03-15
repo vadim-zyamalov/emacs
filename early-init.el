@@ -10,6 +10,9 @@
                                  (setq file-name-handler-alist file-name-handler-alist-original)
                                  (makunbound 'file-name-handler-alist-original)))
 
+(setq read-process-output-max (* 1024 1024))
+(setenv "LSP_USE_PLISTS" "true")
+
 (setq user-emacs-directory
       (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/")))
 
