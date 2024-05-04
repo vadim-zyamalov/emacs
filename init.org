@@ -790,10 +790,10 @@ Emacs настроен на изменение размера фрейма (ок
 Настроим стандартный шрифт. Я предпочитаю [[https://github.com/JetBrains/JetBrainsMono][JetBrains Mono]], хотя это дело вкуса. Некоторое время использовал [[https://github.com/tonsky/FiraCode][Fira Code]]; сейчас буду использовать [[https://github.com/be5invis/Iosevka][Iosevka]].
 
 #+begin_src emacs-lisp
-(cond ((find-font (font-spec :name "JetBrains Mono"))
+(cond ((find-font (font-spec :name "Cascadia Code NF"))
        (set-face-attribute 'default
                            nil
-                           :font "JetBrains Mono"
+                           :font "Cascadia Code NF"
                            :height 120))
       ((find-font (font-spec :name "Iosevka"))
        (set-face-attribute 'default
@@ -829,7 +829,7 @@ Emacs настроен на изменение размера фрейма (ок
                 "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
                 "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
                 "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-             ((or "Fira Code" "Cascadia Code")
+             ((or "Fira Code" "Cascadia Code" "Cascadia Code NF")
               '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
                 ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
                 "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
@@ -877,7 +877,9 @@ Emacs настроен на изменение размера фрейма (ок
 
 #+begin_src emacs-lisp
 (use-package nerd-icons
-    :straight t)
+    :straight t
+    :custom
+    (nerd-icons-font-family "Cascadia Code NF"))
 
 (use-package nerd-icons-completion
     :straight t
@@ -948,7 +950,7 @@ Emacs настроен на изменение размера фрейма (ок
 #+begin_src emacs-lisp
 (use-package dashboard
     :straight t
-    :after (nerd-icons)
+    :after nerd-icons
     :init
     (setq dashboard-display-icons-p t
           dashboard-icon-type 'nerd-icons
@@ -959,7 +961,6 @@ Emacs настроен на изменение размера фрейма (ок
           dashboard-startup-banner (expand-file-name
                                     "it-people.png"
                                     (file-name-directory user-init-file))
-          dashboard-set-navigator t
           dashboard-navigator-buttons
           `((
              (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
@@ -975,7 +976,17 @@ Emacs настроен на изменение размера фрейма (ок
               "emacs"
               "Github с настройками Emacs"
               (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
-             )))
+             ))
+          dashboard-startupify-list '(dashboard-insert-banner
+                                      dashboard-insert-newline
+                                      dashboard-insert-banner-title
+                                      dashboard-insert-newline
+                                      dashboard-insert-navigator
+                                      dashboard-insert-newline
+                                      dashboard-insert-init-info
+                                      dashboard-insert-items
+                                      dashboard-insert-newline
+                                      dashboard-insert-footer))
     :config
     (dashboard-setup-startup-hook))
 #+end_src
@@ -1968,10 +1979,13 @@ to the LaTeX table."
 
 #+begin_src emacs-lisp
 (use-package company-reftex
+    :after auctex
     :straight t)
 (use-package company-auctex
+    :after auctex
     :straight t)
 (use-package company-math
+    :after auctex
     :straight t)
 
 (use-package LaTeX

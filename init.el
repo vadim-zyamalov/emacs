@@ -290,10 +290,10 @@
     :config
     (load-theme 'catppuccin :no-confirm))
 
-(cond ((find-font (font-spec :name "JetBrains Mono"))
+(cond ((find-font (font-spec :name "Cascadia Code NF"))
        (set-face-attribute 'default
                            nil
-                           :font "JetBrains Mono"
+                           :font "Cascadia Code NF"
                            :height 120))
       ((find-font (font-spec :name "Iosevka"))
        (set-face-attribute 'default
@@ -325,7 +325,7 @@
                 "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
                 "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
                 "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-             ((or "Fira Code" "Cascadia Code")
+             ((or "Fira Code" "Cascadia Code" "Cascadia Code NF")
               '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
                 ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
                 "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
@@ -351,7 +351,9 @@
         (global-ligature-mode t)))
 
 (use-package nerd-icons
-    :straight t)
+    :straight t
+    :custom
+    (nerd-icons-font-family "Cascadia Code NF"))
 
 (use-package nerd-icons-completion
     :straight t
@@ -391,7 +393,7 @@
 
 (use-package dashboard
     :straight t
-    :after (nerd-icons)
+    :after nerd-icons
     :init
     (setq dashboard-display-icons-p t
           dashboard-icon-type 'nerd-icons
@@ -402,7 +404,6 @@
           dashboard-startup-banner (expand-file-name
                                     "it-people.png"
                                     (file-name-directory user-init-file))
-          dashboard-set-navigator t
           dashboard-navigator-buttons
           `((
              (,(nerd-icons-sucicon "nf-custom-emacs" :height 1.0 :v-adjust 0.0)
@@ -418,7 +419,17 @@
               "emacs"
               "Github с настройками Emacs"
               (lambda (&rest _) (browse-url "https://github.com/vadim-zyamalov/emacs")))
-             )))
+             ))
+          dashboard-startupify-list '(dashboard-insert-banner
+                                      dashboard-insert-newline
+                                      dashboard-insert-banner-title
+                                      dashboard-insert-newline
+                                      dashboard-insert-navigator
+                                      dashboard-insert-newline
+                                      dashboard-insert-init-info
+                                      dashboard-insert-items
+                                      dashboard-insert-newline
+                                      dashboard-insert-footer))
     :config
     (dashboard-setup-startup-hook))
 
@@ -1081,10 +1092,13 @@ to the LaTeX table."
             (my/unprotect-inner-amps))))
 
 (use-package company-reftex
+    :after auctex
     :straight t)
 (use-package company-auctex
+    :after auctex
     :straight t)
 (use-package company-math
+    :after auctex
     :straight t)
 
 (use-package LaTeX
