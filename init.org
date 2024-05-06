@@ -787,14 +787,15 @@ Emacs настроен на изменение размера фрейма (ок
 
 *** Шрифты
 
-Настроим стандартный шрифт. Я предпочитаю [[https://github.com/JetBrains/JetBrainsMono][JetBrains Mono]], хотя это дело вкуса. Некоторое время использовал [[https://github.com/tonsky/FiraCode][Fira Code]]; сейчас буду использовать [[https://github.com/be5invis/Iosevka][Iosevka]].
+Настроим стандартный шрифт. Я предпочитаю [[https://github.com/microsoft/cascadia-code][Cascadia Code]], [[https://github.com/be5invis/Iosevka][Iosevka]] и [[https://github.com/tonsky/FiraCode][Fira Code]].
 
 #+begin_src emacs-lisp
-(cond ((find-font (font-spec :name "Cascadia Code NF"))
+(cond ((find-font (font-spec :name "Cascadia Code"))
        (set-face-attribute 'default
                            nil
-                           :font "Cascadia Code NF"
-                           :height 120))
+                           :font "Cascadia Code"
+                           :height 120)
+       (setq nerd-icons-font-family "Cascadia Code NF"))
       ((find-font (font-spec :name "Iosevka"))
        (set-face-attribute 'default
                            nil
@@ -877,9 +878,7 @@ Emacs настроен на изменение размера фрейма (ок
 
 #+begin_src emacs-lisp
 (use-package nerd-icons
-    :straight t
-    :custom
-    (nerd-icons-font-family "Cascadia Code NF"))
+    :straight t)
 
 (use-package nerd-icons-completion
     :straight t
@@ -1641,7 +1640,7 @@ Magit --- пакет для работы с git внутри Emacs.
     (modify-syntax-entry ?> "." org-mode-syntax-table))
 #+end_src
 
-[[https://github.com/sabof/org-bullets][Org-bullets]] позволяет настроить метки при разделах org-документа. [[https://github.org/snosov1/toc-org][TOC-org]] дает возможность более гибкой настройки оглавления. [[https://github.com/awth13/org-appear][org-appear]] сворачивает форматирование в org-документах, разворачивая при наведении курсора. [[https://github.com/Fanael/edit-indirect][Edit-indirect]] дает возможность редактирования блоков с исходным кодом в отдельных буферах.
+[[https://github.com/sabof/org-bullets][Org-bullets]] позволяет настроить метки при разделах org-документа. [[https://github.com/snosov1/toc-org][TOC-org]] дает возможность более гибкой настройки оглавления. [[https://github.com/awth13/org-appear][org-appear]] сворачивает форматирование в org-документах, разворачивая при наведении курсора. [[https://github.com/Fanael/edit-indirect][Edit-indirect]] дает возможность редактирования блоков с исходным кодом в отдельных буферах.
 
 #+begin_src emacs-lisp
 (use-package org
@@ -1649,7 +1648,8 @@ Magit --- пакет для работы с git внутри Emacs.
     :hook ((org-mode . org-indent-mode)
            (org-mode . my/angle-brackets-fix))
     :init
-    (setq org-edit-src-content-indentation 0
+    (setq org-fold-core-style 'overlays
+          org-edit-src-content-indentation 0
           org-src-preserve-indentation nil
           org-src-fontify-natively t
           org-src-tab-acts-natively t
@@ -1690,11 +1690,12 @@ Magit --- пакет для работы с git внутри Emacs.
     :hook (org-mode . toc-org-mode))
 
 (use-package org-appear
-    :straight (org-appear :type git :host github :repo "awth13/org-appear")
+    :straight t
     :after org
     :hook (org-mode . org-appear-mode)
-    :init
-    (setq org-appear-autolinks t
+    :config
+    (setq org-appear-trigger 'always
+          org-appear-autolinks t
           org-appear-autosubmarkers t))
 
 (use-package org-auto-tangle

@@ -290,11 +290,12 @@
     :config
     (load-theme 'catppuccin :no-confirm))
 
-(cond ((find-font (font-spec :name "Cascadia Code NF"))
+(cond ((find-font (font-spec :name "Cascadia Code"))
        (set-face-attribute 'default
                            nil
-                           :font "Cascadia Code NF"
-                           :height 120))
+                           :font "Cascadia Code"
+                           :height 120)
+       (setq nerd-icons-font-family "Cascadia Code NF"))
       ((find-font (font-spec :name "Iosevka"))
        (set-face-attribute 'default
                            nil
@@ -351,9 +352,7 @@
         (global-ligature-mode t)))
 
 (use-package nerd-icons
-    :straight t
-    :custom
-    (nerd-icons-font-family "Cascadia Code NF"))
+    :straight t)
 
 (use-package nerd-icons-completion
     :straight t
@@ -826,7 +825,8 @@
     :hook ((org-mode . org-indent-mode)
            (org-mode . my/angle-brackets-fix))
     :init
-    (setq org-edit-src-content-indentation 0
+    (setq org-fold-core-style 'overlays
+          org-edit-src-content-indentation 0
           org-src-preserve-indentation nil
           org-src-fontify-natively t
           org-src-tab-acts-natively t
@@ -867,11 +867,12 @@
     :hook (org-mode . toc-org-mode))
 
 (use-package org-appear
-    :straight (org-appear :type git :host github :repo "awth13/org-appear")
+    :straight t
     :after org
     :hook (org-mode . org-appear-mode)
-    :init
-    (setq org-appear-autolinks t
+    :config
+    (setq org-appear-trigger 'always
+          org-appear-autolinks t
           org-appear-autosubmarkers t))
 
 (use-package org-auto-tangle
